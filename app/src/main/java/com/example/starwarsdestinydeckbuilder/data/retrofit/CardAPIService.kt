@@ -1,7 +1,6 @@
 package com.example.starwarsdestinydeckbuilder.data.retrofit
 
 import com.example.starwarsdestinydeckbuilder.data.retrofit.model.CardJS
-import com.example.starwarsdestinydeckbuilder.domain.model.Card
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -15,11 +14,11 @@ private val retrofit = Retrofit.Builder()
     .addConverterFactory(GsonConverterFactory.create())
     .build()
 
-interface CardAPI {
+interface CardAPIService {
     @GET("api/public/card/{card_code}")
     suspend fun getCardByCode(@Path("card_code") cardCode: String): Response<CardJS>
 }
 
 object CardApi {
-    val retrofitService: CardAPI by lazy { retrofit.create(CardAPI::class.java) }
+    val retrofitService: CardAPIService by lazy { retrofit.create(CardAPIService::class.java) }
 }

@@ -7,6 +7,7 @@ import com.example.starwarsdestinydeckbuilder.data.local.data.CardsDao
 import com.example.starwarsdestinydeckbuilder.data.remote.data.CardApi
 import com.example.starwarsdestinydeckbuilder.data.remote.data.CardNetwork
 import com.example.starwarsdestinydeckbuilder.data.remote.data.CardService
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -26,13 +27,8 @@ object DataModule {
 
     @Provides
     @Singleton
-    fun provideCardService() = CardApi.retrofitService
-
-    @Provides
-    @Singleton
     fun provideCardCache(cardsDao: CardsDao) = CardCache(cardsDao)
 
-    @Provides
-    @Singleton
-    fun provideCardNetwork(cardService: CardService) = CardNetwork(cardService)
+    @Binds
+    abstract fun provide
 }

@@ -1,14 +1,17 @@
-package com.example.starwarsdestinydeckbuilder.domain.model
+package com.example.starwarsdestinydeckbuilder.data.local.model
 
-import java.net.URL
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 
-const val LEGALITY_ALLOWED = 1
-const val LEGALITY_RESTRICTED = 2
-const val LEGALITY_BANNED = 0
-
-data class Card(
-    val sides: List<String>?,
-    val setCode: String,
+@Entity
+data class CardEntity(
+    val side1: String?,
+    val side2: String?,
+    val side3: String?,
+    val side4: String?,
+    val side5: String?,
+    val side6: String?,
+    @PrimaryKey val setCode: String,
     val setName: String,
     val typeCode: String,
     val typeName: String,
@@ -18,7 +21,7 @@ data class Card(
     val affiliationName: String?,
     val rarityCode: Char,
     val rarityName: String,
-    val subtypes: List<Subtype>?,
+   // val subtypes: List<Subtype>?,  TODO: Set this up as an Entity
     val position: Int,
     val code: String,
     val ttsCardID: Int,
@@ -35,31 +38,17 @@ data class Card(
     val hasDie: Boolean,
     val hasErrata: Boolean,
     val flipCard: Boolean,
-    val url: URL,
-    val imageSrc: URL,
+    val url: String,
+    val imageSrc: String,
     val label: String,
     val cp: Int,
-    val reprints: List<Int>?,
-    val parallelDiceOf: List<Int>?,
+    // val reprints: List<Int>?,  Setup as One-to-Many
+    // val parallelDiceOf: List<Int>?, Setup as One-to-Many
 
-    val legalityStandard: Int,
+    /*val legalityStandard: Int,   //TODO:  Set these up as entities
     val legalityTrilogy: Int,
     val legalityInfinite: Int,
-    val legalityARHStandard: Int,
+    val legalityARHStandard: Int,*/
 
-    val balance: String?,
-
-    val timestamp: Long,
+    val balance: String?
 )
-
-data class Subtype(
-    val code: String,
-    val name: String,
-)
-/*
-data class Format(
-    val name: String,
-    val code: String,
-    val isMember: Boolean,
-    val balance: String
-)*/

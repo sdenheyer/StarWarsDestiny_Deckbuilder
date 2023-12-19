@@ -24,26 +24,6 @@ class CardRepositoryImpl @Inject constructor(
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
 ): CardRepository {
 
-
-    /* override suspend fun getCardbyCode(code: String): Card {
-        val result = cardService.getCardByCode(code)
-        if (result.isSuccessful && result.body() != null) {
-            return result.body()!!.toDomain()
-        } else {
-            return CardDTO.testCard.copy(name = "ERROR!").toDomain()
-        }
-    }
-
-    override suspend fun getCardSets(): List<CardSet> {
-        val result = cardService.getCardSets()
-        if (result.isSuccessful && result.body() != null) {
-            return result.body()!!.map { it.toDomain() }
-        } else {
-            return emptyList()
-        }
-    }
-
-*/
     override fun getCardbyCode(code: String): Flow<Resource<Card>> {
         return networkBoundResource(
             fetchFromLocal =  { cardCache.getCardByCode(code) },
@@ -63,6 +43,17 @@ class CardRepositoryImpl @Inject constructor(
             fetchFromRemote = { cardNetwork.getCardSets() },
             processRemoteResponse = { },
             saveRemoteData = { coroutineScope.launch(dispatcher) { cardCache.storeCardSets(it) } },
+            onFetchFailed = { _, _ -> }
+        ).flowOn(dispatcher)
+    }
+
+    override fun getCardsBySet(code: String): Flow<Resource<List<Card>>> {
+        return networkBoundResource(
+            fetchFromLocal =  { cardCache.getCardsBySet(code) },
+            shouldFetchFromRemote = { it.isNullOrEmpty() },
+            fetchFromRemote = { cardNetwork.getCardsBySet(code) },
+            processRemoteResponse = { },
+            saveRemoteData = { coroutineScope.launch(dispatcher) { cardCache.storeCards(it) } },
             onFetchFailed = { _, _ -> }
         ).flowOn(dispatcher)
     }

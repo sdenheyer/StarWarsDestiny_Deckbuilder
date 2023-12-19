@@ -1,5 +1,6 @@
 package com.example.starwarsdestinydeckbuilder.data.remote.data
 
+import android.util.Log
 import com.example.starwarsdestinydeckbuilder.domain.data.Resource
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.Flow
@@ -28,8 +29,11 @@ inline fun <DB, REMOTE> networkBoundResource(
             when (apiResponse) {
                 is ApiSuccessResponse -> {
                     processRemoteResponse(apiResponse)
-                    apiResponse.body?.let { saveRemoteData(it) }
+                    apiResponse.body?.let {
+                        Log.d("SWD", "Saving to db: $it.size")
+                        saveRemoteData(it) }
                     emitAll(fetchFromLocal().map { dbData ->
+                        Log.d("SWD", "Getting from db: $dbData.size")
                         Resource.success(dbData)
                     })
                 }

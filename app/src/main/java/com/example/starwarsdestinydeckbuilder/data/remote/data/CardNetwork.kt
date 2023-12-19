@@ -1,5 +1,6 @@
 package com.example.starwarsdestinydeckbuilder.data.remote.data
 
+import android.util.Log
 import com.example.starwarsdestinydeckbuilder.data.remote.mappings.toDomain
 import com.example.starwarsdestinydeckbuilder.data.remote.model.CardDTO
 import com.example.starwarsdestinydeckbuilder.data.remote.model.CardSetDTO
@@ -36,6 +37,7 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
 
         val apiResponse = try {
             val response = cardService.getCardsBySet(code)
+            Log.d("SWD", "Response rec'd: ${response.body()?.size}")
             if (response.body() != null) {
                 ApiResponse.create(response, { it!!.map { it.toDomain() } })
             } else {

@@ -32,7 +32,7 @@ abstract class AppDatabase : RoomDatabase() {
 
 @Dao
 interface CardsDao {
-    @Insert
+    @Insert()
     fun insertCards(vararg cards: CardEntity)
 
     @Update

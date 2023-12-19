@@ -11,5 +11,7 @@ interface CardRepository {
 
     fun getCardSets(): Flow<Resource<List<CardSet>>>
 
+    fun getCardsBySet(code: String): Flow<Resource<List<Card>>>
+
 
 }

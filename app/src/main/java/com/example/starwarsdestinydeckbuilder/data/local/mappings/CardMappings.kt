@@ -52,12 +52,12 @@ fun CardEntity.toDomain() = Card(
 )
 
 fun Card.toEntity() = CardEntity(
-    side1 = sides?.get(1),
-    side2 = sides?.get(2),
-    side3 = sides?.get(3),
-    side4 = sides?.get(4),
-    side5 = sides?.get(5),
-    side6 = sides?.get(6),
+    side1 = sides?.get(0),
+    side2 = sides?.get(1),
+    side3 = sides?.get(2),
+    side4 = sides?.get(3),
+    side5 = sides?.get(4),
+    side6 = sides?.get(5),
     setCode = setCode,
     setName = setName,
     typeCode = typeCode,

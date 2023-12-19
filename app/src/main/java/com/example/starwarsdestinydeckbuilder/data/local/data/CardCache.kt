@@ -1,5 +1,6 @@
 package com.example.starwarsdestinydeckbuilder.data.local.data
 
+import android.database.sqlite.SQLiteConstraintException
 import com.example.starwarsdestinydeckbuilder.data.local.mappings.toDomain
 import com.example.starwarsdestinydeckbuilder.data.local.mappings.toEntity
 import com.example.starwarsdestinydeckbuilder.domain.data.ICardCache
@@ -13,7 +14,7 @@ class CardCache(
     private val dao: CardsDao
 ):ICardCache {
     override fun getCardByCode(code: String): Flow<Card> = dao.getCardByCode(code).map { it.toDomain() }
-    override fun getCardsBySet(code: String): Flow<List<Card>> = dao.getCardsBySet(code).map { it.map { it.toDomain() } }
+    override fun getCardsBySet(code: String): Flow<List<Card>> = dao.getCardsBySet(code).map { it.map { entity -> entity.toDomain() } }
 
     override fun getCardSets(): Flow<List<CardSet>> = dao.getCardSets().map { it.map { it.toDomain() }}
 
@@ -22,7 +23,7 @@ class CardCache(
             val card = it.toEntity()
             try {
                 dao.insertCards(card)
-            } catch(e: SQLClientInfoException) {
+            } catch(e: SQLiteConstraintException) {
                 dao.updateCard(card)
             }
         }
@@ -33,7 +34,7 @@ class CardCache(
             val set = it.toEntity()
             try {
                 dao.insertCardSets(set)
-            } catch(e: SQLClientInfoException) {
+            } catch(e: SQLiteConstraintException) {
                 dao.updateCardSet(set)
             }
         }

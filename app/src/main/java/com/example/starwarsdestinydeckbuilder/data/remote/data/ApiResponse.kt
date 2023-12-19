@@ -11,7 +11,7 @@ sealed class ApiResponse<Output> {
 
         fun <Input, Output> create(response: Response<Input>,  typeConverter: (Input?) -> Output): ApiResponse<Output> {
             return if (response.isSuccessful) {
-                val body = typeConverter(response.body())
+                val body = if (response.body() != null) typeConverter(response.body()) else null
                 val headers = response.headers()
                 if (body == null || response.code() == 204) {
                     ApiEmptyResponse()

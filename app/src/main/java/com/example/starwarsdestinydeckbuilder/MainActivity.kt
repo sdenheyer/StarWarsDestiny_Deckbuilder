@@ -1,11 +1,16 @@
 package com.example.starwarsdestinydeckbuilder
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -21,13 +26,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.starwarsdestinydeckbuilder.ui.theme.StarWarsDestinyDeckbuilderTheme
 import com.example.starwarsdestinydeckbuilder.viewmodel.CardViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlin.math.exp
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -51,13 +53,13 @@ class MainActivity : ComponentActivity() {
 fun Greeting(modifier: Modifier = Modifier,
                 cardVM: CardViewModel = hiltViewModel()) {
 
-    val card by cardVM.cardFlow.collectAsStateWithLifecycle()
+    val cards by cardVM.cardsFlow.collectAsStateWithLifecycle(emptyList())
     val set by cardVM.cardSetMenuItemsState.collectAsStateWithLifecycle(initialValue = emptyList())
     var expanded by remember { mutableStateOf(false) }
 
+    Column {
         Box(
             modifier = Modifier
-                .fillMaxSize()
                 .wrapContentSize(Alignment.TopStart)
         ) {
             Button(onClick = { expanded = true }) {
@@ -65,12 +67,37 @@ fun Greeting(modifier: Modifier = Modifier,
             }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 set?.forEach { set ->
-                    DropdownMenuItem(text = { Text(set.name) }, onClick = { /*TODO*/ })
+                    DropdownMenuItem(text = { Text(set.name) }, onClick = {(cardVM::setCardSetSelection)(set.code)})
                 }
             }
-            Text(set.toString())
+            //Text(set.toString())
         }
+        Text("Test")
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items(items = cards, key = { it.code }) { card ->
+                Log.d("SWD", "Recomposing: $card")
+                Row(modifier = Modifier.fillMaxSize()) {
+                    Text(card.name)
+                    Text(card.affiliation)
+                    Text(card.faction)
+                    Text(card.points)
+                    Text("${card.health ?: ""}")
+                    Text(card.type)
+                    Text(card.die1)
+                    Text(card.die2)
+                    Text(card.die3)
+                    Text(card.die4)
+                    Text(card.die5)
+                    Text(card.die6)
+                    Text(card.set)
+                }
+
+            }
+
+        }
+
     }
+}
 
 @Preview(showBackground = true)
 @Composable

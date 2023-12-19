@@ -1,6 +1,7 @@
 package com.example.starwarsdestinydeckbuilder.data.local.data
 
 import android.database.sqlite.SQLiteConstraintException
+import android.util.Log
 import com.example.starwarsdestinydeckbuilder.data.local.mappings.toDomain
 import com.example.starwarsdestinydeckbuilder.data.local.mappings.toEntity
 import com.example.starwarsdestinydeckbuilder.domain.data.ICardCache
@@ -19,11 +20,14 @@ class CardCache(
     override fun getCardSets(): Flow<List<CardSet>> = dao.getCardSets().map { it.map { it.toDomain() }}
 
     override suspend fun storeCards(cards: List<Card>) {
+        Log.d("SWD", "Writing cards: ${cards.size}")
         cards.forEach() {
             val card = it.toEntity()
+         //   Log.d("SWD", "Writing card: ${card.code}, ${card.name}")
             try {
                 dao.insertCards(card)
             } catch(e: SQLiteConstraintException) {
+                Log.d("SWD", "Already exists!  ${card.name}")
                 dao.updateCard(card)
             }
         }

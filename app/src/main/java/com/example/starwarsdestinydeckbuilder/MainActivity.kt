@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -72,11 +74,10 @@ fun Greeting(modifier: Modifier = Modifier,
             }
             //Text(set.toString())
         }
-        Text("Test")
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(items = cards, key = { it.code }) { card ->
-                Log.d("SWD", "Recomposing: $card")
-                Row(modifier = Modifier.fillMaxSize()) {
+               // Log.d("SWD", "Recomposing: $card")
+                Row(modifier = Modifier.fillMaxWidth().wrapContentHeight()) {
                     Text(card.name)
                     Text(card.affiliation)
                     Text(card.faction)

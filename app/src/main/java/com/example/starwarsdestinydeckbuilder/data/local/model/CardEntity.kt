@@ -11,7 +11,7 @@ data class CardEntity(
     val side4: String?,
     val side5: String?,
     val side6: String?,
-    @PrimaryKey val setCode: String,
+    val setCode: String,
     val setName: String,
     val typeCode: String,
     val typeName: String,
@@ -23,7 +23,7 @@ data class CardEntity(
     val rarityName: String,
    // val subtypes: List<Subtype>?,  TODO: Set this up as an Entity
     val position: Int,
-    val code: String,
+    @PrimaryKey val code: String,
     val ttsCardID: Int,
     val name: String,
     val subtitle: String?,

@@ -93,7 +93,7 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
                 if (!set.isNullOrEmpty()) {
                     _cardsFlow.update {
                         val resource = cardRepo.getCardsBySet(set).first { it.status == Resource.Status.SUCCESS && it.data != null && it.data.isNotEmpty()}
-                        Log.d("SWD", "sending data: ${resource.status} ${resource.data?.size}")
+                   //     Log.d("SWD", "sending data: ${resource.status} ${resource.data?.size}")
                         resource.data ?: emptyList()
                     }
                 }

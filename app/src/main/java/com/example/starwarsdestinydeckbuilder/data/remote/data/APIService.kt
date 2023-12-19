@@ -20,6 +20,9 @@ interface CardService {
     @GET("api/public/card/{card_code}")
     suspend fun getCardByCode(@Path("card_code") cardCode: String): Response<CardDTO>
 
+    @GET("api/public/cards/{set_code}")
+    suspend fun getCardsBySet(@Path("set_code") setCode: String): Response<List<CardDTO>>
+
     @GET("api/public/sets/")
     suspend fun getCardSets(): Response<List<CardSetDTO>>
 }

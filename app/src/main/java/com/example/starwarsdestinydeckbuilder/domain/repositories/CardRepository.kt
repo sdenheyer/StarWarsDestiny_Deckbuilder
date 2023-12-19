@@ -7,9 +7,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface CardRepository {
 
-    suspend fun getCardbyCode(code: String): Flow<Resource<Card>>
+    fun getCardbyCode(code: String): Flow<Resource<Card>>
 
-    suspend fun getCardSets(): List<CardSet>
+    fun getCardSets(): Flow<Resource<List<CardSet>>>
 
 
 }

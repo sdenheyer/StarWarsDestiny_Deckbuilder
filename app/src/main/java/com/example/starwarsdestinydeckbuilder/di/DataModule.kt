@@ -7,10 +7,12 @@ import com.example.starwarsdestinydeckbuilder.data.local.data.CardsDao
 import com.example.starwarsdestinydeckbuilder.data.remote.data.CardApi
 import com.example.starwarsdestinydeckbuilder.data.remote.data.CardNetwork
 import com.example.starwarsdestinydeckbuilder.data.remote.data.CardService
+import com.example.starwarsdestinydeckbuilder.domain.data.ICardCache
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.components.ActivityComponent
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -28,7 +30,4 @@ object DataModule {
     @Provides
     @Singleton
     fun provideCardCache(cardsDao: CardsDao) = CardCache(cardsDao)
-
-    @Binds
-    abstract fun provide
 }

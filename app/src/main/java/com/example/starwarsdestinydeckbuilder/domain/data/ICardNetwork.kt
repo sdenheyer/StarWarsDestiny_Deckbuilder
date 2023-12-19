@@ -10,7 +10,7 @@ import retrofit2.Response
 
 interface ICardNetwork {
     fun getCardByCode(code: String): Flow<ApiResponse<Card>>
-    suspend fun getCardsBySet(code: String): Flow<Response<List<CardDTO>>>
-    suspend fun getCardSets(): Flow<Response<List<CardSetDTO>>>
+    fun getCardsBySet(code: String): Flow<ApiResponse<List<Card>>>
+    fun getCardSets(): Flow<ApiResponse<List<CardSet>>>
 
 }

@@ -15,7 +15,7 @@ class CardCache(
     override fun getCardByCode(code: String): Flow<Card> = dao.getCardByCode(code).map { it.toDomain() }
     override fun getCardsBySet(code: String): Flow<List<Card>> = dao.getCardsBySet(code).map { it.map { it.toDomain() } }
 
-    override suspend fun getCardSets(): Flow<List<CardSet>> = dao.getCardSets().map { it.map { it.toDomain() }}
+    override fun getCardSets(): Flow<List<CardSet>> = dao.getCardSets().map { it.map { it.toDomain() }}
 
     override suspend fun storeCards(cards: List<Card>) {
         cards.forEach() {

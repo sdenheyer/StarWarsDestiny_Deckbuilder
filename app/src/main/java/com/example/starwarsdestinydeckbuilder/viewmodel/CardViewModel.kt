@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.starwarsdestinydeckbuilder.data.CardRepositoryImpl
 import com.example.starwarsdestinydeckbuilder.data.remote.model.CardDTO
 import com.example.starwarsdestinydeckbuilder.data.remote.mappings.toDomain
+import com.example.starwarsdestinydeckbuilder.domain.data.Resource
 import com.example.starwarsdestinydeckbuilder.domain.model.Card
 import com.example.starwarsdestinydeckbuilder.domain.model.CardSet
 import dagger.hilt.android.AndroidEntryPoint
@@ -20,13 +21,13 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
     private val _cardFlow:MutableStateFlow<Card> = MutableStateFlow(CardDTO.testCard.copy(name = "NOTHING").toDomain())
     val cardFlow = _cardFlow.asStateFlow()
 
-    private val _cardSetsFlow:MutableStateFlow<List<CardSet>> = MutableStateFlow(emptyList())
-    val cardSetsFlow = _cardSetsFlow.asStateFlow()
+  //  private val _cardSetsFlow:MutableStateFlow<Resource<List<CardSet>>?> = MutableStateFlow(null)
+    val cardSetsFlow = cardRepo.getCardSets()
 
     init {
         viewModelScope.launch {
            // _cardFlow.value = cardRepo.getCardbyCode("01001")
-            _cardSetsFlow.value = cardRepo.getCardSets()
+          //  _cardSetsFlow.value = cardRepo.getCardSets()
         }
     }
 }

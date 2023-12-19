@@ -8,6 +8,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -40,11 +41,11 @@ class MainActivity : ComponentActivity() {
 fun Greeting(modifier: Modifier = Modifier,
                 cardVM: CardViewModel = hiltViewModel()) {
 
-    val card = cardVM.cardFlow.collectAsStateWithLifecycle()
-    val set = cardVM.cardSetsFlow.collectAsStateWithLifecycle()
+    val card by cardVM.cardFlow.collectAsStateWithLifecycle()
+    val set by cardVM.cardSetsFlow.collectAsStateWithLifecycle(null)
 
     Text(
-        text = set.value.toString(),
+        text = "${set?.data.toString()}, ${set?.status}",
         modifier = modifier
     )
 }

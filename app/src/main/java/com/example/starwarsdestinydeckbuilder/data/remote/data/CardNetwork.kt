@@ -24,7 +24,7 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
         if (response.body() != null) {
             ApiResponse.create(response, { it!!.toDomain() })
         } else {
-            ApiResponse.create(error = Throwable("No data"))
+            ApiResponse.create(error = Throwable(response.message()))
         }
         } catch(e: IOException) {
             ApiResponse.create(error = Throwable("Network error"))
@@ -39,7 +39,7 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
             if (response.body() != null) {
                 ApiResponse.create(response, { it!!.map { it.toDomain() } })
             } else {
-                ApiResponse.create(error = Throwable("No data"))
+                ApiResponse.create(error = Throwable(response.message()))
             }
         } catch(e: IOException) {
             ApiResponse.create(error = Throwable("Network error"))
@@ -54,7 +54,7 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
             if (response?.body() != null) {
                 ApiResponse.create(response, { it!!.map { it.toDomain() } })
             } else {
-                ApiResponse.create(error = Throwable("No data"))
+                ApiResponse.create(error = Throwable(response.message()))
             }
         } catch(e: IOException) {
             ApiResponse.create(error = Throwable("Network error"))

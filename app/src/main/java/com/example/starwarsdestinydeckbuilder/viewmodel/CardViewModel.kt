@@ -3,6 +3,7 @@ package com.example.starwarsdestinydeckbuilder.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.starwarsdestinydeckbuilder.data.CardRepositoryImpl
+import com.example.starwarsdestinydeckbuilder.data.remote.data.ApiResponse
 import com.example.starwarsdestinydeckbuilder.data.remote.model.CardDTO
 import com.example.starwarsdestinydeckbuilder.data.remote.mappings.toDomain
 import com.example.starwarsdestinydeckbuilder.domain.data.Resource
@@ -12,8 +13,15 @@ import dagger.hilt.android.AndroidEntryPoint
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+
+data class CardSetMenuItem(
+    val code: String,
+    val name: String,
+    val postition: Int,
+)
 
 @HiltViewModel
 class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl):ViewModel() {
@@ -23,6 +31,16 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
 
   //  private val _cardSetsFlow:MutableStateFlow<Resource<List<CardSet>>?> = MutableStateFlow(null)
     val cardSetsFlow = cardRepo.getCardSets()
+
+    val cardSetMenuItemsState = cardSetsFlow.map { response ->
+        if (response.status == Resource.Status.SUCCESS) {
+            response.data?.map { CardSetMenuItem(code = it.code, name = it.name, postition = it.position) }?.sortedBy { it.postition }
+        } else {
+            emptyList()
+        }
+    }
+
+
 
     init {
         viewModelScope.launch {

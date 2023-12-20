@@ -12,8 +12,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flattenMerge
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapMerge
+import kotlinx.coroutines.flow.flow
+
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -42,64 +47,85 @@ data class CardUi(
 )
 
 @HiltViewModel
-class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl):ViewModel() {
+class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl) : ViewModel() {
 
-    private val _cardFlow:MutableStateFlow<Card> = MutableStateFlow(CardDTO.testCard.copy(name = "NOTHING").toDomain())
-    val cardFlow = _cardFlow.asStateFlow()
+   // private val _cardFlow: MutableStateFlow<Card> =
+        //MutableStateFlow(CardDTO.testCard.copy(name = "NOTHING").toDomain())
+   // val cardFlow = _cardFlow.asStateFlow()
 
-    private val _cardsFlow:MutableStateFlow<List<Card>> = MutableStateFlow(emptyList())
-    val cardsFlow = _cardsFlow.map { list ->
-        Log.d("SWD", "Generating cardUI: $list")
-        list.map { CardUi(
-            code = it.code,
-            name = it.name,
-            affiliation = it.affiliationName ?: "",
-            faction = it.factionName,
-            points = it.points ?: "",
-            health = it.health,
-            type = it.typeName,
-            rarity = it.rarityName,
-            die1 = it.sides?.get(0) ?: "-",
-            die2 = it.sides?.get(1) ?: "-",
-            die3 = it.sides?.get(2) ?: "-",
-            die4 = it.sides?.get(3) ?: "-",
-            die5 = it.sides?.get(4) ?: "-",
-            die6 = it.sides?.get(5) ?: "-",
-            set = it.setName
-        )
-        }
-    }
+  //  private val _cardsFlow: MutableStateFlow<List<Card>> = MutableStateFlow(emptyList())
+    val cardsFlow
+      get() = cardSetSelection.map { resource ->
+          //  Log.d("SWD", "Generating cardUI: $list")
+          if (resource?.status == Resource.Status.SUCCESS && !resource.data.isNullOrEmpty()) {
+              val list = resource.data.map {
+                  CardUi(
+                      code = it.code,
+                      name = it.name,
+                      affiliation = it.affiliationName ?: "",
+                      faction = it.factionName,
+                      points = it.points ?: "",
+                      health = it.health,
+                      type = it.typeName,
+                      rarity = it.rarityName,
+                      die1 = it.sides?.get(0) ?: "-",
+                      die2 = it.sides?.get(1) ?: "-",
+                      die3 = it.sides?.get(2) ?: "-",
+                      die4 = it.sides?.get(3) ?: "-",
+                      die5 = it.sides?.get(4) ?: "-",
+                      die6 = it.sides?.get(5) ?: "-",
+                      set = it.setName
+                  )
+              }
+              list
+          } else {
+              emptyList()
+          }
+      }
 
-  //  private val _cardSetsFlow:MutableStateFlow<Resource<List<CardSet>>?> = MutableStateFlow(null)
+    //  private val _cardSetsFlow:MutableStateFlow<Resource<List<CardSet>>?> = MutableStateFlow(null)
     val cardSetsFlow = cardRepo.getCardSets()
 
     val cardSetMenuItemsState = cardSetsFlow.map { response ->
         if (response.status == Resource.Status.SUCCESS) {
-            response.data?.map { CardSetMenuItem(code = it.code, name = it.name, postition = it.position) }?.sortedBy { it.postition }
+            response.data?.map {
+                CardSetMenuItem(
+                    code = it.code,
+                    name = it.name,
+                    postition = it.position
+                )
+            }?.sortedBy { it.postition }
         } else {
             emptyList()
         }
     }
 
     val _cardSetSelection: MutableStateFlow<String?> = MutableStateFlow(null)
-    val cardSetSelection = _cardSetSelection.asStateFlow()
+    val cardSetSelection = _cardSetSelection.flatMapMerge { set ->
+        if (set.isNullOrEmpty()) {
+            flow<Resource<List<Card>>?> { null }
+        } else {
+            cardRepo.getCardsBySet(set)
+        }
+    }
 
     init {
         viewModelScope.launch {
-           // _cardFlow.value = cardRepo.getCardbyCode("01001")
-          //  _cardSetsFlow.value = cardRepo.getCardSets()
-            cardSetSelection.collect {set ->
+            // _cardFlow.value = cardRepo.getCardbyCode("01001")
+            //  _cardSetsFlow.value = cardRepo.getCardSets()
+       /*     cardSetSelection.collect { set ->
                 Log.d("SWD", "set selection rec'd: $set")
                 if (!set.isNullOrEmpty()) {
                     _cardsFlow.update {
-                        val resource = cardRepo.getCardsBySet(set).first { it.status == Resource.Status.SUCCESS && it.data != null && it.data.isNotEmpty()}
-                   //     Log.d("SWD", "sending data: ${resource.status} ${resource.data?.size}")
-                        resource.data ?: emptyList()
+                        val resource = cardRepo.getCardsBySet(set)
+                            .first { it.status == Resource.Status.SUCCESS && it.data != null && it.data.isNotEmpty() }
+                        //     Log.d("SWD", "sending data: ${resource.status} ${resource.data?.size}")
+                        resource.data ?: emptyList()*/
                     }
                 }
-            }
-        }
-    }
+           // }
+     //   }
+   // }
 
     fun setCardSetSelection(code: String) {
         _cardSetSelection.update { code }

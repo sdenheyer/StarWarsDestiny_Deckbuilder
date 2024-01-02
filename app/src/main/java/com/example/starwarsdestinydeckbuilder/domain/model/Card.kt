@@ -39,15 +39,10 @@ data class Card(
     val imageSrc: URL,
     val label: String,
     val cp: Int,
-    val reprints: List<Int>?,
-    val parallelDiceOf: List<Int>?,
+    val reprints: List<String>,
+    val parallelDiceOf: List<String>,
 
-    val legalityStandard: Int,
-    val legalityTrilogy: Int,
-    val legalityInfinite: Int,
-    val legalityARHStandard: Int,
-
-    val balance: String?,
+    val formats: List<Format>? = null,
 
     val timestamp: Long,
 )
@@ -56,10 +51,10 @@ data class Subtype(
     val code: String,
     val name: String,
 )
-/*
+
 data class Format(
     val name: String,
     val code: String,
-    val isMember: Boolean,
-    val balance: String
-)*/
+    val legality: String,
+    val balance: String?
+)

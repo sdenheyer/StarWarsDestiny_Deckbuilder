@@ -1,7 +1,5 @@
 package com.example.starwarsdestinydeckbuilder.data.remote.mappings
 
-import com.example.starwarsdestinydeckbuilder.data.local.model.CardEntity
-import com.example.starwarsdestinydeckbuilder.data.local.model.CardSetEntity
 import com.example.starwarsdestinydeckbuilder.data.remote.model.CardSetDTO
 import com.example.starwarsdestinydeckbuilder.domain.model.CardSet
 import java.net.URL

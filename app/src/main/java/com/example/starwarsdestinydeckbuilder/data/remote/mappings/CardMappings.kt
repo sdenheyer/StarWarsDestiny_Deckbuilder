@@ -1,9 +1,7 @@
 package com.example.starwarsdestinydeckbuilder.data.remote.mappings
 
-import com.example.starwarsdestinydeckbuilder.data.local.model.CardEntity
 import com.example.starwarsdestinydeckbuilder.data.remote.model.CardDTO
 import com.example.starwarsdestinydeckbuilder.domain.model.Card
-import com.example.starwarsdestinydeckbuilder.domain.model.LEGALITY_ALLOWED
 import java.net.URL
 
 fun CardDTO.toDomain() = Card(
@@ -39,15 +37,8 @@ fun CardDTO.toDomain() = Card(
     imageSrc = URL(imagesrc),
     label = label,
     cp = cp,
-    reprints = reprints,
-    parallelDiceOf = paralleldiceof,
-
-    legalityStandard = LEGALITY_ALLOWED,
-    legalityTrilogy = LEGALITY_ALLOWED,
-    legalityInfinite = LEGALITY_ALLOWED,
-    legalityARHStandard = LEGALITY_ALLOWED,
-
-    balance = null,
+    reprints = reprints ?: emptyList(),
+    parallelDiceOf = paralleldiceof ?: emptyList(),
 
     timestamp = 0
 )

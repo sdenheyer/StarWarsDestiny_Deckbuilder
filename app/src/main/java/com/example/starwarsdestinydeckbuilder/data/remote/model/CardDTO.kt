@@ -35,8 +35,8 @@ data class CardDTO (
     val imagesrc: String,
     val label: String,
     val cp: Int,
-    val reprints: List<Int>?,
-    val paralleldiceof: List<Int>?,
+    val reprints: List<String>?,
+    val paralleldiceof: List<String>?,
 ) {
     companion object {
         val testCard =

@@ -16,6 +16,7 @@ inline fun <DB, REMOTE> networkBoundResource(
     crossinline saveRemoteData: (REMOTE) -> Unit = { Unit },
     crossinline onFetchFailed: (errorBody: String?, statusCode: Int) -> Unit = { _: String?, _: Int -> Unit }
     ) = flow<Resource<DB>> {
+        Log.d("SWD", "Network resource flows initializing...")
 
         emit(Resource.loading(null))
 
@@ -30,10 +31,10 @@ inline fun <DB, REMOTE> networkBoundResource(
                 is ApiSuccessResponse -> {
                     processRemoteResponse(apiResponse)
                     apiResponse.body?.let {
-                     //   Log.d("SWD", "Saving to db: $it.size")
+                      //  Log.d("SWD", "Saving to db: $it.size")
                         saveRemoteData(it) }
                     emitAll(fetchFromLocal().map { dbData ->
-                    //    Log.d("SWD", "Getting from db: $dbData.size")
+                      //  Log.d("SWD", "Getting from db: $dbData.size")
                         Resource.success(dbData)
                     })
                 }
@@ -54,7 +55,7 @@ inline fun <DB, REMOTE> networkBoundResource(
         }
     } else {
         emitAll(fetchFromLocal().map {
-          //  Log.d("SWD", "Fetch local output, $it")
+         //   Log.d("SWD", "Fetch local output, $it")
             Resource.success(it)})
     }
 }

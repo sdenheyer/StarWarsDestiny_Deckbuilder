@@ -2,6 +2,8 @@ package com.example.starwarsdestinydeckbuilder.data.remote.data
 
 import com.example.starwarsdestinydeckbuilder.data.remote.model.CardDTO
 import com.example.starwarsdestinydeckbuilder.data.remote.model.CardSetDTO
+import com.example.starwarsdestinydeckbuilder.data.remote.model.FormatDTO
+import com.example.starwarsdestinydeckbuilder.domain.model.Format
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -25,6 +27,9 @@ interface CardService {
 
     @GET("api/public/sets/")
     suspend fun getCardSets(): Response<List<CardSetDTO>>
+
+    @GET("api/public/formats")
+    suspend fun getFormats(): Response<List<FormatDTO>>
 }
 
 object CardApi {

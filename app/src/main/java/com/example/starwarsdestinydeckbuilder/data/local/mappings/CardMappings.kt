@@ -1,11 +1,11 @@
 package com.example.starwarsdestinydeckbuilder.data.local.mappings
 
-import com.example.starwarsdestinydeckbuilder.data.local.model.CardEntity
+import com.example.starwarsdestinydeckbuilder.data.local.model.CardBaseEntity
 import com.example.starwarsdestinydeckbuilder.domain.model.Card
-import com.example.starwarsdestinydeckbuilder.domain.model.LEGALITY_ALLOWED
 import java.net.URL
+import java.util.Date
 
-fun CardEntity.toDomain() = Card(
+fun CardBaseEntity.toDomain() = Card(
     sides = if (side1 == null) { null } else { listOf(side1!!, side2!!, side3!!, side4!!, side5!!, side6!!) },
     setCode = setCode,
     setName = setName,
@@ -41,17 +41,10 @@ fun CardEntity.toDomain() = Card(
     reprints = emptyList(),
     parallelDiceOf = emptyList(),
 
-    legalityStandard = LEGALITY_ALLOWED,
-    legalityTrilogy = LEGALITY_ALLOWED,
-    legalityInfinite = LEGALITY_ALLOWED,
-    legalityARHStandard = LEGALITY_ALLOWED,
-
-    balance = null,
-
-    timestamp = 0
+    timestamp = timestamp
 )
 
-fun Card.toEntity() = CardEntity(
+fun Card.toEntity() = CardBaseEntity(
     side1 = sides?.get(0),
     side2 = sides?.get(1),
     side3 = sides?.get(2),
@@ -90,6 +83,8 @@ fun Card.toEntity() = CardEntity(
     imageSrc = imageSrc.toExternalForm(),
     label = label,
     cp = cp,
+
+    timestamp = Date().time
 // val reprints: List<Int>?,  Setup as One-to-Many
 // val parallelDiceOf: List<Int>?, Setup as One-to-Many
 
@@ -98,5 +93,5 @@ fun Card.toEntity() = CardEntity(
     val legalityInfinite: Int,
     val legalityARHStandard: Int,*/
 
-    balance = balance
+   // balance = balance
 )

@@ -4,10 +4,13 @@ import android.util.Log
 import com.example.starwarsdestinydeckbuilder.data.remote.mappings.toDomain
 import com.example.starwarsdestinydeckbuilder.data.remote.model.CardDTO
 import com.example.starwarsdestinydeckbuilder.data.remote.model.CardSetDTO
+import com.example.starwarsdestinydeckbuilder.data.remote.model.FormatDTO
 import com.example.starwarsdestinydeckbuilder.di.IoDispatcher
 import com.example.starwarsdestinydeckbuilder.domain.data.ICardNetwork
 import com.example.starwarsdestinydeckbuilder.domain.model.Card
+import com.example.starwarsdestinydeckbuilder.domain.model.CardFormat
 import com.example.starwarsdestinydeckbuilder.domain.model.CardSet
+import com.example.starwarsdestinydeckbuilder.domain.model.Format
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -53,6 +56,22 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
 
         val apiResponse = try {
             val response = cardService.getCardSets()
+            if (response?.body() != null) {
+                ApiResponse.create(response, { it!!.map { it.toDomain() } })
+            } else {
+                ApiResponse.create(error = Throwable(response.message()))
+            }
+        } catch(e: IOException) {
+            ApiResponse.create(error = Throwable("Network error"))
+        }
+        emit(apiResponse)
+
+    }.flowOn(dispatcher)
+
+    override fun getFormats(): Flow<ApiResponse<List<CardFormat>>> = flow {
+
+        val apiResponse = try {
+            val response = cardService.getFormats()
             if (response?.body() != null) {
                 ApiResponse.create(response, { it!!.map { it.toDomain() } })
             } else {

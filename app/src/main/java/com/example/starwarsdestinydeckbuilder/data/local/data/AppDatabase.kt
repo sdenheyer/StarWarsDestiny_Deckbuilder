@@ -1,22 +1,32 @@
 package com.example.starwarsdestinydeckbuilder.data.local.data
 
 import android.app.Application
-import androidx.room.Dao
 import androidx.room.Database
-import androidx.room.Insert
-import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.Update
-import com.example.starwarsdestinydeckbuilder.data.local.model.CardEntity
+import com.example.starwarsdestinydeckbuilder.data.local.model.Balance
+import com.example.starwarsdestinydeckbuilder.data.local.model.CardBaseEntity
+import com.example.starwarsdestinydeckbuilder.data.local.model.CardCode
+import com.example.starwarsdestinydeckbuilder.data.local.model.CardParellelDiceCrossRef
+import com.example.starwarsdestinydeckbuilder.data.local.model.CardReprintsCrossRef
 import com.example.starwarsdestinydeckbuilder.data.local.model.CardSetEntity
-import kotlinx.coroutines.flow.Flow
+import com.example.starwarsdestinydeckbuilder.data.local.model.CardSubtypeCrossRef
+import com.example.starwarsdestinydeckbuilder.data.local.model.BalanceCardCrossref
+import com.example.starwarsdestinydeckbuilder.data.local.model.FormatBannedCrossref
+import com.example.starwarsdestinydeckbuilder.data.local.model.FormatBaseEntity
+import com.example.starwarsdestinydeckbuilder.data.local.model.FormatRestrictedCrossref
+import com.example.starwarsdestinydeckbuilder.data.local.model.FormatSetCrossref
+import com.example.starwarsdestinydeckbuilder.data.local.model.SetCode
+import com.example.starwarsdestinydeckbuilder.data.local.model.SubTypeEntity
 
 @Database
-    (entities = [CardEntity::class, CardSetEntity::class],
+    (entities = [CardBaseEntity::class, CardSetEntity::class, CardSubtypeCrossRef::class, CardReprintsCrossRef::class, CardParellelDiceCrossRef::class,
+                SubTypeEntity::class, CardCode::class, FormatBaseEntity::class, SetCode::class, Balance::class, FormatSetCrossref::class,
+                FormatBannedCrossref::class, FormatRestrictedCrossref::class, BalanceCardCrossref::class, ],
             version = 1,
             exportSchema = false
             )
+//@TypeConverters(Converters::class)
 
 abstract class AppDatabase : RoomDatabase() {
     class Builder(private val application: Application) {
@@ -28,28 +38,4 @@ abstract class AppDatabase : RoomDatabase() {
     }
 
     abstract fun cardsDao(): CardsDao
-}
-
-@Dao
-interface CardsDao {
-    @Insert()
-    fun insertCards(vararg cards: CardEntity)
-
-    @Update
-    fun updateCard(card: CardEntity)
-
-    @Insert
-    fun insertCardSets(vararg sets: CardSetEntity)
-
-    @Update
-    fun updateCardSet(set: CardSetEntity)
-
-    @Query("SELECT * FROM cardentity WHERE setCode = :setCode")
-    fun getCardsBySet(setCode: String): Flow<List<CardEntity>>
-
-    @Query("SELECT * FROM cardentity WHERE code = :code")
-    fun getCardByCode(code: String): Flow<CardEntity>
-
-    @Query("SELECT * FROM cardsetentity")
-    fun getCardSets(): Flow<List<CardSetEntity>>
 }

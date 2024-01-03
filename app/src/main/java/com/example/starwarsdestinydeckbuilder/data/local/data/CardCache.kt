@@ -4,6 +4,10 @@ import android.database.sqlite.SQLiteConstraintException
 import android.util.Log
 import com.example.starwarsdestinydeckbuilder.data.local.mappings.toDomain
 import com.example.starwarsdestinydeckbuilder.data.local.mappings.toEntity
+import com.example.starwarsdestinydeckbuilder.data.local.model.CardCode
+import com.example.starwarsdestinydeckbuilder.data.local.model.CardParellelDiceCrossRef
+import com.example.starwarsdestinydeckbuilder.data.local.model.CardReprintsCrossRef
+import com.example.starwarsdestinydeckbuilder.data.local.model.CardSubtypeCrossRef
 import com.example.starwarsdestinydeckbuilder.data.local.model.SubTypeEntity
 import com.example.starwarsdestinydeckbuilder.domain.data.ICardCache
 import com.example.starwarsdestinydeckbuilder.domain.model.Card
@@ -15,24 +19,33 @@ import kotlinx.coroutines.flow.map
 class CardCache(
     private val dao: CardsDao
 ):ICardCache {
-    override fun getCardByCode(code: String): Flow<Card> = dao.getCardByCode(code).map { entity -> entity.card.toDomain() }
-    override fun getCardsBySet(code: String): Flow<List<Card>> = dao.getCardsBySet(code).map { it.map { entity -> entity.card.toDomain() } }
+    override fun getCardByCode(code: String): Flow<Card> = dao.getCardByCode(code).map { entity -> entity.toDomain() }
+    override fun getCardsBySet(code: String): Flow<List<Card>> = dao.getCardsBySet(code).map { it.map { entity -> entity.toDomain() } }
 
     override fun getCardSets(): Flow<List<CardSet>> = dao.getCardSets().map { it.map { it.toDomain() }}
     override fun getFormats(): Flow<List<CardFormat>> = dao.getFormats().map { it.map { it.toDomain() } }
     override suspend fun storeCards(cards: List<Card>) {
         Log.d("SWD", "Writing cards: ${cards.size}")
-        cards.forEach() {
-            val card = it.toEntity()
+        cards.forEach() { card ->
+            val cardEntity = card.toEntity()
          //   Log.d("SWD", "Writing card: ${card.code}, ${card.name}")
             try {
-                dao.insertCards(card)
+                dao.insertCards(cardEntity)
             } catch(e: SQLiteConstraintException) {
-                Log.d("SWD", "Already exists!  ${card.name}")
-                dao.updateCard(card)
+                Log.d("SWD", "Already exists!  ${cardEntity.name}")
+                dao.updateCard(cardEntity)
             }
-            it.subtypes?.forEach {
-                dao.insertSubtypes(SubTypeEntity(it.code, it.name))
+            card.subtypes?.forEach { subtype ->
+                dao.insertSubtypes(SubTypeEntity(subtype.code, subtype.name))
+                dao.insertCardSubtypesCross(CardSubtypeCrossRef(subTypeCode = subtype.code, code = card.code))
+            }
+            card.reprints.forEach { cardCode ->
+                dao.insertCardCodes(CardCode(cardCode))
+                dao.insertReprints(CardReprintsCrossRef(code = card.code, cardCode = cardCode))
+            }
+            card.parallelDiceOf.forEach { cardCode ->
+                dao.insertCardCodes(CardCode(cardCode))
+                dao.insertParellelDice(CardParellelDiceCrossRef(code = card.code, cardCode = cardCode))
             }
         }
     }

@@ -15,7 +15,8 @@ import com.example.starwarsdestinydeckbuilder.viewmodel.DetailViewModel
 
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
-fun DetailsScreen(modifier:Modifier = Modifier,
+fun DetailsScreen(isCompactScreen: Boolean,
+                    modifier:Modifier = Modifier,
                   detailViewModel: DetailViewModel = hiltViewModel()) {
 
     val card by detailViewModel.card.collectAsStateWithLifecycle(initialValue = null)

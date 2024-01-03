@@ -1,47 +1,49 @@
 package com.example.starwarsdestinydeckbuilder.data.local.mappings
 
 import com.example.starwarsdestinydeckbuilder.data.local.model.CardBaseEntity
+import com.example.starwarsdestinydeckbuilder.data.local.model.CardEntity
 import com.example.starwarsdestinydeckbuilder.domain.model.Card
+import com.example.starwarsdestinydeckbuilder.domain.model.Subtype
 import java.net.URL
 import java.util.Date
 
-fun CardBaseEntity.toDomain() = Card(
-    sides = if (side1 == null) { null } else { listOf(side1!!, side2!!, side3!!, side4!!, side5!!, side6!!) },
-    setCode = setCode,
-    setName = setName,
-    typeCode = typeCode,
-    typeName = typeName,
-    factionCode = factionCode,
-    factionName = factionName,
-    affiliationCode = affiliationCode,
-    affiliationName = affiliationName,
-    rarityCode = rarityCode,
-    rarityName = rarityName,
-    subtypes = emptyList(),
-    position = position,
-    code = code,
-    ttsCardID = ttsCardID,
-    name = name,
-    subtitle = subtitle,
-    cost = cost,
-    health = health,
-    points = points,
-    text = text,
-    deckLimit = deckLimit,
-    flavor = flavor,
-    illustrator = illustrator,
-    isUnique = isUnique,
-    hasDie = hasDie,
-    hasErrata = hasErrata,
-    flipCard = flipCard,
-    url = URL(url),
-    imageSrc = URL(imageSrc),
-    label = label,
-    cp = cp,
-    reprints = emptyList(),
-    parallelDiceOf = emptyList(),
+fun CardEntity.toDomain() = Card(
+    sides = if (card.side1 == null) { null } else { listOf(card.side1!!, card.side2!!, card.side3!!, card.side4!!, card.side5!!, card.side6!!) },
+    setCode = card.setCode,
+    setName = card.setName,
+    typeCode = card.typeCode,
+    typeName = card.typeName,
+    factionCode = card.factionCode,
+    factionName = card.factionName,
+    affiliationCode = card.affiliationCode,
+    affiliationName = card.affiliationName,
+    rarityCode = card.rarityCode,
+    rarityName = card.rarityName,
+    subtypes = subTypes.map { Subtype(code = it.subTypeCode, name = it.name) },
+    position = card.position,
+    code = card.code,
+    ttsCardID = card.ttsCardID,
+    name = card.name,
+    subtitle = card.subtitle,
+    cost = card.cost,
+    health = card.health,
+    points = card.points,
+    text = card.text,
+    deckLimit = card.deckLimit,
+    flavor = card.flavor,
+    illustrator = card.illustrator,
+    isUnique = card.isUnique,
+    hasDie = card.hasDie,
+    hasErrata = card.hasErrata,
+    flipCard = card.flipCard,
+    url = URL(card.url),
+    imageSrc = URL(card.imageSrc),
+    label = card.label,
+    cp = card.cp,
+    reprints = reprints.map { it.cardCode },
+    parallelDiceOf = parellelDiceOf.map { it.cardCode },
 
-    timestamp = timestamp
+    timestamp = card.timestamp
 )
 
 fun Card.toEntity() = CardBaseEntity(

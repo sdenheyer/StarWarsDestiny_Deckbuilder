@@ -28,7 +28,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.starwarsdestinydeckbuilder.viewmodel.CardViewModel
 
 @Composable
-fun CardListScreen(modifier: Modifier = Modifier,
+fun CardListScreen(isCompactScreen: Boolean,
+                    modifier: Modifier = Modifier,
                    cardVM: CardViewModel = hiltViewModel(),
                    onCardClick: (String) -> Unit,
 ) {
@@ -55,6 +56,6 @@ fun CardListScreen(modifier: Modifier = Modifier,
                 }
             }
         }
-        TextList(cards = cards, modifier = modifier, onCardClick)
+        TextList(isCompactScreen, cards = cards, modifier = modifier, onCardClick)
     }
 }

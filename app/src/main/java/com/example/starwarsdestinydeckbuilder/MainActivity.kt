@@ -22,6 +22,9 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,12 +55,14 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    @ExperimentalMaterial3WindowSizeClassApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             StarWarsDestinyDeckbuilderTheme {
                 setContent {
-                    DestinyApp()
+                    val widthSizeClass = calculateWindowSizeClass(this).widthSizeClass
+                    DestinyApp(widthSizeClass = widthSizeClass)
                 }
             }
         }
@@ -65,16 +70,20 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun DestinyApp(navController: NavHostController = rememberNavController()) {
+fun DestinyApp(widthSizeClass: WindowWidthSizeClass,
+    navController: NavHostController = rememberNavController()) {
+
+    val isCompactScreen = widthSizeClass == WindowWidthSizeClass.Compact
+
    NavHost(navController = navController, startDestination = "card_list") {
        composable(route = "card_list") {
-           CardListScreen() { code -> navController.navigate("card_detail/${code}")}
+           CardListScreen(isCompactScreen) { code -> navController.navigate("card_detail/${code}")}
        }
 
        composable(route = "card_detail/{code}", arguments = listOf(navArgument("code") {
            type = NavType.StringType
        })) {
-            DetailsScreen()
+            DetailsScreen(isCompactScreen)
        }
    }
 }

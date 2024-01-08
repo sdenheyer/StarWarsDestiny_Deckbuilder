@@ -11,6 +11,7 @@ import com.example.starwarsdestinydeckbuilder.di.IoDispatcher
 import com.example.starwarsdestinydeckbuilder.domain.data.Resource
 import com.example.starwarsdestinydeckbuilder.domain.model.Card
 import com.example.starwarsdestinydeckbuilder.domain.model.CardFormat
+import com.example.starwarsdestinydeckbuilder.domain.model.CardFormatList
 import com.example.starwarsdestinydeckbuilder.domain.model.CardSet
 import com.example.starwarsdestinydeckbuilder.domain.model.CardSetList
 import com.example.starwarsdestinydeckbuilder.domain.model.Format
@@ -31,12 +32,14 @@ class CardRepositoryImpl @Inject constructor(
     private val cardNetwork: CardNetwork,
     private val coroutineScope: CoroutineScope,
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
-): CardRepository {
+) : CardRepository {
 
-    override fun getCardbyCode(code: String): Flow<Resource<Card?>> {
+    override fun getCardbyCode(code: String, forceRemoteUpdate: Boolean): Flow<Resource<Card?>> {
         return networkBoundResource(
-            fetchFromLocal =  { cardCache.getCardByCode(code) },
-            shouldFetchFromRemote = { it == null },
+            fetchFromLocal = { cardCache.getCardByCode(code) },
+            shouldFetchFromRemote = { it == null ||
+                    (forceRemoteUpdate) ||
+                    (Date().time - (it.timestamp) > (it.expiry))},
             fetchFromRemote = { cardNetwork.getCardByCode(code) },
             processRemoteResponse = { },
             saveRemoteData = { coroutineScope.launch(dispatcher) { cardCache.storeCards(listOf(it)) } },
@@ -45,23 +48,30 @@ class CardRepositoryImpl @Inject constructor(
         ).flowOn(dispatcher)
     }
 
-    override fun getCardSets(): Flow<Resource<CardSetList>> {
+    override fun getCardSets(forceRemoteUpdate: Boolean): Flow<Resource<CardSetList>> {
         return networkBoundResource(
-            fetchFromLocal =  { cardCache.getCardSets() },
-            shouldFetchFromRemote = { it?.cardSets.isNullOrEmpty() },
+            fetchFromLocal = { cardCache.getCardSets() },
+            shouldFetchFromRemote = {
+                (it?.cardSets.isNullOrEmpty()) ||
+                        (forceRemoteUpdate) ||
+                        (Date().time - (it?.timestamp ?: 0L) > (it?.expiry ?: 0L))
+            },
             fetchFromRemote = { cardNetwork.getCardSets() },
-            processRemoteResponse = {  },
-            saveRemoteData = { coroutineScope.launch(dispatcher) {
-                cardCache.storeCardSets(it)
-            } },
+            processRemoteResponse = { },
+            saveRemoteData = {
+                coroutineScope.launch(dispatcher) {
+                    cardCache.storeCardSets(it)
+                }
+            },
             onFetchFailed = { _, _ -> }
         ).flowOn(dispatcher)
     }
 
-    override fun getCardsBySet(code: String): Flow<Resource<List<Card>>> {
+    override fun getCardsBySet(code: String, forceRemoteUpdate: Boolean): Flow<Resource<List<Card>>> {
         return networkBoundResource(
-            fetchFromLocal =  { cardCache.getCardsBySet(code) },
-            shouldFetchFromRemote = { it.isNullOrEmpty() },
+            fetchFromLocal = { cardCache.getCardsBySet(code) },
+            shouldFetchFromRemote = { it.isNullOrEmpty() ||
+                    (forceRemoteUpdate) },
             fetchFromRemote = { cardNetwork.getCardsBySet(code) },
             processRemoteResponse = { },
             saveRemoteData = { coroutineScope.launch(dispatcher) { cardCache.storeCards(it) } },
@@ -69,10 +79,12 @@ class CardRepositoryImpl @Inject constructor(
         ).flowOn(dispatcher)
     }
 
-    override fun getCardFormats(): Flow<Resource<List<CardFormat>>> {
+    override fun getCardFormats(forceRemoteUpdate: Boolean): Flow<Resource<CardFormatList>> {
         return networkBoundResource(
-            fetchFromLocal =  { cardCache.getFormats() },
-            shouldFetchFromRemote = { it.isNullOrEmpty() },
+            fetchFromLocal = { cardCache.getFormats() },
+            shouldFetchFromRemote = { it?.cardFormats.isNullOrEmpty() ||
+                    (forceRemoteUpdate) ||
+                    (Date().time - (it?.timestamp ?: 0L) > (it?.expiry ?: 0L))},
             fetchFromRemote = { cardNetwork.getFormats() },
             processRemoteResponse = { },
             saveRemoteData = { coroutineScope.launch(dispatcher) { cardCache.storeFormats(it) } },
@@ -80,5 +92,5 @@ class CardRepositoryImpl @Inject constructor(
         ).flowOn(dispatcher)
     }
 
-   // fun getFormats(): Flow<ApiResponse<List<CardFormat>>> = cardNetwork.getFormats()
+    // fun getFormats(): Flow<ApiResponse<List<CardFormat>>> = cardNetwork.getFormats()
 }

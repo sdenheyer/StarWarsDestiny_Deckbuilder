@@ -7,6 +7,7 @@ import com.example.starwarsdestinydeckbuilder.data.remote.data.ApiSuccessRespons
 import com.example.starwarsdestinydeckbuilder.domain.data.Resource
 import com.example.starwarsdestinydeckbuilder.domain.model.Card
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -67,11 +68,12 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
 
     private val cardSetSelection = MutableStateFlow("")
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     val cardsFlow = cardSetSelection.transformLatest { set ->
         if (set.isNotEmpty()) {
             //Log.d("SWD", "Generating cardUI: $set")
-            emitAll(cardRepo.getCardsBySet(set).map { resource ->
-                if (resource?.status == Resource.Status.SUCCESS && !resource.data.isNullOrEmpty()) {
+            emitAll(cardRepo.getCardsBySet(set, false).map { resource ->
+                if (resource.status == Resource.Status.SUCCESS && !resource.data.isNullOrEmpty()) {
                     resource.data.map { it.toCardUi() }
                 } else {
                     emptyList()
@@ -80,7 +82,7 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
         }
       }
 
-    val cardSetsFlow = cardRepo.getCardSets()
+    val cardSetsFlow = cardRepo.getCardSets(false)
 
     val cardSetMenuItemsState = cardSetsFlow.map { response ->
         if (response.status == Resource.Status.SUCCESS) {

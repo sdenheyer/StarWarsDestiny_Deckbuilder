@@ -10,8 +10,6 @@ import androidx.room.Relation
 data class FormatBaseEntity(
     val gameTypeName: String,
     @PrimaryKey val gameTypeCode: String,
-    val timeStamp: Long,
-    val expiry: Long,
 )
 
 @Entity
@@ -80,4 +78,11 @@ data class FormatEntity(
         associateBy = Junction(BalanceCardCrossref::class)
     )
     val balance: List<Balance>,
+)
+
+@Entity
+data class FormatTimeEntity(
+    @PrimaryKey val id: Int = 0,   //Yes, this is on purpose - only want one and replace always
+    val timestamp: Long,
+    val expiry: Long,
 )

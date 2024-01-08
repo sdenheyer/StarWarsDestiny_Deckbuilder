@@ -12,5 +12,4 @@ fun FormatDTO.toDomain() = CardFormat(
     restricted = data.restricted ?: emptyList(),
     balance = data.balance ?: emptyMap(),
     restrictedPairs = data.restrictedPairs ?: emptyMap(),
-    timestamp = Date().time,
 )

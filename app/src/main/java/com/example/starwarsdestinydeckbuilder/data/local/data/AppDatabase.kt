@@ -17,13 +17,14 @@ import com.example.starwarsdestinydeckbuilder.data.local.model.FormatBannedCross
 import com.example.starwarsdestinydeckbuilder.data.local.model.FormatBaseEntity
 import com.example.starwarsdestinydeckbuilder.data.local.model.FormatRestrictedCrossref
 import com.example.starwarsdestinydeckbuilder.data.local.model.FormatSetCrossref
+import com.example.starwarsdestinydeckbuilder.data.local.model.FormatTimeEntity
 import com.example.starwarsdestinydeckbuilder.data.local.model.SetCode
 import com.example.starwarsdestinydeckbuilder.data.local.model.SubTypeEntity
 
 @Database
     (entities = [CardBaseEntity::class, CardSetEntity::class, CardSubtypeCrossRef::class, CardReprintsCrossRef::class, CardParellelDiceCrossRef::class,
                 SubTypeEntity::class, CardCode::class, FormatBaseEntity::class, SetCode::class, Balance::class, FormatSetCrossref::class,
-                FormatBannedCrossref::class, FormatRestrictedCrossref::class, BalanceCardCrossref::class, CardSetTimeEntity::class],
+                FormatBannedCrossref::class, FormatRestrictedCrossref::class, BalanceCardCrossref::class, CardSetTimeEntity::class, FormatTimeEntity::class],
             version = 1,
             exportSchema = false
             )

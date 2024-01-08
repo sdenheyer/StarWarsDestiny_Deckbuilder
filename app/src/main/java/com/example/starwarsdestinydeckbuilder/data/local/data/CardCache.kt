@@ -14,12 +14,12 @@ import com.example.starwarsdestinydeckbuilder.data.local.model.CardSubtypeCrossR
 import com.example.starwarsdestinydeckbuilder.data.local.model.FormatBannedCrossref
 import com.example.starwarsdestinydeckbuilder.data.local.model.FormatRestrictedCrossref
 import com.example.starwarsdestinydeckbuilder.data.local.model.FormatSetCrossref
+import com.example.starwarsdestinydeckbuilder.data.local.model.FormatTimeEntity
 import com.example.starwarsdestinydeckbuilder.data.local.model.SetCode
 import com.example.starwarsdestinydeckbuilder.data.local.model.SubTypeEntity
 import com.example.starwarsdestinydeckbuilder.domain.data.ICardCache
 import com.example.starwarsdestinydeckbuilder.domain.model.Card
-import com.example.starwarsdestinydeckbuilder.domain.model.CardFormat
-import com.example.starwarsdestinydeckbuilder.domain.model.CardSet
+import com.example.starwarsdestinydeckbuilder.domain.model.CardFormatList
 import com.example.starwarsdestinydeckbuilder.domain.model.CardSetList
 import com.example.starwarsdestinydeckbuilder.domain.model.CodeOrCard
 import kotlinx.coroutines.flow.Flow
@@ -30,11 +30,8 @@ class CardCache(
     private val dao: CardsDao
 ):ICardCache {
     override fun getCardByCode(code: String): Flow<Card?> = dao.getCardByCode(code).map { entity ->
-        if (entity != null) {
-            entity.toDomain()
-        } else {
-            null
-        }}
+        entity?.toDomain()
+    }
 
     override fun getCardsBySet(code: String): Flow<List<Card>> = dao.getCardsBySet(code).map { it.map { entity -> entity.toDomain() } }
 
@@ -43,7 +40,9 @@ class CardCache(
 
         CardSetList(timestamp = timestamp.timestamp, expiry = timestamp.expiry, cardSets = it.map { it.toDomain() })
     }
-    override fun getFormats(): Flow<List<CardFormat>> = dao.getFormats().map { it.map { it.toDomain() } }
+    override fun getFormats(): Flow<CardFormatList> = dao.getFormats().map {
+        list -> CardFormatList(timestamp = Date().time, expiry = 24 * 60 * 60 * 1000, cardFormats = list.map { it.toDomain() })
+    }
     override suspend fun storeCards(cards: List<Card>) {
        // Log.d("SWD", "Writing cards: ${cards.size}")
         cards.forEach() { card ->
@@ -90,8 +89,8 @@ class CardCache(
         dao.insertSetTimestamp(CardSetTimeEntity(timestamp = sets.timestamp, expiry = sets.expiry))
     }
 
-    override suspend fun storeFormats(formats: List<CardFormat>) {
-        formats.forEach {
+    override suspend fun storeFormats(formatlist: CardFormatList) {
+        formatlist.cardFormats.forEach {
             val format = it.toEntity()
             try {
                 dao.insertFormats(format.cardFormat)
@@ -119,5 +118,6 @@ class CardCache(
                 dao.insertRestrictedCardsCrossRef(FormatRestrictedCrossref(gameTypeCode = format.cardFormat.gameTypeCode, cardCode = map.key))
             }
         }
+        dao.insertFormatTimestamp(FormatTimeEntity(timestamp = formatlist.timestamp, expiry = formatlist.expiry))
     }
 }

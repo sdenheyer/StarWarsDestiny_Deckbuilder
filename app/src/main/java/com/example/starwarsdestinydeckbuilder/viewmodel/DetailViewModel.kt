@@ -3,7 +3,7 @@ package com.example.starwarsdestinydeckbuilder.viewmodel
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.example.starwarsdestinydeckbuilder.domain.GetCardWithFormat
+import com.example.starwarsdestinydeckbuilder.domain.usecases.GetCardWithFormat
 import com.example.starwarsdestinydeckbuilder.domain.data.Resource
 import com.example.starwarsdestinydeckbuilder.domain.model.Card
 import com.example.starwarsdestinydeckbuilder.domain.model.CodeOrCard

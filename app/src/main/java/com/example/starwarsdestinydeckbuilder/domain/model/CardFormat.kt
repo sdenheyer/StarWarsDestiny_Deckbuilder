@@ -8,6 +8,10 @@ data class CardFormat(
     val restricted: List<String>,
     val balance: Map<String, String>,
     val restrictedPairs: Map<String, Array<String>>,
+)
+
+data class CardFormatList(
     val timestamp: Long,
-    val expiry: Long = 0,
+    val expiry: Long,
+    val cardFormats: List<CardFormat>
 )

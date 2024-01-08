@@ -9,6 +9,7 @@ import com.example.starwarsdestinydeckbuilder.di.IoDispatcher
 import com.example.starwarsdestinydeckbuilder.domain.data.ICardNetwork
 import com.example.starwarsdestinydeckbuilder.domain.model.Card
 import com.example.starwarsdestinydeckbuilder.domain.model.CardFormat
+import com.example.starwarsdestinydeckbuilder.domain.model.CardFormatList
 import com.example.starwarsdestinydeckbuilder.domain.model.CardSet
 import com.example.starwarsdestinydeckbuilder.domain.model.CardSetList
 import com.example.starwarsdestinydeckbuilder.domain.model.Format
@@ -16,6 +17,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import okhttp3.Headers
 import retrofit2.Response
 import java.io.IOException
 import java.lang.NumberFormatException
@@ -29,7 +31,8 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
         val apiResponse = try {
         val response = cardService.getCardByCode(code)
         if (response.body() != null) {
-            ApiResponse.create(response, { it!!.toDomain() })
+            val expiry = getExpiry(response.headers())
+            ApiResponse.create(response, { it!!.toDomain().copy(timestamp = Date().time, expiry = expiry) })
         } else {
             ApiResponse.create(error = Throwable(response.message()))
         }
@@ -43,9 +46,10 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
 
         val apiResponse = try {
             val response = cardService.getCardsBySet(code)
-            Log.d("SWD", "Response rec'd: ${response.body()?.size}")
+          //  Log.d("SWD", "Response rec'd: ${response.body()?.size}")
+            val expiry = getExpiry(response.headers())
             if (response.body() != null) {
-                ApiResponse.create(response, { it!!.map { it.toDomain() } })
+                ApiResponse.create(response, { it!!.map { it.toDomain().copy(timestamp = Date().time, expiry = expiry) } })
             } else {
                 ApiResponse.create(error = Throwable(response.message()))
             }
@@ -60,22 +64,11 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
         val apiResponse = try {
             val response = cardService.getCardSets()
             if (response?.body() != null) {
-                ApiResponse.create(response, {
+                ApiResponse.create(response) {
                     val list = it!!.map { it.toDomain() }
-                    var expiry = 24 * 60 * 60 * 1000L
-                    val cacheControl = response.headers().values("cache-control")
-                    cacheControl.forEach{
-                        if (it.startsWith("max-age", true)) {
-                            try { expiry = it.substringAfter("public, max-age=").toLong() * 1000
-                                Log.d("SWD", "Expiry: $expiry")
-                            } catch(e: NumberFormatException) {
-                                Log.d("SWD", "String to L:  Nope!")
-                            }
-
-                        }
-                    }
+                    val expiry = getExpiry(response.headers())
                     CardSetList(timestamp = Date().time, expiry = expiry, list)
-                })
+                }
             } else {
                 ApiResponse.create(error = Throwable(response.message()))
             }
@@ -86,13 +79,15 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
 
     }.flowOn(dispatcher)
 
-    override fun getFormats(): Flow<ApiResponse<List<CardFormat>>> = flow {
+    override fun getFormats(): Flow<ApiResponse<CardFormatList>> = flow {
 
         val apiResponse = try {
             val response = cardService.getFormats()
           //  Log.d("SWD", response.body().toString())
-            if (response?.body() != null) {
-                ApiResponse.create(response) { list -> list!!.map { it.toDomain() } }
+            val list = response.body()?.map { it.toDomain() } ?: emptyList()
+            val expiry = getExpiry(response.headers())
+            if (response.body() != null) {
+                ApiResponse.create(response) { CardFormatList(timestamp = Date().time, expiry = expiry, cardFormats = list) }
             } else {
                 ApiResponse.create(error = Throwable(response.message()))
             }
@@ -102,4 +97,23 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
         emit(apiResponse)
 
     }.flowOn(dispatcher)
+}
+
+fun getExpiry(headers: Headers): Long {
+    var expiry = 24 * 60 * 60 * 1000L
+    val cacheControl = headers.values("cache-control")
+    cacheControl.forEach {
+        if (!it.endsWith("public", true)) {
+            try {
+               // Log.d("SWD", "Cache control header: $it")
+                expiry = it.substringAfter("=").toLong() * 1000
+                // expiry = 60 * 1000 //TEST VALUE
+                Log.d("SWD", "Expiry: $expiry")
+            } catch (e: NumberFormatException) {
+                Log.d("SWD", "Couldn't find an integer in the string")
+            }
+
+        }
+    }
+    return expiry
 }

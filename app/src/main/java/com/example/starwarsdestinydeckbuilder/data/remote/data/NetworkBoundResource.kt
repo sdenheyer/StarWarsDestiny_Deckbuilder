@@ -16,14 +16,14 @@ inline fun <DB, REMOTE> networkBoundResource(
     crossinline saveRemoteData: (REMOTE) -> Unit = { Unit },
     crossinline onFetchFailed: (errorBody: String?, statusCode: Int) -> Unit = { _: String?, _: Int -> Unit }
     ) = flow<Resource<DB>> {
-        Log.d("SWD", "Network resource flows initializing...")
+       // Log.d("SWD", "Network resource flows initializing...")
 
         emit(Resource.loading(null))
 
     val localData = fetchFromLocal().first()
 
     if (shouldFetchFromRemote(localData)) {
-
+        Log.d("SWD", "Fetching from remote...")
         emit(Resource.loading(localData))
 
         fetchFromRemote().collect {apiResponse ->
@@ -47,15 +47,17 @@ inline fun <DB, REMOTE> networkBoundResource(
                             it
                         )
                     })
-                } else -> {
+                }
+                else -> {
 
                 }
             }
 
         }
     } else {
+        Log.d("SWD", "Fetch from local")
         emitAll(fetchFromLocal().map {
-         //   Log.d("SWD", "Fetch local output, $it")
+          //  Log.d("SWD", "Fetch local output, $it")
             Resource.success(it)})
     }
 }

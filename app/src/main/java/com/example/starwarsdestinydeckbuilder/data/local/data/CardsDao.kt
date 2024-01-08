@@ -21,6 +21,7 @@ import com.example.starwarsdestinydeckbuilder.data.local.model.FormatBaseEntity
 import com.example.starwarsdestinydeckbuilder.data.local.model.FormatEntity
 import com.example.starwarsdestinydeckbuilder.data.local.model.FormatRestrictedCrossref
 import com.example.starwarsdestinydeckbuilder.data.local.model.FormatSetCrossref
+import com.example.starwarsdestinydeckbuilder.data.local.model.FormatTimeEntity
 import com.example.starwarsdestinydeckbuilder.data.local.model.SetCode
 import com.example.starwarsdestinydeckbuilder.data.local.model.SubTypeEntity
 import kotlinx.coroutines.flow.Flow
@@ -54,7 +55,7 @@ interface CardsDao {
 
     @Transaction
     @Query("SELECT * FROM cardbaseentity WHERE code = :code")
-    fun getCardByCode(code: String): Flow<CardEntity>
+    fun getCardByCode(code: String): Flow<CardEntity?>
 
 
     @Insert
@@ -93,11 +94,17 @@ interface CardsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertBalanceCrossRef(vararg balanceCardCrossref: BalanceCardCrossref)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertFormatTimestamp(formatTimestamp: FormatTimeEntity)
+
     @Update
     fun updateFormat(format: FormatBaseEntity)
 
     @Query("SELECT * FROM formatbaseentity")
     fun getFormats(): Flow<List<FormatEntity>>
+
+    @Query("SELECT * FROM formattimeentity")
+    suspend fun getFormatTimestamp(): FormatTimeEntity?
 
 
 }

@@ -13,7 +13,6 @@ available = Date(available),
 known = known,
 total = total,
 url = URL(url),
-timestamp = 0
 )
 
 fun CardSet.toEntity() = CardSetEntity(

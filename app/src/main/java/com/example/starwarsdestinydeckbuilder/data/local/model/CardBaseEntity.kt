@@ -46,6 +46,7 @@ data class CardBaseEntity(
     val cp: Int,
 
     val timestamp: Long,
+    val expiry: Long,
 )
 
 @Entity

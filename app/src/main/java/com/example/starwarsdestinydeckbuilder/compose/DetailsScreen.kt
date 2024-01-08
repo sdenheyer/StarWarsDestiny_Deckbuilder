@@ -30,8 +30,19 @@ fun DetailsScreen(isCompactScreen: Boolean,
             Text(card?.text ?: "")
             Text(card?.illustrator ?: "")
             Text("${card?.setName} #${card?.position}")
-            Text(card?.reprints?.joinToString(separator = ". ") ?: "")
-            Text(card?.parellelDice?.joinToString(separator = ". ") ?: "")
+            if (!card?.reprints.isNullOrEmpty()) {
+                Text("Reprinted in:")
+                card?.reprints!!.forEach {
+                    Text("${it.setName} #${it.position}")
+                }
+            }
+            if (!card?.parellelDice.isNullOrEmpty()) {
+                Text("Used as parallel die by:")
+                card?.parellelDice!!.forEach {
+                    Text("${it.setName} #${it.position}")
+                }
+            }
+            Text(card?.formats.toString())
         }
         GlideImage(model = card?.imagesrc, contentDescription = "", modifier = Modifier.weight(1f))
     }

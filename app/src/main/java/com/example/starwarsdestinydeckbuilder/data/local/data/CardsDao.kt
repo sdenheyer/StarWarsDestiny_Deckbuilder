@@ -14,6 +14,7 @@ import com.example.starwarsdestinydeckbuilder.data.local.model.CardEntity
 import com.example.starwarsdestinydeckbuilder.data.local.model.CardParellelDiceCrossRef
 import com.example.starwarsdestinydeckbuilder.data.local.model.CardReprintsCrossRef
 import com.example.starwarsdestinydeckbuilder.data.local.model.CardSetEntity
+import com.example.starwarsdestinydeckbuilder.data.local.model.CardSetTimeEntity
 import com.example.starwarsdestinydeckbuilder.data.local.model.CardSubtypeCrossRef
 import com.example.starwarsdestinydeckbuilder.data.local.model.FormatBannedCrossref
 import com.example.starwarsdestinydeckbuilder.data.local.model.FormatBaseEntity
@@ -59,12 +60,17 @@ interface CardsDao {
     @Insert
     fun insertCardSets(vararg sets: CardSetEntity)
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertSetTimestamp(setTimestamp: CardSetTimeEntity)
+
     @Update
     fun updateCardSet(set: CardSetEntity)
 
     @Query("SELECT * FROM cardsetentity")
     fun getCardSets(): Flow<List<CardSetEntity>>
 
+    @Query("SELECT * FROM cardsettimeentity")
+    suspend fun getSetTimestamp(): CardSetTimeEntity?
 
     @Insert
     fun insertFormats(vararg formats: FormatBaseEntity)

@@ -36,7 +36,7 @@ data class CardDTO (
     val label: String,
     val cp: Int,
     val reprints: List<String>?,
-    val paralleldiceof: List<String>?,
+    val parallel_dice_of: List<String>?,
 ) {
     companion object {
         val testCard =
@@ -77,7 +77,7 @@ data class CardDTO (
                 label = "<span class=\"icon-set-AW\"></span> Captain Phasma - Elite Trooper",
                 cp = 1215,
                 reprints = null,
-                paralleldiceof = null,
+                parallel_dice_of = null,
             )
     }
 }

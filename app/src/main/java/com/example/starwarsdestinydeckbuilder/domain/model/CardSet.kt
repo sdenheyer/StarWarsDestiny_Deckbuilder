@@ -11,6 +11,11 @@ data class CardSet(
     val known: Int,
     val total: Int,
     val url: URL,
-
-    val timestamp: Long,
     )
+
+data class CardSetList(
+    val timestamp: Long,
+    val expiry: Long,
+    val cardSets: List<CardSet>
+)
+

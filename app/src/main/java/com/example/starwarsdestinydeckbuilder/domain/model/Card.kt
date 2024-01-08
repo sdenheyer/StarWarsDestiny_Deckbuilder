@@ -2,10 +2,6 @@ package com.example.starwarsdestinydeckbuilder.domain.model
 
 import java.net.URL
 
-const val LEGALITY_ALLOWED = 1
-const val LEGALITY_RESTRICTED = 2
-const val LEGALITY_BANNED = 0
-
 data class Card(
     val sides: List<String>?,
     val setCode: String,
@@ -39,12 +35,16 @@ data class Card(
     val imageSrc: URL,
     val label: String,
     val cp: Int,
-    val reprints: List<String>,
-    val parallelDiceOf: List<String>,
+    val reprints: List<CodeOrCard<*>> = emptyList(),
+    val parallelDiceOf: List<CodeOrCard<*>> = emptyList(),
+
+    //val reprintCards: List<Card> = emptyList(),
+    //val parellelDiceCards: List<Card> = emptyList(),
 
     val formats: List<Format>? = null,
 
     val timestamp: Long,
+    val expiry: Long = 0,
 )
 
 data class Subtype(
@@ -53,8 +53,7 @@ data class Subtype(
 )
 
 data class Format(
-    val name: String,
-    val code: String,
-    val legality: String,
-    val balance: String?
+    val gameType: String,
+    val legality: String? = null,
+    val balance: String? = null,
 )

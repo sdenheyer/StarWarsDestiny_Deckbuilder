@@ -1,5 +1,6 @@
 package com.example.starwarsdestinydeckbuilder.data
 
+import android.util.Log
 import com.example.starwarsdestinydeckbuilder.data.local.data.CardCache
 import com.example.starwarsdestinydeckbuilder.data.remote.data.ApiResponse
 import com.example.starwarsdestinydeckbuilder.data.remote.data.CardNetwork
@@ -11,6 +12,7 @@ import com.example.starwarsdestinydeckbuilder.domain.data.Resource
 import com.example.starwarsdestinydeckbuilder.domain.model.Card
 import com.example.starwarsdestinydeckbuilder.domain.model.CardFormat
 import com.example.starwarsdestinydeckbuilder.domain.model.CardSet
+import com.example.starwarsdestinydeckbuilder.domain.model.CardSetList
 import com.example.starwarsdestinydeckbuilder.domain.model.Format
 import com.example.starwarsdestinydeckbuilder.domain.repositories.CardRepository
 import kotlinx.coroutines.CoroutineDispatcher
@@ -20,6 +22,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.lang.NumberFormatException
+import java.util.Date
 import javax.inject.Inject
 
 class CardRepositoryImpl @Inject constructor(
@@ -29,7 +33,7 @@ class CardRepositoryImpl @Inject constructor(
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
 ): CardRepository {
 
-    override fun getCardbyCode(code: String): Flow<Resource<Card>> {
+    override fun getCardbyCode(code: String): Flow<Resource<Card?>> {
         return networkBoundResource(
             fetchFromLocal =  { cardCache.getCardByCode(code) },
             shouldFetchFromRemote = { it == null },
@@ -41,13 +45,15 @@ class CardRepositoryImpl @Inject constructor(
         ).flowOn(dispatcher)
     }
 
-    override fun getCardSets(): Flow<Resource<List<CardSet>>> {
+    override fun getCardSets(): Flow<Resource<CardSetList>> {
         return networkBoundResource(
             fetchFromLocal =  { cardCache.getCardSets() },
-            shouldFetchFromRemote = { it.isNullOrEmpty() },
+            shouldFetchFromRemote = { it?.cardSets.isNullOrEmpty() },
             fetchFromRemote = { cardNetwork.getCardSets() },
-            processRemoteResponse = { },
-            saveRemoteData = { coroutineScope.launch(dispatcher) { cardCache.storeCardSets(it) } },
+            processRemoteResponse = {  },
+            saveRemoteData = { coroutineScope.launch(dispatcher) {
+                cardCache.storeCardSets(it)
+            } },
             onFetchFailed = { _, _ -> }
         ).flowOn(dispatcher)
     }

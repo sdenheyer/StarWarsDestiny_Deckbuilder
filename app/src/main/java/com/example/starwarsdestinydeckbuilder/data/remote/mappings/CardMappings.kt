@@ -2,7 +2,9 @@ package com.example.starwarsdestinydeckbuilder.data.remote.mappings
 
 import com.example.starwarsdestinydeckbuilder.data.remote.model.CardDTO
 import com.example.starwarsdestinydeckbuilder.domain.model.Card
+import com.example.starwarsdestinydeckbuilder.domain.model.CodeOrCard
 import java.net.URL
+import java.util.Date
 
 fun CardDTO.toDomain() = Card(
     sides = sides,
@@ -37,10 +39,10 @@ fun CardDTO.toDomain() = Card(
     imageSrc = URL(imagesrc),
     label = label,
     cp = cp,
-    reprints = reprints ?: emptyList(),
-    parallelDiceOf = paralleldiceof ?: emptyList(),
+    reprints = reprints?.map { CodeOrCard.CodeValue(it) } ?: emptyList(),
+    parallelDiceOf = parallel_dice_of?.map { CodeOrCard.CodeValue(it) } ?: emptyList(),
 
-    timestamp = 0
+    timestamp = Date().time,
 )
 
 

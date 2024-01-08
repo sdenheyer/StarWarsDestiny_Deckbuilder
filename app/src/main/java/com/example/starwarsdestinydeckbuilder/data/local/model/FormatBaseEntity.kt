@@ -11,6 +11,7 @@ data class FormatBaseEntity(
     val gameTypeName: String,
     @PrimaryKey val gameTypeCode: String,
     val timeStamp: Long,
+    val expiry: Long,
 )
 
 @Entity
@@ -42,10 +43,11 @@ data class Balance(
     val cardCode: String,
 )
 
-@Entity(primaryKeys = ["balance", "gameTypeCode"])
+@Entity(primaryKeys = ["balance", "cardCode", "gameTypeCode"])
 data class BalanceCardCrossref(
     val gameTypeCode: String,
     val balance: String,
+    val cardCode: String,
 )
 
 data class FormatEntity(

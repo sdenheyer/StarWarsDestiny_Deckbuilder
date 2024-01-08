@@ -2,11 +2,9 @@ package com.example.starwarsdestinydeckbuilder.data.local.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.net.URL
-import java.sql.Date
+
 @Entity
 data class CardSetEntity(
-
     val name: String,
     @PrimaryKey val code: String,
     val position: Int,
@@ -15,3 +13,10 @@ data class CardSetEntity(
     val total: Int,
     val url: String,
 )
+
+@Entity
+data class CardSetTimeEntity(
+    @PrimaryKey val id: Int = 0,   //Yes, this is on purpose - only want one and replace always
+    val timestamp: Long,
+    val expiry: Long,
+    )

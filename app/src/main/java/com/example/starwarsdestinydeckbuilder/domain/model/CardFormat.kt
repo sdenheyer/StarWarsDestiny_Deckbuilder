@@ -7,5 +7,7 @@ data class CardFormat(
     val banned: List<String>,
     val restricted: List<String>,
     val balance: Map<String, String>,
-    val restrictedPairs: Map<String, Array<String>>?
+    val restrictedPairs: Map<String, Array<String>>,
+    val timestamp: Long,
+    val expiry: Long = 0,
 )

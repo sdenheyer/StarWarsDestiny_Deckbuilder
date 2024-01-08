@@ -84,7 +84,7 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
 
     val cardSetMenuItemsState = cardSetsFlow.map { response ->
         if (response.status == Resource.Status.SUCCESS) {
-            response.data?.map {
+            response.data?.cardSets?.map {
                 CardSetMenuItem(
                     code = it.code,
                     name = it.name,

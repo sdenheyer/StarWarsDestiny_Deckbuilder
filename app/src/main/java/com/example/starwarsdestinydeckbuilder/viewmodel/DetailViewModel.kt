@@ -3,15 +3,13 @@ package com.example.starwarsdestinydeckbuilder.viewmodel
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import com.example.starwarsdestinydeckbuilder.data.CardRepositoryImpl
+import com.example.starwarsdestinydeckbuilder.domain.GetCardWithFormat
 import com.example.starwarsdestinydeckbuilder.domain.data.Resource
 import com.example.starwarsdestinydeckbuilder.domain.model.Card
-import com.example.starwarsdestinydeckbuilder.domain.repositories.CardRepository
+import com.example.starwarsdestinydeckbuilder.domain.model.CodeOrCard
+import com.example.starwarsdestinydeckbuilder.domain.model.Format
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.transform
-import kotlinx.coroutines.flow.transformLatest
 import java.net.URL
 import javax.inject.Inject
 
@@ -39,9 +37,17 @@ data class CardDetailUi(
     val illustrator: String?,
     val setName: String,
     val position: Int,
-    val reprints: List<String>?,
-    val parellelDice: List<String>?,
+    val reprints: List<MiniCard>,
+    val parellelDice: List<MiniCard>,
     val imagesrc: URL,
+    val formats: List<Format>
+)
+
+data class MiniCard(
+    val name: String,
+    val code: String,
+    val setName: String,
+    val position: Int
 )
 
 fun Card.toDetailUi() = CardDetailUi(
@@ -68,19 +74,38 @@ fun Card.toDetailUi() = CardDetailUi(
     illustrator = illustrator,
     setName = setName,
     position = position,
-    reprints = reprints,
-    parellelDice = parallelDiceOf,
+    reprints = reprints.mapNotNull {
+        when (it) {
+            is CodeOrCard.CardValue -> it.value.toMiniCard()
+            is CodeOrCard.CodeValue -> null
+            }
+        },
+    parellelDice = parallelDiceOf.mapNotNull {
+        when (it) {
+            is CodeOrCard.CardValue -> it.value.toMiniCard()
+            is CodeOrCard.CodeValue -> null
+        }
+    },
     imagesrc = imageSrc,
+    formats = formats ?: emptyList()
 )
+
+fun Card.toMiniCard() = MiniCard(
+    name = name,
+    code = code,
+    setName = setName,
+    position = position
+)
+
 @HiltViewModel
 class DetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    cardRepo: CardRepositoryImpl,
+    getCardWithFormat: GetCardWithFormat,
 ) : ViewModel() {
 
     val code: String = checkNotNull(savedStateHandle.get("code"))
 
-    val card = cardRepo.getCardbyCode(code).transform { resource ->
+    val card = getCardWithFormat(code).transform { resource ->
         if (resource?.status == Resource.Status.SUCCESS && resource.data != null) {
             emit(resource.data.toDetailUi())
         }

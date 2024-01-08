@@ -3,6 +3,7 @@ package com.example.starwarsdestinydeckbuilder.data.local.mappings
 import com.example.starwarsdestinydeckbuilder.data.local.model.CardBaseEntity
 import com.example.starwarsdestinydeckbuilder.data.local.model.CardEntity
 import com.example.starwarsdestinydeckbuilder.domain.model.Card
+import com.example.starwarsdestinydeckbuilder.domain.model.CodeOrCard
 import com.example.starwarsdestinydeckbuilder.domain.model.Subtype
 import java.net.URL
 import java.util.Date
@@ -40,10 +41,11 @@ fun CardEntity.toDomain() = Card(
     imageSrc = URL(card.imageSrc),
     label = card.label,
     cp = card.cp,
-    reprints = reprints.map { it.cardCode },
-    parallelDiceOf = parellelDiceOf.map { it.cardCode },
+    reprints = reprints.map { CodeOrCard.CodeValue(it.cardCode) },
+    parallelDiceOf = parellelDiceOf.map { CodeOrCard.CodeValue(it.cardCode) },
 
-    timestamp = card.timestamp
+    timestamp = card.timestamp,
+    expiry = card.expiry,
 )
 
 fun Card.toEntity() = CardBaseEntity(
@@ -86,7 +88,9 @@ fun Card.toEntity() = CardBaseEntity(
     label = label,
     cp = cp,
 
-    timestamp = Date().time
+    timestamp = Date().time,
+    expiry = expiry
+
 // val reprints: List<Int>?,  Setup as One-to-Many
 // val parallelDiceOf: List<Int>?, Setup as One-to-Many
 

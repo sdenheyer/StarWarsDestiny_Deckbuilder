@@ -14,6 +14,5 @@ available = Date(SimpleDateFormat("yyyy-MM-dd").parse(available).time),
 known = known,
 total = total,
 url = URL(url),
-    timestamp = 0
 )
 

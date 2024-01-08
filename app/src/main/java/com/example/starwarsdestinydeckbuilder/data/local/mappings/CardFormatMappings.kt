@@ -13,6 +13,7 @@ fun CardFormat.toEntity() = FormatEntity(
         gameTypeName = gameTypeName,
         gameTypeCode = gameTypeCode,
         timeStamp = Date().time,
+        expiry = expiry
     ),
     includedSets = includedSets.map { SetCode(it) },
     restricted = restricted.map { CardCode(it) },
@@ -28,5 +29,7 @@ fun FormatEntity.toDomain() = CardFormat(
     restricted = restricted.map { it.cardCode },
     banned = banned.map { it.cardCode },
     balance = balance.associate { Pair(it.cardCode, it.balance) },
-    restrictedPairs = null,
+    restrictedPairs = emptyMap(),
+    timestamp = cardFormat.timeStamp,
+    expiry = cardFormat.expiry,
 )

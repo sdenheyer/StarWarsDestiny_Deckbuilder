@@ -34,12 +34,7 @@ data class CardUi(
     val health: Int?,
     val type: String,
     val rarity: String,
-    val die1: String,
-    val die2: String,
-    val die3: String,
-    val die4: String,
-    val die5: String,
-    val die6: String,
+    val diceRef: List<String>,
     val set: String,
 )
 
@@ -54,12 +49,7 @@ fun Card.toCardUi() = CardUi(
     health = health,
     type = typeName,
     rarity = rarityName,
-    die1 = sides?.get(0) ?: "-",
-    die2 = sides?.get(1) ?: "-",
-    die3 = sides?.get(2) ?: "-",
-    die4 = sides?.get(3) ?: "-",
-    die5 = sides?.get(4) ?: "-",
-    die6 = sides?.get(5) ?: "-",
+    diceRef = sides ?: emptyList(),
     set = setName
 )
 

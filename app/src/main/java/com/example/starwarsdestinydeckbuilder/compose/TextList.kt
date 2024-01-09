@@ -1,11 +1,11 @@
 package com.example.starwarsdestinydeckbuilder.compose
 
-import android.content.res.Resources
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.starwarsdestinydeckbuilder.ui.theme.getColorFromString
 import com.example.starwarsdestinydeckbuilder.viewmodel.CardUi
 
 @Composable
@@ -126,14 +127,8 @@ fun CardItem(modifier: Modifier, card: CardUi, onItemClick: (String) -> Unit) {
 
 @Composable
 fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> Unit) {
-    val color = when (card.color) {
-        "red" -> Color.Red
-        "blue" -> Color.Blue
-        "gray" -> Color.Gray
-        "yellow" -> Color.Yellow
-        else -> MaterialTheme.colorScheme.background
-    }
-    Column(modifier = modifier.background(color = color)
+    val cardColor = getColorFromString(card.color)
+    Column(modifier = modifier.background(color = cardColor)
         .clickable { onItemClick(card.code) })
     {
         Row(modifier.padding(vertical = 6.dp), verticalAlignment = Alignment.Bottom) {
@@ -176,7 +171,9 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
                 modifier = Modifier.padding(horizontal = 12.dp)
             )
         }
-        Row {
+
+        DieGroup(modifier = Modifier.height(60.dp), listOf(card.die1, card.die2, card.die3, card.die4, card.die5, card.die6))
+      /*  Row {
             Text(
                 card.die1,
                 fontSize = 12.sp,
@@ -211,8 +208,7 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
                 card.set,
                 fontSize = 12.sp,
                 modifier = Modifier.padding(horizontal = 8.dp)
-            )
+            )*/
         }
         Divider()
     }
-}

@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.example.starwarsdestinydeckbuilder.compose
 
 import androidx.compose.foundation.BorderStroke
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CardDefaults
@@ -40,7 +43,7 @@ fun TextList(isCompactScreen: Boolean, cards: List<CardUi>, modifier: Modifier, 
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun CardItem(modifier: Modifier, card: CardUi, onItemClick: (String) -> Unit) {
     val cardColor = getColorFromString(card.color)
@@ -68,126 +71,142 @@ fun CardItem(modifier: Modifier, card: CardUi, onItemClick: (String) -> Unit) {
                 )
             }
         }
-        Row(modifier.padding(vertical = 6.dp, horizontal = 8.dp).fillMaxWidth(),
+        Row(
+            modifier
+                .padding(top = 0.dp, bottom = 8.dp, start = 8.dp, end = 6.dp)
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+          //  horizontalArrangement = Arrangement.SpaceBetween
             ) {
+            Column(modifier = Modifier.weight(2f)) {
+                Text("Affiliation", fontSize = 10.sp)
+                Text(
+                    card.affiliation,
+                    fontSize = 16.sp,
+                )
+            }
+            Column(modifier = Modifier.weight(3f)) {
+                Text("Faction", fontSize = 10.sp)
+                Text(
+                    card.faction,
+                    fontSize = 16.sp,
+                )
+            }
+            Column(modifier = Modifier.weight(2f)) {
+                Text("P/C", fontSize = 10.sp)
+                Text(
+                    card.points,
+                    fontSize = 16.sp,
+                )
+            }
+            Column(modifier = Modifier.weight(1.5f)) {
+                Text("Health", fontSize = 10.sp)
+                Text(
+                    "${card.health ?: "-"}",
+                    fontSize = 16.sp,
+                )
+            }
+            Column(modifier = Modifier.weight(2.5f)) {
+                Text("Type", fontSize = 10.sp)
+                Text(
+                    card.type,
+                    fontSize = 16.sp,
+                )
+            }
 
-            Text(
-                card.affiliation,
-                fontSize = 16.sp,
-            )
-            Text(
-                card.faction,
-                fontSize = 16.sp,
-            )
-            Text(
-                card.points,
-                fontSize = 16.sp,
-            )
-            Text(
-                "${card.health ?: ""}",
-                fontSize = 16.sp,
-            )
-            Text(
-                card.type,
-                fontSize = 16.sp,
-            )
-            DieGroup(modifier = Modifier.height(30.dp), card.diceRef)
-            Text(
-                card.set,
-                fontSize = 16.sp,
-            )
+            DieGroup(modifier = Modifier.height(20.dp).weight(9f), dieCodes = card.diceRef, isCompactScreen = false)
+
+            Column(modifier = Modifier.weight(2.5f)) {
+                Text("Set", fontSize = 10.sp)
+                Text(
+                    card.set,
+                    fontSize = 16.sp,
+                )
+            }
         }
-        Divider()
+      //  Divider()
     }
 }
 
 @Composable
 fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> Unit) {
     val cardColor = getColorFromString(card.color)
-    Column(modifier = modifier
-        .background(color = cardColor)
-        .clickable { onItemClick(card.code) })
+    OutlinedCard(modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Black,
+            contentColor = Color.White
+        ),
+        border = BorderStroke(2.dp, cardColor),
+        onClick = { onItemClick(card.code) })
     {
-        Row(modifier.padding(vertical = 6.dp), verticalAlignment = Alignment.Bottom) {
+        Row(modifier, verticalAlignment = Alignment.Bottom) {
             Text(
                 card.name,
                 fontSize = 28.sp,
+                color = cardColor,
                 modifier = Modifier.padding(horizontal = 12.dp)
             )
-            Text(
-                card.subtitle,
-                fontSize = 16.sp,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
+            if (card.subtitle.isNotBlank()) {
+                Text("-", fontSize = 20.sp)
+                Text(
+                    card.subtitle,
+                    fontSize = 18.sp,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
+                )
+            }
         }
-        Row(modifier.padding(vertical = 6.dp), verticalAlignment = Alignment.Bottom) {
+        Row(
+            modifier
+                .padding(top = 0.dp, bottom = 8.dp, start = 8.dp, end = 6.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            //  horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(2f)) {
+                Text("Affiliation", fontSize = 10.sp)
+                Text(
+                    card.affiliation,
+                    fontSize = 16.sp,
+                )
+            }
+            Column(modifier = Modifier.weight(3f)) {
+                Text("Faction", fontSize = 10.sp)
+                Text(
+                    card.faction,
+                    fontSize = 16.sp,
+                )
+            }
+            Column(modifier = Modifier.weight(2f)) {
+                Text("P/C", fontSize = 10.sp)
+                Text(
+                    card.points,
+                    fontSize = 16.sp,
+                )
+            }
+            Column(modifier = Modifier.weight(1.5f)) {
+                Text("Health", fontSize = 10.sp)
+                Text(
+                    "${card.health ?: "-"}",
+                    fontSize = 16.sp,
+                )
+            }
+            Column(modifier = Modifier.weight(2.5f)) {
+                Text("Type", fontSize = 10.sp)
+                Text(
+                    card.type,
+                    fontSize = 16.sp,
+                )
+            }
 
-            Text(
-                card.affiliation,
-                fontSize = 16.sp,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
-            Text(
-                card.faction,
-                fontSize = 16.sp,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
-            Text(
-                card.points,
-                fontSize = 16.sp,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
-            Text(
-                "${card.health ?: ""}",
-                fontSize = 16.sp,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
-            Text(
-                card.type,
-                fontSize = 16.sp,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
+           /* Column(modifier = Modifier.weight(2.5f)) {
+                Text("Set", fontSize = 10.sp)
+                Text(
+                    card.set,
+                    fontSize = 16.sp,
+                )
+            }*/
         }
-
-        DieGroup(modifier = Modifier.height(60.dp), card.diceRef)
-      /*  Row {
-            Text(
-                card.die1,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-            Text(
-                card.die2,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-            Text(
-                card.die3,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-            Text(
-                card.die4,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-            Text(
-                card.die5,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-            Text(
-                card.die6,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
-            Text(
-                card.set,
-                fontSize = 12.sp,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )*/
-        }
-        Divider()
+        DieGroup(modifier = Modifier.padding(bottom = 10.dp).height(25.dp).fillMaxWidth(), card.diceRef, isCompactScreen = true)
+        //  Divider()
     }
+}

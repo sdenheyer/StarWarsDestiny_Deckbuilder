@@ -45,7 +45,7 @@ fun Card.toCardUi() = CardUi(
     affiliation = affiliationName ?: "",
     faction = factionName,
     color = factionCode,
-    points = points ?: "",
+    points = points ?: if (cost != null) cost.toString() else "",
     health = health,
     type = typeName,
     rarity = rarityName,

@@ -11,10 +11,11 @@ import kotlinx.coroutines.flow.map
 inline fun <DB, REMOTE> networkBoundResource(
     crossinline fetchFromLocal: () -> Flow<DB>,
     crossinline shouldFetchFromRemote: (DB?) -> Boolean = { true },
+   // crossinline getTimestamp: (DB?) -> Long = { 0L },   Leaving this off for now - 304 not sent?
     crossinline fetchFromRemote: () -> Flow<ApiResponse<REMOTE>>,
-    crossinline processRemoteResponse:(response: ApiSuccessResponse<REMOTE>) -> Unit = { Unit },
-    crossinline saveRemoteData: (REMOTE) -> Unit = { Unit },
-    crossinline onFetchFailed: (errorBody: String?, statusCode: Int) -> Unit = { _: String?, _: Int -> Unit }
+    crossinline processRemoteResponse:(response: ApiSuccessResponse<REMOTE>) -> Unit,
+    crossinline saveRemoteData: (REMOTE) -> Unit,
+    crossinline onFetchFailed: (errorBody: String?, statusCode: Int) -> Unit
     ) = flow<Resource<DB>> {
        // Log.d("SWD", "Network resource flows initializing...")
 

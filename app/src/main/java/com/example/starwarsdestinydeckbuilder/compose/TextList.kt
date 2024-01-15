@@ -3,22 +3,16 @@
 package com.example.starwarsdestinydeckbuilder.compose
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,20 +40,20 @@ fun TextList(isCompactScreen: Boolean, cards: List<CardUi>, modifier: Modifier, 
 
 @Composable
 fun CardItem(modifier: Modifier, card: CardUi, onItemClick: (String) -> Unit) {
-    val cardColor = getColorFromString(card.color)
+    val borderColor = getColorFromString(card.color)
     OutlinedCard(modifier = modifier,
         colors = CardDefaults.cardColors(
             containerColor = Color.Black,
             contentColor = Color.White
         ),
-        border = BorderStroke(2.dp, cardColor),
+        border = BorderStroke(2.dp, borderColor),
         onClick = { onItemClick(card.code) })
     {
         Row(modifier, verticalAlignment = Alignment.Bottom) {
             Text(
                 card.name,
                 fontSize = 28.sp,
-                color = cardColor,
+                color = borderColor,
                 modifier = Modifier.padding(horizontal = 12.dp)
             )
             if (card.subtitle.isNotBlank()) {

@@ -64,7 +64,7 @@ data class CardDTO (
                 cost = null,
                 health = 11,
                 points = "12/15",
-                text = "Your non-unique characters have the Guardian keyword.",
+                text = "Blue Character only.\\n<b>Action</b> - Remove this die to turn a die to a side showing a blank ([blank])",
                 deck_limit = 1,
                 flavor = "\"Whatever you're planning, it won't work.\"",
                 illustrator = "Darren Tan",

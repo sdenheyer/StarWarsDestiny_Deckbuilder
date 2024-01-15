@@ -70,7 +70,8 @@ class GetCardWithFormat @Inject constructor(val cardRepo: CardRepositoryImpl) {
                     ) {
                         format = format.copy(legality = "restricted")
                     }
-                    format = format.copy(balance = it.balance[card.code])
+                   // val points:String = if (card.points.isNullOrEmpty()) card.cost.toString() else (card.points ?: "")
+                    format = format.copy(balance = if (it.balance[card.code].isNullOrEmpty()) card.points ?: "" else it.balance[card.code])
 
                 } else {
                     format = format.copy(legality = "banned")

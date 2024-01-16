@@ -209,7 +209,12 @@ fun CardText(modifier: Modifier, card: CardDetailUi) {
                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
                 formats = card.formats
             )
-            Balance(modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp), formats = card.formats)
+            if (!card.formats.all { format -> format.balance.isNullOrBlank() }) {
+                Balance(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 12.dp),
+                    formats = card.formats
+                )
+            }
         }
 
     }

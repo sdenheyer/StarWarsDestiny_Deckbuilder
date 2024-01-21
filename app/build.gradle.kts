@@ -7,15 +7,15 @@ plugins {
 }
 
 android {
-    namespace = "com.example.starwarsdestinydeckbuilder"
+    namespace = "com.stevedenheyer.starwarsdestinydeckbuilder"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.starwarsdestinydeckbuilder"
+        applicationId = "com.stevedenheyer.starwarsdestinydeckbuilder"
         minSdk = 21
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 3
+        versionName = "0.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -58,6 +58,8 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.compose.material3:material3:1.1.2")
+    implementation("androidx.compose.material3:material3-window-size-class:1.1.2")
+    implementation("androidx.compose.material3:material3-adaptive:1.0.0-alpha04")
 
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
@@ -65,7 +67,7 @@ dependencies {
     implementation("com.github.bumptech.glide:compose:1.0.0-beta01")
 
     implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.compose.material3:material3-window-size-class:1.1.2")
+
     annotationProcessor("androidx.room:room-compiler:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")

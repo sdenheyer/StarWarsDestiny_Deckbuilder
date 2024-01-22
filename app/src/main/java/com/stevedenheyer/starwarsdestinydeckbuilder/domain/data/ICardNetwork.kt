@@ -11,5 +11,6 @@ interface ICardNetwork {
     fun getCardsBySet(code: String): Flow<ApiResponse<List<Card>>>
     fun getCardSets(): Flow<ApiResponse<CardSetList>>
     fun getFormats(): Flow<ApiResponse<CardFormatList>>
+    fun findCards(query: String): Flow<ApiResponse<List<Card>>>
 
 }

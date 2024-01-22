@@ -28,6 +28,9 @@ interface CardService {
 
     @GET("api/public/formats")
     suspend fun getFormats(): Response<List<FormatDTO>>
+
+    @GET("api/public/find?_format=json&q{query}")
+    suspend fun findCards(@Path("query") query: String): Response<List<CardDTO>>
 }
 
 object CardApi {

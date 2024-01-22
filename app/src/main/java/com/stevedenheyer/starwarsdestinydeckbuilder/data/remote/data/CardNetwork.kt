@@ -90,6 +90,23 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
         emit(apiResponse)
 
     }.flowOn(dispatcher)
+
+    override fun findCards(query: String): Flow<ApiResponse<List<Card>>> = flow {
+
+        val apiResponse = try {
+            val response = cardService.findCards(query)
+            //  Log.d("SWD", "Response rec'd: ${response.body()?.size}")
+            val expiry = getExpiry(response.headers())
+            if (response.body() != null) {
+                ApiResponse.create(response, { it!!.map { it.toDomain().copy(timestamp = Date().time, expiry = expiry) } })
+            } else {
+                ApiResponse.create(error = Throwable(response.message()))
+            }
+        } catch(e: IOException) {
+            ApiResponse.create(error = Throwable("Network error"))
+        }
+        emit(apiResponse)
+    }.flowOn(dispatcher)
 }
 
 fun getExpiry(headers: Headers): Long {

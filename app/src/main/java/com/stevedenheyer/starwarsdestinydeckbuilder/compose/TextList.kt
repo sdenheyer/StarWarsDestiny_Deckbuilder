@@ -33,7 +33,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.toCardUi
 
 @Composable
 fun TextList(isCompactScreen: Boolean, cards: List<CardUi>, modifier: Modifier, onItemClick: (String) -> Unit) {
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    LazyColumn(modifier = modifier.fillMaxSize()) {
         items(items = cards, key = { it.code }) { card ->
             if (!isCompactScreen) {
                 CardItem(modifier = Modifier, card = card, onItemClick)

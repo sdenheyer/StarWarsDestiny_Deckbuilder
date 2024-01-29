@@ -72,30 +72,12 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DetailViewModel
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.toDetailUi
 import java.net.URL
 
-val mediumText = 16.sp
-val smallText = 12.sp
-
-val inlineContent = DieIcon.entries.associate { die ->
-    Pair(die.code, InlineTextContent(
-        Placeholder(
-            width = mediumText,
-            height = mediumText,
-            placeholderVerticalAlign = PlaceholderVerticalAlign.AboveBaseline
-        )
-    ) {
-        Image(
-            painter = painterResource(id = die.resourceId),
-            contentDescription = die.inlineTag,
-            modifier = Modifier.fillMaxSize(),
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-        )
-    })
-}
-
 @Composable
-fun DetailsScreen(isCompactScreen: Boolean,
-                    modifier:Modifier = Modifier,
-                  detailViewModel: DetailViewModel = hiltViewModel()) {
+fun DetailsScreen(
+    isCompactScreen: Boolean,
+    modifier: Modifier = Modifier,
+    detailViewModel: DetailViewModel = hiltViewModel()
+) {
 
     val card by detailViewModel.card.collectAsStateWithLifecycle(initialValue = null)
 
@@ -123,49 +105,76 @@ fun CardText(modifier: Modifier, card: CardDetailUi) {
         .padding(start = 8.dp)
         .padding(vertical = 2.dp)
 
-    OutlinedCard(modifier = modifier,
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                ),
-                border = BorderStroke(4.dp, color = cardColor)
+    val inlineContent = DieIcon.entries.associate { die ->
+        Pair(die.code, InlineTextContent(
+            Placeholder(
+                width = MaterialTheme.typography.bodyLarge.fontSize,
+                height = MaterialTheme.typography.bodyLarge.fontSize,
+                placeholderVerticalAlign = PlaceholderVerticalAlign.AboveBaseline
+            )
+        ) {
+            Image(
+                painter = painterResource(id = die.resourceId),
+                contentDescription = die.inlineTag,
+                modifier = Modifier.fillMaxSize(),
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
+            )
+        })
+    }
+
+    OutlinedCard(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
+        border = BorderStroke(4.dp, color = cardColor)
     ) {
 
         Text(
-            buildAnnotatedString {
-                    withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontSize = 26.sp)) {
-                        append(card.name)
+            buildAnnotatedString {//TODO:  Add "unique" indicator
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontSize = 26.sp)) {
+                    append(card.name)
+                }
+                if (!card.subtitle.isNullOrBlank())
+                    withStyle(style = SpanStyle(fontSize = MaterialTheme.typography.titleSmall.fontSize)) {
+                        append(" - ${card.subtitle}")
                     }
-                    if (!card.subtitle.isNullOrBlank())
-                        withStyle(style = SpanStyle(fontSize = MaterialTheme.typography.titleSmall.fontSize)) {
-                            append(" - ${card.subtitle}")
-                        }
-        },
+            },
             style = MaterialTheme.typography.titleLarge,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .background(color = cardColor)
                 .padding(start = 12.dp, top = 12.dp, bottom = 8.dp)
-                .fillMaxWidth())
+                .fillMaxWidth()
+        )
 
-        Text("${card.affiliation}. ${card.faction}. ${card.rarity}", style = MaterialTheme.typography.bodyLarge, modifier = textModifer)
+        Text(
+            "${card.affiliation}. ${card.faction}. ${card.rarity}",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = textModifer
+        )
 
         Text(
             buildAnnotatedString {
-                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
                     append(card.typeName)
                     card.subtypes?.forEach {
                         append(" - ${it}")
                     }
-                        append(". ")
-                    }
-                    //append("Points: ${card.points}.  Health: ${card.health}")
+                    append(". ")
+                }
+                //append("Points: ${card.points}.  Health: ${card.health}")
             },
             style = MaterialTheme.typography.bodyLarge,
             modifier = textModifer
         )
 
-        Text("Points: ${card.points}.  Health: ${card.health}", style = MaterialTheme.typography.bodyLarge, modifier = textModifer)
+        Text(
+            "Points: ${card.points}.  Health: ${card.health}",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = textModifer
+        )
 
         if (card.sides != null) {
             DieGroup(
@@ -178,33 +187,73 @@ fun CardText(modifier: Modifier, card: CardDetailUi) {
         }
 
         if (card.has_errata) {
-            Text("This card was errata'd", style = MaterialTheme.typography.bodyMedium, fontStyle = FontStyle.Italic, modifier = textModifer)
+            Text(
+                "This card was errata'd",
+                style = MaterialTheme.typography.bodyMedium,
+                fontStyle = FontStyle.Italic,
+                modifier = textModifer
+            )
         }
-        Text(parseHtml(card.text ?: ""), style = MaterialTheme.typography.bodyLarge, modifier = textModifer, inlineContent = inlineContent)
-        Text(card.flavor ?: "", style = MaterialTheme.typography.bodyMedium, modifier = textModifer, fontStyle = FontStyle.Italic)
+        Text(
+            parseHtml(card.text ?: ""),
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = textModifer,
+            inlineContent = inlineContent
+        )
+        Text(
+            card.flavor ?: "",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = textModifer,
+            fontStyle = FontStyle.Italic
+        )
         if (!card.illustrator.isNullOrEmpty()) {
-            Row (modifier = textModifer) {
-                Image(painter = painterResource(id = R.drawable.baseline_brush_24), contentDescription = "Paintbrush Icon", modifier = Modifier.size(20.dp),
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface) )
+            Row(modifier = textModifer) {
+                Image(
+                    painter = painterResource(id = R.drawable.baseline_brush_24),
+                    contentDescription = "Paintbrush Icon",
+                    modifier = Modifier.size(20.dp),
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
+                )
                 Text(card.illustrator, style = MaterialTheme.typography.bodyLarge)
             }
         }
 
         Spacer(modifier = Modifier.size(20.dp))
 
-        Text("${card.setName} #${card.position}", style = MaterialTheme.typography.bodyLarge, modifier = textModifer)
+        Text(
+            "${card.setName} #${card.position}",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = textModifer
+        )
 
         if (card.reprints.isNotEmpty()) {
-            Text("Reprinted in:", style = MaterialTheme.typography.bodyMedium, modifier = textModifer)
+            Text(
+                "Reprinted in:",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = textModifer
+            )
             card.reprints.forEach {
-                Text("${it.setName} #${it.position}", style = MaterialTheme.typography.bodyLarge, modifier = textModifer, color = Color.Blue)
+                Text(
+                    "${it.setName} #${it.position}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = textModifer,
+                    color = Color.Blue
+                )
             }
         }
 
         if (card.parellelDice.isNotEmpty()) {
-            Text("Used as parallel die by:", style = MaterialTheme.typography.bodyMedium, modifier = textModifer)
+            Text(
+                "Used as parallel die by:",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = textModifer
+            )
             card.parellelDice.forEach {
-                Text("${it.setName} #${it.position}", style = MaterialTheme.typography.bodyLarge, modifier = textModifer)
+                Text(
+                    "${it.setName} #${it.position}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = textModifer
+                )
             }
         }
 
@@ -229,41 +278,62 @@ fun CardText(modifier: Modifier, card: CardDetailUi) {
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun ImageCard(modifier: Modifier, src: URL) {
-    GlideImage(model = src, contentDescription = "", contentScale = ContentScale.FillWidth, alignment = Alignment.TopCenter, modifier = modifier.padding(horizontal = 6.dp))
+    GlideImage(
+        model = src,
+        contentDescription = "",
+        contentScale = ContentScale.FillWidth,
+        alignment = Alignment.TopCenter,
+        modifier = modifier.padding(horizontal = 6.dp)
+    )
 }
 
 @Composable
 fun Legality(modifier: Modifier, factionColor: Color, formats: List<Format>) {
     val border = BorderStroke(width = Dp.Hairline, color = MaterialTheme.colorScheme.onSurface)
     Column(modifier = modifier) {
-        Text("Legality", style = MaterialTheme.typography.titleLarge, modifier = Modifier
-            .padding(vertical = 4.dp)
-            .fillMaxWidth()
-            .wrapContentWidth(align = Alignment.CenterHorizontally))
+        Text(
+            "Legality", style = MaterialTheme.typography.titleLarge, modifier = Modifier
+                .padding(vertical = 4.dp)
+                .fillMaxWidth()
+                .wrapContentWidth(align = Alignment.CenterHorizontally)
+        )
 
-        LazyRow(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically,
+        LazyRow(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentWidth(align = Alignment.CenterHorizontally)) {
+                .wrapContentWidth(align = Alignment.CenterHorizontally)
+        ) {
             items(items = formats, key = { it.gameType }) { format ->
 
                 val columnModifier = if (format.legality == "banned")
-                    Modifier.fillMaxWidth().border(border)
-                else Modifier.fillMaxWidth().border(border).background(color = Color.Green)
+                    Modifier
+                        .fillMaxWidth()
+                        .border(border)
+                else Modifier
+                    .fillMaxWidth()
+                    .border(border)
+                    .background(color = Color.Green)
 
-                Column(modifier = columnModifier, horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    modifier = columnModifier,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Surface(border = border, color = factionColor) {
                         Text(
-                            format.gameType, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
+                            format.gameType,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
                         )
                     }
                     if (format.legality == "banned")
-                            Image(
-                                painter = painterResource(id = R.drawable.baseline_cancel_24),
-                                contentDescription = "Banned",
-                                colorFilter = ColorFilter.tint(factionColor),
-                                modifier = Modifier.padding(vertical = 4.dp),
-                            )
+                        Image(
+                            painter = painterResource(id = R.drawable.baseline_cancel_24),
+                            contentDescription = "Banned",
+                            colorFilter = ColorFilter.tint(factionColor),
+                            modifier = Modifier.padding(vertical = 4.dp),
+                        )
                     else
                         Image(
                             painter = painterResource(id = R.drawable.baseline_check_circle_24),
@@ -281,38 +351,48 @@ fun Legality(modifier: Modifier, factionColor: Color, formats: List<Format>) {
 fun Balance(modifier: Modifier, factionColor: Color, formats: List<Format>) {
     val border = BorderStroke(width = Dp.Hairline, color = MaterialTheme.colorScheme.onSurface)
     Column(modifier = modifier) {
-        Text("Balance of the Force", style = MaterialTheme.typography.titleLarge, modifier = Modifier
-            .padding(vertical = 4.dp)
-            .fillMaxWidth()
-            .wrapContentWidth(align = Alignment.CenterHorizontally))
+        Text(
+            "Balance of the Force", style = MaterialTheme.typography.titleLarge, modifier = Modifier
+                .padding(vertical = 4.dp)
+                .fillMaxWidth()
+                .wrapContentWidth(align = Alignment.CenterHorizontally)
+        )
 
-        LazyRow(horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically,
+        LazyRow(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .wrapContentWidth(align = Alignment.CenterHorizontally)) {
+                .wrapContentWidth(align = Alignment.CenterHorizontally)
+        ) {
             items(items = formats, key = { it.gameType }) { format ->
 
-                Column(modifier = Modifier
-                    .fillMaxWidth()
-                    .border(border), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(border), horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Surface(border = border, color = factionColor) {
                         Text(
-                            format.gameType, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
+                            format.gameType,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp)
                         )
                     }
-                        val legalityText = if (format.legality == "banned") "--" else format.balance ?: "--"
+                    val legalityText =
+                        if (format.legality == "banned") "--" else format.balance ?: "--"
 
-                            Text(
-                                legalityText,
-                                style = MaterialTheme.typography.bodyLarge, modifier = Modifier
-                                    .padding(vertical = 2.dp)
-                                    .fillMaxWidth()
-                            )
+                    Text(
+                        legalityText,
+                        style = MaterialTheme.typography.bodyLarge, modifier = Modifier
+                            .padding(vertical = 2.dp)
+                            .fillMaxWidth()
+                    )
                 }
             }
         }
-        }
     }
+}
 
 
 fun parseHtml(s: String): AnnotatedString {
@@ -324,42 +404,87 @@ fun parseHtml(s: String): AnnotatedString {
                 "b" -> withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                     append(strings.next())
                 }
+
                 "/b" -> {}
                 "i" -> withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
                     append(strings.next())
                 }
+
                 "/i" -> {}
-                DieIcon.BLANK.inlineTag -> appendInlineContent(DieIcon.BLANK.code, "[" + DieIcon.BLANK.inlineTag + "]")
-                DieIcon.DISCARD.inlineTag -> appendInlineContent(DieIcon.DISCARD.code, "[" + DieIcon.DISCARD.inlineTag + "]")
-                DieIcon.DISRUPT.inlineTag -> appendInlineContent(DieIcon.DISRUPT.code, "[" + DieIcon.DISRUPT.inlineTag + "]")
-                DieIcon.FOCUS.inlineTag -> appendInlineContent(DieIcon.FOCUS.code, "[" + DieIcon.FOCUS.inlineTag + "]")
-                DieIcon.INDIRECT.inlineTag -> appendInlineContent(DieIcon.INDIRECT.code, "[" + DieIcon.INDIRECT.inlineTag + "]")
-                DieIcon.MELEE.inlineTag -> appendInlineContent(DieIcon.MELEE.code, "[" + DieIcon.MELEE.inlineTag + "]")
-                DieIcon.RANGED.inlineTag -> appendInlineContent(DieIcon.RANGED.code, "[" + DieIcon.RANGED.inlineTag + "]")
-                DieIcon.RESOURCE.inlineTag -> appendInlineContent(DieIcon.RESOURCE.code, "[" + DieIcon.RESOURCE.inlineTag + "]")
-                DieIcon.SHIELD.inlineTag -> appendInlineContent(DieIcon.SHIELD.code, "[" + DieIcon.SHIELD.inlineTag + "]")
-                DieIcon.SPECIAL.inlineTag -> appendInlineContent(DieIcon.SPECIAL.code, "[" + DieIcon.SPECIAL.inlineTag + "]")
+                DieIcon.BLANK.inlineTag -> appendInlineContent(
+                    DieIcon.BLANK.code,
+                    "[" + DieIcon.BLANK.inlineTag + "]"
+                )
+
+                DieIcon.DISCARD.inlineTag -> appendInlineContent(
+                    DieIcon.DISCARD.code,
+                    "[" + DieIcon.DISCARD.inlineTag + "]"
+                )
+
+                DieIcon.DISRUPT.inlineTag -> appendInlineContent(
+                    DieIcon.DISRUPT.code,
+                    "[" + DieIcon.DISRUPT.inlineTag + "]"
+                )
+
+                DieIcon.FOCUS.inlineTag -> appendInlineContent(
+                    DieIcon.FOCUS.code,
+                    "[" + DieIcon.FOCUS.inlineTag + "]"
+                )
+
+                DieIcon.INDIRECT.inlineTag -> appendInlineContent(
+                    DieIcon.INDIRECT.code,
+                    "[" + DieIcon.INDIRECT.inlineTag + "]"
+                )
+
+                DieIcon.MELEE.inlineTag -> appendInlineContent(
+                    DieIcon.MELEE.code,
+                    "[" + DieIcon.MELEE.inlineTag + "]"
+                )
+
+                DieIcon.RANGED.inlineTag -> appendInlineContent(
+                    DieIcon.RANGED.code,
+                    "[" + DieIcon.RANGED.inlineTag + "]"
+                )
+
+                DieIcon.RESOURCE.inlineTag -> appendInlineContent(
+                    DieIcon.RESOURCE.code,
+                    "[" + DieIcon.RESOURCE.inlineTag + "]"
+                )
+
+                DieIcon.SHIELD.inlineTag -> appendInlineContent(
+                    DieIcon.SHIELD.code,
+                    "[" + DieIcon.SHIELD.inlineTag + "]"
+                )
+
+                DieIcon.SPECIAL.inlineTag -> appendInlineContent(
+                    DieIcon.SPECIAL.code,
+                    "[" + DieIcon.SPECIAL.inlineTag + "]"
+                )
+
                 else -> append(string)
             }
         }
     }
 }
 
-@Preview
+/*@Preview
 @Composable
 fun HtmlParser() {
-    val t = parseHtml("Blue Character only.\n<b>Action</b> - Remove this die to turn a die to a side showing a blank ([blank]).")
-    Text(t, inlineContent=inlineContent)
+    val t =
+        parseHtml("Blue Character only.\n<b>Action</b> - Remove this die to turn a die to a side showing a blank ([blank]).")
+    Text(t, inlineContent = CardText.inlineContent)
 
-}
+}*/
 
 @Preview(widthDp = 500)
 @Composable
 fun FormatPreview() {
-    val formats = listOf(Format(gameType = "Standard", legality = "banned", balance = "12/16"),
+    val formats = listOf(
+        Format(gameType = "Standard", legality = "banned", balance = "12/16"),
         Format(gameType = "Trilogy", legality = "", balance = "12/16"),
         Format(gameType = "Infinite", legality = "", balance = "12/16"),
-        Format(gameType = "ARH Standard", legality = "", balance = "12/16"))
+        Format(gameType = "ARH Standard", legality = "", balance = "12/16")
+    )
     Column {
         Legality(modifier = Modifier, factionColor = Color.Red, formats = formats)
         Balance(modifier = Modifier, formats = formats, factionColor = Color.Red)
@@ -370,8 +495,10 @@ fun FormatPreview() {
 @Preview(widthDp = 400)
 @Composable
 fun TextCardPreview() {
-    CardText(modifier = Modifier
-        .background(Color.Black)
-        .fillMaxSize(), card = CardDTO.testCard.toDomain().toDetailUi())
+    CardText(
+        modifier = Modifier
+            .background(Color.Black)
+            .fillMaxSize(), card = CardDTO.testCard.toDomain().toDetailUi()
+    )
 }
 

@@ -8,11 +8,13 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormatList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.repositories.CardRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
@@ -82,5 +84,20 @@ class CardRepositoryImpl @Inject constructor(
         ).flowOn(dispatcher)
     }
 
-    // fun getFormats(): Flow<ApiResponse<List<CardFormat>>> = cardNetwork.getFormats()
+    override fun findCards(query: String): Flow<Resource<List<Card>>> {
+        return networkBoundResource(
+            fetchFromLocal = { cardCache.findCards(query) },
+            shouldFetchFromRemote = { true },
+            fetchFromRemote = { cardNetwork.findCards(query) },
+            processRemoteResponse = { },
+            saveRemoteData =  { coroutineScope.launch(dispatcher) { cardCache.storeCards(it) }},
+            onFetchFailed = { _, _ -> }
+        )
+    }
+
+    override suspend fun createDeck(deck: Deck) {
+        cardCache.createDeck(deck)
+    }
+
+    override fun getAllDecks(): Flow<List<Deck>> = cardCache.getDecks()
 }

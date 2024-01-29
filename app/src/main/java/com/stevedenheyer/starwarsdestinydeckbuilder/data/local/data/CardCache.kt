@@ -11,6 +11,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardParelle
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardReprintsCrossRef
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardSetTimeEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardSubtypeCrossRef
+import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.DeckEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.FormatBannedCrossref
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.FormatRestrictedCrossref
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.FormatSetCrossref
@@ -22,6 +23,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormatList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CodeOrCard
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.Date
@@ -35,6 +37,8 @@ class CardCache(
 
     override fun getCardsBySet(code: String): Flow<List<Card>> = dao.getCardsBySet(code).map { it.map { entity -> entity.toDomain() } }
 
+    override fun findCards(query: String): Flow<List<Card>> = dao.findCards("%" + query + "%").map { it.map { entity -> entity.toDomain() }}
+
     override fun getCardSets(): Flow<CardSetList> = dao.getCardSets().map {
         val timestamp = dao.getSetTimestamp() ?: CardSetTimeEntity(timestamp = Date().time, expiry = 24 * 60 * 60 * 1000)
 
@@ -43,6 +47,8 @@ class CardCache(
     override fun getFormats(): Flow<CardFormatList> = dao.getFormats().map {
         list -> CardFormatList(timestamp = Date().time, expiry = 24 * 60 * 60 * 1000, cardFormats = list.map { it.toDomain() })
     }
+
+    override fun getDecks(): Flow<List<Deck>> = dao.getDecks().map { it.map { deckEntity ->  deckEntity.toDomain() }}
     override suspend fun storeCards(cards: List<Card>) {
        // Log.d("SWD", "Writing cards: ${cards.size}")
         cards.forEach() { card ->
@@ -119,5 +125,16 @@ class CardCache(
             }
         }
         dao.insertFormatTimestamp(FormatTimeEntity(timestamp = formatlist.timestamp, expiry = formatlist.expiry))
+    }
+
+    override suspend fun createDeck(deck: Deck) {
+        dao.insertNewDeck(deck.toEntity())
+    }
+
+    override suspend fun updateDeck(deck: Deck) {
+        deck.slots.forEach {
+            dao.insertSlot(it.toEntity(deck.name))
+        }
+        dao.updateDeck(deck.toEntity())
     }
 }

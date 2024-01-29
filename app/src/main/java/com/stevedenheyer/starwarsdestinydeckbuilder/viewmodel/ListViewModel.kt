@@ -1,39 +1,58 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.CardRepositoryImpl
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.launch
 
 import javax.inject.Inject
 
-data class CardSetMenuItem(
-    val code: String,
-    val name: String,
-    val postition: Int,
-)
+data class menuUiState(
+    val isLoading: Boolean,
+    val errorMessage: String?,
+    val data: List<MenuItem>
+) {
+    sealed interface MenuItem {
+        val code: String
+        val name: String
 
-sealed interface ListUiState {
+        data class deck(
+            override val code: String,
+            override val name: String,
+        ) : MenuItem
+
+        data class card(
+            override val code: String,
+            override val name: String,
+            val postition: Int
+        ) : MenuItem
+    }
+}
+
+sealed interface UiState {
     val isLoading: Boolean
     val errorMessage: String?
 
     data class noData(
         override val isLoading: Boolean,
         override val errorMessage: String?,
-    ):ListUiState
+    ):UiState
 
     data class hasData(
         override val isLoading: Boolean,
         override val errorMessage: String?,
-        val cards: List<CardUi>
-    ):ListUiState
+        val data: List<CardUi>
+    ):UiState
 }
 data class CardUi(
     val code: String,
@@ -69,56 +88,98 @@ fun Card.toCardUi() = CardUi(
 class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl) : ViewModel() {
 
     private val cardSetSelection = MutableStateFlow("")
+    private val cardsBySetFlow = cardSetSelection.transform { code ->
+        if (code.isNotEmpty()) {
+            emitAll(cardRepo.getCardsBySet(code, false))
+        }
+    }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val cardsFlow = cardSetSelection.transformLatest { set ->
+    private val query = MutableStateFlow("")
+    private val cardsByQuery = query.transform { query ->
+        if (query.isNotEmpty()) {
+            emitAll(cardRepo.findCards(query))
+        }
+    }
+
+    private val _cardsFlow: MutableStateFlow<Resource<List<Card>>> = MutableStateFlow(Resource.loading(emptyList()))
+
+    val cardsFlow = _cardsFlow.mapLatest {
+      /*  set ->
         if (set.isNotEmpty()) {
             //Log.d("SWD", "Generating cardUI: $set")
-            emitAll(cardRepo.getCardsBySet(set, false).map { resource ->
+            emitAll(cardRepo.getCardsBySet(set, false).map {
+                */
+                resource ->
                 when (resource.status) {
                     Resource.Status.LOADING -> {
                         if (resource.data.isNullOrEmpty()) {
-                            ListUiState.noData(isLoading = true, errorMessage = resource.message)
+                            UiState.noData(isLoading = true, errorMessage = resource.message)
                         } else {
-                            ListUiState.hasData(isLoading = true, errorMessage = resource.message, cards = resource.data.map { it.toCardUi() })
+                            UiState.hasData(isLoading = true, errorMessage = resource.message, data = resource.data.map { it.toCardUi() })
                         }
                     }
                     Resource.Status.ERROR -> {
                         if (resource.data.isNullOrEmpty()) {
-                            ListUiState.noData(isLoading = false, errorMessage = resource.message)
+                            UiState.noData(isLoading = false, errorMessage = resource.message)
                         } else {
-                            ListUiState.hasData(isLoading = false, errorMessage = resource.message, cards = resource.data.map { it.toCardUi() })
+                            UiState.hasData(isLoading = false, errorMessage = resource.message, data = resource.data.map { it.toCardUi() })
                         }
                     }
                     Resource.Status.SUCCESS -> {
                         if (resource.data.isNullOrEmpty()) {
-                            ListUiState.noData(isLoading = false, errorMessage = resource.message)
+                            UiState.noData(isLoading = false, errorMessage = resource.message)
                         } else {
-                            ListUiState.hasData(isLoading = false, errorMessage = resource.message, cards = resource.data.map { it.toCardUi() })
+                            UiState.hasData(isLoading = false, errorMessage = resource.message, data = resource.data.map { it.toCardUi() })
                         }
                     }
                 }
-            })
-        }
-      }
+            }
 
-    val cardSetsFlow = cardRepo.getCardSets(false)
+    private val cardSetsFlow = cardRepo.getCardSets(false)
 
-    val cardSetMenuItemsState = cardSetsFlow.map { response ->
-        if (response.status == Resource.Status.SUCCESS) {
-            response.data?.cardSets?.map {
-                CardSetMenuItem(
+    private val decksFlow = cardRepo.getAllDecks()
+
+    val menuItemsState = combine(cardSetsFlow, decksFlow) { response, decks ->
+        val itemsList:MutableList<menuUiState.MenuItem> = decks.map { menuUiState.MenuItem.deck(code = it.name, name = it.name) }.toMutableList()
+
+        if (response.data != null) {
+            itemsList.addAll(response.data.cardSets.map {
+                menuUiState.MenuItem.card(
                     code = it.code,
                     name = it.name,
                     postition = it.position
                 )
-            }?.sortedBy { it.postition }
-        } else {
-            emptyList()
+            }.sortedBy { it.postition })
+        }
+
+        when (response.status) {
+            Resource.Status.LOADING -> menuUiState(isLoading = true, errorMessage = response.message, data = itemsList)
+            Resource.Status.ERROR -> menuUiState(isLoading = false, errorMessage = response.message, data = itemsList)
+            Resource.Status.SUCCESS -> menuUiState(isLoading = false, errorMessage = response.message, data = itemsList)
+            }
+        }
+
+    init {
+        viewModelScope.launch {
+            cardsBySetFlow.collect {resource ->
+                _cardsFlow.update { resource }
+            }
+        }
+
+        viewModelScope.launch {
+            cardsByQuery.collect {resource ->
+                _cardsFlow.update { resource }
+            }
         }
     }
 
     fun setCardSetSelection(code: String) {
         cardSetSelection.update { code }
     }
+
+    fun findCard(queryText: String) {
+        query.update { queryText }
+    }
+
+    suspend fun createDeck(deck: Deck) = cardRepo.createDeck(deck)
 }

@@ -8,6 +8,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 private const val BASE_URL = "https://db.swdrenewedhope.com"
 
@@ -29,8 +30,8 @@ interface CardService {
     @GET("api/public/formats")
     suspend fun getFormats(): Response<List<FormatDTO>>
 
-    @GET("api/public/find?_format=json&q{query}")
-    suspend fun findCards(@Path("query") query: String): Response<List<CardDTO>>
+    @GET("api/public/find")
+    suspend fun findCards(@Query("q") query: String): Response<List<CardDTO>>
 }
 
 object CardApi {

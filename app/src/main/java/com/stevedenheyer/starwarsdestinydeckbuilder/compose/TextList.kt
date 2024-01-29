@@ -56,7 +56,7 @@ fun CardItem(modifier: Modifier, card: CardUi, onItemClick: (String) -> Unit) {
         border = BorderStroke(2.dp, factionColor),
         onClick = { onItemClick(card.code) })
     {
-            Text(buildAnnotatedString {
+            Text(buildAnnotatedString {//TODO:  Add "unique" indicator
                 withStyle(style = SpanStyle(color = factionColor)) {
                     append(card.name)
                 }

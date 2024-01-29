@@ -1,14 +1,12 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.compose
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,15 +14,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.InlineTextContent
@@ -39,8 +32,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
@@ -68,6 +59,8 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.model.CardDTO
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Format
 import com.stevedenheyer.starwarsdestinydeckbuilder.ui.theme.getColorFromString
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardDetailUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardUiState
+import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DeckDetailUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DetailViewModel
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.toDetailUi
 import java.net.URL
@@ -79,21 +72,39 @@ fun DetailsScreen(
     detailViewModel: DetailViewModel = hiltViewModel()
 ) {
 
-    val card by detailViewModel.card.collectAsStateWithLifecycle(initialValue = null)
+    val cardState by detailViewModel.uiCard.collectAsStateWithLifecycle(initialValue = CardUiState.noData(isLoading = true, errorMessage = null))
+    val decks by detailViewModel.uiDecks.collectAsStateWithLifecycle(initialValue = emptyList())
 
-    if (card != null) {
-        if (isCompactScreen) {
-            val scrollState = rememberScrollState()
-            Column(modifier.verticalScroll(state = scrollState)) {
-                CardText(modifier = Modifier.padding(vertical = 8.dp), card = card!!)
-                ImageCard(modifier = Modifier, src = card!!.imagesrc)
-            }
+    Log.d("SWD", "Card State: ${cardState.isLoading}")
+
+    when (val state = cardState) {
+        is CardUiState.hasData -> if (isCompactScreen) {
+            CompactDetails(card = state.data, decks = decks)
         } else {
-            Row(modifier = modifier.fillMaxSize()) {
-                CardText(modifier = Modifier.weight(1F), card = card!!)
-                ImageCard(modifier = Modifier.weight(0.8F), src = card!!.imagesrc)
-            }
+            Details(card = state.data, decks = decks)
         }
+        is CardUiState.noData -> {}
+    }
+}
+
+@Composable
+fun CompactDetails(card: CardDetailUi, decks: List<DeckDetailUi>, modifier: Modifier = Modifier) {
+    val scrollState = rememberScrollState()
+    Column(modifier.verticalScroll(state = scrollState)) {
+        CardText(modifier = Modifier.padding(vertical = 8.dp), card = card)
+        DecksText(modifier = Modifier.padding(vertical = 8.dp), decks = decks)
+        ImageCard(modifier = Modifier, src = card.imagesrc)
+    }
+}
+
+@Composable
+fun Details(card: CardDetailUi, decks: List<DeckDetailUi>, modifier: Modifier = Modifier) {
+    Row(modifier = modifier.fillMaxSize()) {
+        Column(modifier = Modifier.weight(1F)) {
+            CardText(modifier = Modifier, card = card)
+            DecksText(modifier = Modifier, decks = decks)
+        }
+        ImageCard(modifier = Modifier.weight(0.8F), src = card.imagesrc)
     }
 }
 
@@ -125,7 +136,7 @@ fun CardText(modifier: Modifier, card: CardDetailUi) {
     OutlinedCard(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            containerColor = MaterialTheme.colorScheme.surface,
             contentColor = MaterialTheme.colorScheme.onSurface
         ),
         border = BorderStroke(4.dp, color = cardColor)
@@ -290,6 +301,7 @@ fun ImageCard(modifier: Modifier, src: URL) {
 @Composable
 fun Legality(modifier: Modifier, factionColor: Color, formats: List<Format>) {
     val border = BorderStroke(width = Dp.Hairline, color = MaterialTheme.colorScheme.onSurface)
+    Log.d("SWD", "Legality: ${formats.size} ${formats.toString()}")
     Column(modifier = modifier) {
         Text(
             "Legality", style = MaterialTheme.typography.titleLarge, modifier = Modifier
@@ -394,6 +406,35 @@ fun Balance(modifier: Modifier, factionColor: Color, formats: List<Format>) {
     }
 }
 
+@Composable
+fun DecksText(modifier: Modifier, decks: List<DeckDetailUi>) {
+
+    //val cardColor = getColorFromString(card.color)
+    val textModifer = Modifier
+        .padding(start = 8.dp)
+        .padding(vertical = 2.dp)
+
+    OutlinedCard(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
+        border = BorderStroke(4.dp, color = MaterialTheme.colorScheme.onSurface)
+    ) {
+        LazyColumn(userScrollEnabled = false, modifier = Modifier
+            .heightIn(max = 2000.dp)
+            .fillMaxWidth()) {
+            items(items = decks, key = { it.name }) { deck ->
+                Row(modifier = Modifier.padding(8.dp)) {
+                    Text(deck.name, modifier = textModifer)
+                    Text(deck.formatName, modifier = textModifer)
+                    Text(deck.quantity.toString(), modifier = textModifer)
+                }
+            }
+
+        }
+    }}
 
 fun parseHtml(s: String): AnnotatedString {
     val strings = s.split("<", ">", "[", "]").listIterator()
@@ -404,13 +445,18 @@ fun parseHtml(s: String): AnnotatedString {
                 "b" -> withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                     append(strings.next())
                 }
-
                 "/b" -> {}
+
                 "i" -> withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
                     append(strings.next())
                 }
-
                 "/i" -> {}
+
+                "em" -> withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
+                    append(strings.next())
+                }
+                "/em" -> {}
+
                 DieIcon.BLANK.inlineTag -> appendInlineContent(
                     DieIcon.BLANK.code,
                     "[" + DieIcon.BLANK.inlineTag + "]"

@@ -3,7 +3,6 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.domain.model
 import java.util.Date
 
 data class Deck(
-    val id: String = "",
     val name: String,
     val creationDate: Date,
     val updateDate: Date,

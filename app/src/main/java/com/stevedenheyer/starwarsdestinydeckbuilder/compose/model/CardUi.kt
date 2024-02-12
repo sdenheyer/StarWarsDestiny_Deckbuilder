@@ -10,9 +10,9 @@ data class CardUi(
     val affiliation: String,
     val faction: String,
     val color: String,
-    val points: String?,
-    val cost: String?,
-    val health: String?,
+    val points: Pair<Int?, Int?>,
+    val cost: Int?,
+    val health: Int?,
     val type: String,
     val rarity: String,
     val diceRef: List<String>,
@@ -29,21 +29,9 @@ fun Card.toCardUi() = CardUi(
     affiliation = affiliationName ?: "",
     faction = factionName,
     color = factionCode,
-    points = points.asString()
-
-    /*run {
-        if (this.first == null && this.second == null) {
-            null
-        } else {
-            if (this.second == null) {
-                this.first.toString()
-            } else {
-                this.first.toString() + "/" + this.second.toString()
-            }
-        }
-    }*/,
-    cost = cost?.toString(),
-    health = health.toString(),
+    points = points,
+    cost = cost,
+    health = health,
     type = typeName,
     rarity = rarityName,
     diceRef = sides ?: emptyList(),

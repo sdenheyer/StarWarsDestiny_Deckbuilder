@@ -259,7 +259,9 @@ fun CardListScreen(
                                     (cardVM::findCard)(queryText.text)
                                 }
                             ),
-                            modifier = Modifier.clickable { keyboardController?.show() }
+                            modifier = Modifier.clickable {
+                                queryText = TextFieldValue("")
+                                keyboardController?.show() }
                         )
                     },
                     navigationIcon = {

@@ -1,17 +1,23 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.CardRepositoryImpl
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.usecases.GetCardWithFormat
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CodeOrCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Format
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
+import com.stevedenheyer.starwarsdestinydeckbuilder.utils.asString
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combineTransform
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.launch
 import java.net.URL
 import javax.inject.Inject
 
@@ -26,6 +32,7 @@ data class CardDetailUi(
     val typeName: String,
     val subtypes: List<String>?,
     val points: String?,
+    val cost: String?,
     val health: Int?,
     val sides: List<String>?,
     val has_errata: Boolean,
@@ -59,7 +66,8 @@ fun Card.toDetailUi() = CardDetailUi(
     subtitle = subtitle,
     typeName = typeName,
     subtypes = subtypes?.map { it.name },
-    points = points ?: if (cost != null) cost.toString() else "",
+    points = points.asString(),
+    cost = cost?.toString(),
     health = health,
     sides = sides,
     has_errata = hasErrata,
@@ -122,12 +130,14 @@ data class DeckDetailUi(
 class DetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     getCardWithFormat: GetCardWithFormat,
-    repo: CardRepositoryImpl,
+    private val repo: CardRepositoryImpl,
 ) : ViewModel() {
 
     val code: String = checkNotNull(savedStateHandle.get("code"))
 
-    val uiCard = getCardWithFormat(code).transform { resource ->
+    val card = getCardWithFormat(code).stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = Resource.loading())
+
+    val uiCard = card.transform { resource ->
         when (resource.status) {
             Resource.Status.SUCCESS -> {
                 if (resource.data != null)
@@ -146,9 +156,9 @@ class DetailViewModel @Inject constructor(
                     emit(CardUiState.noData(isLoading = false, errorMessage = resource.message))
             }
     }
-    }
+    }.stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = CardUiState.noData(isLoading = true, errorMessage = null))
 
-    private val decks = repo.getAllDecks()
+    private val decks = repo.getAllDecks().stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = emptyList())
 
     val uiDecks = combineTransform(decks, uiCard) { decks, uiCard ->
         if (uiCard is CardUiState.hasData) {
@@ -167,4 +177,19 @@ class DetailViewModel @Inject constructor(
             emit(deckList)
         }
     }
-}
+
+    fun writeDeck(deckName: String, quantity: Int) {
+        val limit = card.value.data?.deckLimit ?: 2
+        if (quantity <= limit) {
+            Log.d("SWD", "Attempting slot write: ${quantity}, ${limit}")
+            val deck = decks.value.find { it.name == deckName }
+            if (deck != null) {
+                Log.d("SWD", "Writing deck: ${deck.name}")
+                val slot = Slot(cardCode = code, quantity = quantity, dice = quantity, dices = null)
+                viewModelScope.launch { repo.updateDeck(deck, slot) }
+            }
+        }
+
+    }
+    }
+

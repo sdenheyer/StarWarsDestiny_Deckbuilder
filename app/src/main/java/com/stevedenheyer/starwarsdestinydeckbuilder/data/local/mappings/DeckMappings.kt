@@ -15,6 +15,7 @@ fun DeckEntity.toDomain() = Deck(
     formatName = deck.formatName,
     affiliationCode = deck.affiliationCode,
     affiliationName = deck.affiliationName,
+    slots = slots.map { it.toDomain() }
 )
 
 fun Deck.toEntity() = DeckBaseEntity(

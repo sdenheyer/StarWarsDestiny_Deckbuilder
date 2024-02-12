@@ -9,6 +9,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormatList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.repositories.CardRepository
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -100,4 +101,10 @@ class CardRepositoryImpl @Inject constructor(
     }
 
     override fun getAllDecks(): Flow<List<Deck>> = cardCache.getDecks()
+
+    override suspend fun updateDeck(deck: Deck, slot: Slot) {
+        cardCache.updateDeck(deck, slot)
+    }
+
+    override suspend fun getDeck(deckName: String): Deck = cardCache.getDeck(deckName)
 }

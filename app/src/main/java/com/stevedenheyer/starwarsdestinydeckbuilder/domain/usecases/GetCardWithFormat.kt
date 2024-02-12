@@ -6,6 +6,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CodeOrCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Format
+import com.stevedenheyer.starwarsdestinydeckbuilder.utils.asString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.first
@@ -70,7 +71,7 @@ class GetCardWithFormat @Inject constructor(val cardRepo: CardRepositoryImpl) {
                     ) {
                         format = format.copy(legality = "restricted")
                     }
-                    format = format.copy(balance = if (it.balance[card.code].isNullOrEmpty()) card.points else it.balance[card.code])
+                    format = format.copy(balance = if (it.balance[card.code].isNullOrEmpty()) card.points.asString() else it.balance[card.code])
 
                 } else {
                     format = format.copy(legality = "banned")

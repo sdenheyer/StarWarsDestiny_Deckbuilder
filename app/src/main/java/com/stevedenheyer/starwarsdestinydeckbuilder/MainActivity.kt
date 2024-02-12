@@ -3,15 +3,12 @@ package com.stevedenheyer.starwarsdestinydeckbuilder
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -19,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.CardListScreen
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.DeckDetailsScreen
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.DetailsScreen
 import com.stevedenheyer.starwarsdestinydeckbuilder.ui.theme.StarWarsDestinyDeckbuilderTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -48,13 +46,22 @@ fun DestinyApp(modifier: Modifier = Modifier,
 
    NavHost(modifier = modifier, navController = navController, startDestination = "card_list") {
        composable(route = "card_list") {
-           CardListScreen(isCompactScreen, modifier = modifier) { code -> navController.navigate("card_detail/${code}")}
+           CardListScreen(isCompactScreen = isCompactScreen,
+               modifier = modifier,
+               onCardClick = { code -> navController.navigate("card_detail/${code}") },
+               onDeckSelect = { name -> navController.navigate("deck_detail/${name}")})
        }
 
        composable(route = "card_detail/{code}", arguments = listOf(navArgument("code") {
            type = NavType.StringType
        })) {
             DetailsScreen(isCompactScreen, modifier = modifier)
+       }
+
+       composable(route = "deck_detail/{name}", arguments = listOf(navArgument("name") {
+           type = NavType.StringType
+       })) {
+           DeckDetailsScreen(isCompactScreen, modifier)
        }
    }
 }

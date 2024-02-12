@@ -20,9 +20,9 @@ data class Card(
     val ttsCardID: Int,
     val name: String,
     val subtitle: String?,
-    val cost: Int?,    //TODO:  Change this to string
+    val cost: Int?,
     val health: Int?,
-    val points: String?,
+    val points: Pair<Int?, Int?>,
     val text: String?,
     val deckLimit: Int,
     val flavor: String?,

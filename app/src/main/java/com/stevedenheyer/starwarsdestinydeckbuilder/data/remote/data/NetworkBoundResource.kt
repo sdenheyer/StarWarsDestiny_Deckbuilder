@@ -27,7 +27,7 @@ inline fun <DB, REMOTE> networkBoundResource(
         Log.d("SWD", "Fetching from remote...")
         emit(Resource.loading(localData))
 
-        fetchFromRemote().collect {apiResponse ->
+        fetchFromRemote().collect { apiResponse ->
             when (apiResponse) {
                 is ApiSuccessResponse -> {
                     processRemoteResponse(apiResponse)
@@ -59,6 +59,6 @@ inline fun <DB, REMOTE> networkBoundResource(
         Log.d("SWD", "Fetch from local")
         emitAll(fetchFromLocal().map {
           //  Log.d("SWD", "Fetch local output, $it")
-            Resource.success(it)})
+            Resource.success(it) })
     }
 }

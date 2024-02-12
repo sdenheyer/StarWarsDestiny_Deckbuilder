@@ -24,6 +24,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormatList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CodeOrCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.util.Date
@@ -131,10 +132,16 @@ class CardCache(
         dao.insertNewDeck(deck.toEntity())
     }
 
-    override suspend fun updateDeck(deck: Deck) {
-        deck.slots.forEach {
-            dao.insertSlot(it.toEntity(deck.name))
+    override suspend fun updateDeck(deck: Deck, slot: Slot) {
+        if (slot.quantity == 0) {
+            Log.d("SWD", "Deleting slot: ${slot.quantity}")
+            dao.deleteSlot(slot.toEntity(deck.name))
+        } else {
+            Log.d("SWD", "Writing new slot: ${slot.quantity}")
+            dao.insertSlot(slot.toEntity(deck.name))
         }
-        dao.updateDeck(deck.toEntity())
+        dao.updateDeck(deck.copy(updateDate = Date()).toEntity())
     }
+
+    override suspend fun getDeck(name: String): Deck = dao.getDeck(name).toDomain()
 }

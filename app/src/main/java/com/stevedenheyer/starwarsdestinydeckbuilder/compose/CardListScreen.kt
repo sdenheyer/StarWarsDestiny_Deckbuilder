@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,10 +23,12 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
@@ -33,6 +36,10 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -40,6 +47,8 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,19 +65,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
-import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardViewModel
-import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.UiState
-import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.menuUiState
+import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.UiCardSet
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import kotlinx.coroutines.launch
 import java.util.Date
 
@@ -83,17 +93,23 @@ fun CardListScreen(
     modifier: Modifier = Modifier,
     cardVM: CardViewModel = hiltViewModel(),
     onCardClick: (String) -> Unit,
+    onDeckSelect: (String) -> Unit,
 ) {
-    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
 
     val listUiState by cardVM.cardsFlow.collectAsStateWithLifecycle(
         UiState.noData(
-            isLoading = true,
+            isLoading = false,
             errorMessage = null
         )
     )
-    val menu by cardVM.menuItemsState.collectAsStateWithLifecycle(initialValue = menuUiState(isLoading = true, errorMessage = null, data = emptyList()))
+    val setsUiState by cardVM.cardSetsFlow.collectAsStateWithLifecycle(initialValue = UiState.noData(isLoading = false, errorMessage = null))
+    val decksUiState by cardVM.decksFlow.collectAsStateWithLifecycle(initialValue = emptyList())
+
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val scope = rememberCoroutineScope()
 
     var queryText by rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue(""))
@@ -123,19 +139,75 @@ fun CardListScreen(
                     }
                 )
                     LazyColumn {
-                        items(items = menu.data, key = { it.code }) { item ->
-                            NavigationDrawerItem(label = { Text(item.name) },
-                                selected = false,
-                                colors = itemColors,
-                                onClick = {
-                                    (cardVM::setCardSetSelection)(item.code)
-                                    scope.launch { drawerState.close() }
-                                })
+                        if (decksUiState.isNotEmpty()) {
+                            item {
+                                HorizontalDivider()
+                                Text(
+                                    "Decks",
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+                                )
+                            }
 
+                            items(items = decksUiState, key = { it.name }) { deck ->
+                                NavigationDrawerItem(label = { Text(deck.name) },
+                                    selected = false,
+                                    colors = itemColors,
+                                    onClick = {
+                                        onDeckSelect(deck.name)
+                                        scope.launch { drawerState.close() }
+                                    })
+                            }
                         }
+
+                        if (setsUiState is UiState.hasData) {
+                            val sets = (setsUiState as UiState.hasData<List<UiCardSet>>).data
+                            item {
+                                HorizontalDivider()
+                                Text(
+                                    "FFG Official",
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(start = 8.dp, top = 8.dp)
+                                )
+                            }
+
+                            items(items = sets, key = { it.code }) { set ->
+                                if (set.postition == 101) {
+                                    HorizontalDivider()
+                                    Text(
+                                        "A Renewed Hope",
+                                        fontWeight = FontWeight.Bold,
+                                        modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+                                    )
+                                }
+                                NavigationDrawerItem(label = { Text(set.name) },
+                                    selected = false,
+                                    colors = itemColors,
+                                    onClick = {
+                                        (cardVM::setCardSetSelection)(set.code)
+                                        scope.launch { drawerState.close() }
+                                    })
+
+                            }
+                        }
+
+                        if (setsUiState.isLoading) {
+                            item {
+                                CircularProgressIndicator(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .wrapContentSize(Alignment.Center)
+                                        .width(100.dp),
+                                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+
+
                     }
             }
         })
+
     {
 
         when {
@@ -163,6 +235,7 @@ fun CardListScreen(
         }
 
         Scaffold(
+
             topBar = {
                 CenterAlignedTopAppBar(
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -202,32 +275,46 @@ fun CardListScreen(
                     }
                 )
             },
+
+            snackbarHost = {
+                SnackbarHost(hostState = snackbarHostState)
+            }
+
         ) { padding ->
             when (val state = listUiState) {
-                is UiState.hasData -> TextList(
+                is UiState.hasData -> CardList(
                     isCompactScreen,
                     cards = state.data,
                     modifier = modifier.padding(padding),
-                    onCardClick
+                    onItemClick = onCardClick,
+                    onRefreshSwipe = { (cardVM::refreshCardsBySet)(true) }
                 )
 
                 is UiState.noData -> {
                     if (state.isLoading) {
-                        Text(
-                            text = "Loading...", fontSize = 48.sp, modifier = modifier
+                        CircularProgressIndicator(
+                            modifier = Modifier
                                 .fillMaxSize()
-                                .wrapContentSize(align = Alignment.Center)
-                        )
-                    } else {
-                        Text(
-                            text = state.errorMessage ?: "",
-                            fontSize = 48.sp,
-                            modifier = modifier
-                                .fillMaxSize()
-                                .wrapContentSize(align = Alignment.Center)
+                                .wrapContentSize(Alignment.Center)
+                                .width(100.dp),
+                            trackColor = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
 
+                    if (setsUiState.errorMessage != null) {
+                        LaunchedEffect(snackbarHostState) {
+                            val result = snackbarHostState.showSnackbar(setsUiState.errorMessage!!, actionLabel = "Retry", duration = SnackbarDuration.Indefinite)
+                            if (result == SnackbarResult.ActionPerformed) {
+                                cardVM.refreshSets(true)
+                            }
+                        }
+                    } else {
+                        if (listUiState.errorMessage != null) {
+                            LaunchedEffect(snackbarHostState) {
+                                snackbarHostState.showSnackbar(listUiState.errorMessage!!)
+                            }
+                        }
+                    }
                 }
             }
         }

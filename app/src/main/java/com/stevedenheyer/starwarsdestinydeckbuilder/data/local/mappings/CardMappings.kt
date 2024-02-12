@@ -28,7 +28,7 @@ fun CardEntity.toDomain() = Card(
     subtitle = card.subtitle,
     cost = card.cost,
     health = card.health,
-    points = card.points,
+    points = Pair(first = card.points1, second = card.points2),
     text = card.text,
     deckLimit = card.deckLimit,
     flavor = card.flavor,
@@ -66,7 +66,6 @@ fun Card.toEntity() = CardBaseEntity(
     affiliationName = affiliationName,
     rarityCode = rarityCode,
     rarityName = rarityName,
-// val subtypes = List<Subtype>?,  TODO: Set this up as an Entity
     position = position,
     code = code,
     ttsCardID = ttsCardID,
@@ -74,7 +73,8 @@ fun Card.toEntity() = CardBaseEntity(
     subtitle = subtitle,
     cost = cost,
     health = health,
-    points = points,
+    points1 = points.first,
+    points2 = points.second,
     text = text,
     deckLimit = deckLimit,
     flavor = flavor,
@@ -90,14 +90,4 @@ fun Card.toEntity() = CardBaseEntity(
 
     timestamp = Date().time,
     expiry = expiry
-
-// val reprints: List<Int>?,  Setup as One-to-Many
-// val parallelDiceOf: List<Int>?, Setup as One-to-Many
-
-    /*val legalityStandard: Int,   //TODO:  Set these up as entities
-    val legalityTrilogy: Int,
-    val legalityInfinite: Int,
-    val legalityARHStandard: Int,*/
-
-   // balance = balance
 )

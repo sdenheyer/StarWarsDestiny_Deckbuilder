@@ -3,6 +3,7 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.mappings
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.model.CardDTO
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CodeOrCard
+import java.lang.IndexOutOfBoundsException
 import java.net.URL
 import java.util.Date
 
@@ -26,7 +27,11 @@ fun CardDTO.toDomain() = Card(
     subtitle = subtitle,
     cost = cost,
     health = health,
-    points = points,
+    points = points?.split("/").run {
+            val first = this?.elementAtOrNull(0)?.toInt()
+            val second = this?.elementAtOrNull(1)?.toInt()
+            Pair(first, second)
+    },
     text = text,
     deckLimit = deck_limit,
     flavor = flavor,

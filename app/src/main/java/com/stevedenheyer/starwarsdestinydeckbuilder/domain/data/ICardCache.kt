@@ -17,6 +17,6 @@ interface ICardCache {
     suspend fun storeCardSets(sets: CardSetList)
     suspend fun storeFormats(formats: CardFormatList)
     suspend fun createDeck(deck: Deck)
-    suspend fun updateDeck(deck: Deck)
-
+    suspend fun updateDeck(deck: Deck, slot: Slot)
+    suspend fun getDeck(name: String):Deck
 }

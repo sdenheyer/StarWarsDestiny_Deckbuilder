@@ -1,6 +1,7 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.data.local.data
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -118,10 +119,17 @@ interface CardsDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSlot(slot: SlotEntity)
 
+    @Delete
+    suspend fun deleteSlot(slot: SlotEntity)
+
     @Update
     suspend fun updateDeck(deck: DeckBaseEntity)
 
     @Transaction
     @Query("SELECT * FROM deckbaseentity")
     fun getDecks(): Flow<List<DeckEntity>>
+
+    @Transaction
+    @Query("SELECT * FROM deckbaseentity WHERE name = :name")
+    suspend fun getDeck(name: String): DeckEntity
 }

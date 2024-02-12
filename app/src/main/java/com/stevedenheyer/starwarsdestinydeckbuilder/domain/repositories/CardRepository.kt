@@ -5,6 +5,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormatList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
 import kotlinx.coroutines.flow.Flow
 
 interface CardRepository {
@@ -22,4 +23,8 @@ interface CardRepository {
     suspend fun createDeck(deck: Deck)
 
     fun getAllDecks(): Flow<List<Deck>>
+
+    suspend fun updateDeck(deck: Deck, slot: Slot)
+
+    suspend fun getDeck(deckName: String): Deck
 }

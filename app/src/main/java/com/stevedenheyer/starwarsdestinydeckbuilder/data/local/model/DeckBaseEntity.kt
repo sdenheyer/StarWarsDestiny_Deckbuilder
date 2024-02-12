@@ -14,7 +14,6 @@ data class DeckBaseEntity (
     val formatCode: String,
     val formatName: String,
     val affiliationCode: String,
-
     val affiliationName: String,
 )
 
@@ -32,7 +31,7 @@ data class DeckEntity(
 
     @Relation(
         parentColumn = "name",
-        entityColumn = "deckName"
+        entityColumn = "deckName",
     )
     val slots:List<SlotEntity>
 )

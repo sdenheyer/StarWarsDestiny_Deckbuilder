@@ -45,12 +45,12 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
 
     private val cardSetSelection = MutableStateFlow("")
 
-    private val query = MutableStateFlow("")
+   /* private val query = MutableStateFlow("")
     private val cardsByQuery = query.transform { query ->
         if (query.isNotEmpty()) {
             emitAll(cardRepo.findCards(query))
         }
-    }
+    }*/
 
     private val _cardsFlow: MutableStateFlow<Resource<List<Card>>> = MutableStateFlow(Resource.success(null))
 
@@ -119,11 +119,11 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
             }
         }
 
-        viewModelScope.launch {
+        /*viewModelScope.launch {
             cardsByQuery.collect {resource ->
                 _cardsFlow.update { resource }
             }
-        }
+        }*/
 
         refreshSets(false)
     }
@@ -159,8 +159,16 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
     }
 
     fun findCard(queryText: String) {
-        query.update { queryText }
-    }
+        if (queryText.isNotBlank()) {
+            viewModelScope.launch(Dispatchers.IO) {
+                cardListJob?.cancelAndJoin()
+                cardListJob = this.coroutineContext.job
+                cardRepo.findCards(queryText).collect { resource ->
+                        _cardsFlow.update { resource }
+                    }
+                }
+            }
+        }
 
     suspend fun createDeck(deck: Deck) = cardRepo.createDeck(deck)
 

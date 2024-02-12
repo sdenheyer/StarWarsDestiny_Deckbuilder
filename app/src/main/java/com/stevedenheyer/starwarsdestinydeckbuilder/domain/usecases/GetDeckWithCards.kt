@@ -50,10 +50,14 @@ class GetDeckWithCards @Inject constructor(private val cardRepo: CardRepositoryI
                                         uiCard = uiCard.copy(isBanned = true)
                                     }
 
-                                    val balance = format.balance.get(card.setCode)
-                                    if (balance != null) {
+                                    val balance = format.balance.get(card.setCode)?.split("/").run {
+                                        val first = this?.elementAtOrNull(0)?.toInt()
+                                        val second = this?.elementAtOrNull(1)?.toInt()
+                                        Pair(first, second)
+                                    }
+                                    if (balance.first != null) {
                                         uiCard = uiCard.copy(
-                                            points = format.balance.get(card.setCode) ?: "",
+                                            points = balance,
                                             isRestricted = true
                                         )
                                     }

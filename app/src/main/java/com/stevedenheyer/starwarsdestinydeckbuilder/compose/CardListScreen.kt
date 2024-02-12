@@ -111,7 +111,7 @@ fun CardListScreen(
 
     val scope = rememberCoroutineScope()
 
-    var queryText by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+    val (queryText, setQueryText) = rememberSaveable(stateSaver = TextFieldValue.Saver) {
         mutableStateOf(TextFieldValue(""))
     }
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -134,6 +134,9 @@ fun CardListScreen(
                     selected = false,
                     colors = itemColors,
                     onClick = {
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
+                        setQueryText(TextFieldValue(""))
                         openCreateDeckDialog.value = true
                         scope.launch { drawerState.close() }
                     }
@@ -245,7 +248,7 @@ fun CardListScreen(
                     title = {
                         TextField(
                             value = queryText,
-                            onValueChange = { queryText = it },
+                            onValueChange = { setQueryText(it) },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
                                 imeAction = ImeAction.Search,
@@ -260,7 +263,7 @@ fun CardListScreen(
                                 }
                             ),
                             modifier = Modifier.clickable {
-                                queryText = TextFieldValue("")
+                                setQueryText(TextFieldValue(""))
                                 keyboardController?.show() }
                         )
                     },

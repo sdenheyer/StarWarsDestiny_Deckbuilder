@@ -35,6 +35,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.model.CardDTO
 import com.stevedenheyer.starwarsdestinydeckbuilder.ui.theme.getColorFromString
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.CardUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.toCardUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.utils.asString
 
 @Composable
 fun CardItem(modifier: Modifier, isScreenCompact: Boolean, card: CardUi, onItemClick: (String) -> Unit) =
@@ -136,7 +137,7 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
             }
             Column(modifier = Modifier.weight(2f)) {
                 val pointCostLabel = if (card.cost != null) "Cost" else "Points"
-                val pointsOrCost = if (card.cost != null) card.cost else card.points
+                val pointsOrCost = if (card.cost != null) card.cost.toString() else card.points.asString()
                 if (pointsOrCost != null) {
                     Text(pointCostLabel, style = MaterialTheme.typography.labelSmall)
                     Text(
@@ -172,7 +173,6 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
                 )
             }
         }
-        //  Divider()
     }
 }
 
@@ -246,7 +246,7 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
             }
             Column(modifier = Modifier.weight(2f)) {
                 val pointCostLabel = if (card.cost != null) "Cost" else "Points"
-                val pointsOrCost = if (card.cost != null) card.cost else card.points
+                val pointsOrCost = if (card.cost != null) card.cost.toString() else card.points.asString()
                 if (pointsOrCost != null) {
                     Text(pointCostLabel, style = MaterialTheme.typography.labelSmall)
                     Text(
@@ -258,7 +258,7 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
             Column(modifier = Modifier.weight(1.5f)) {
                 Text("Health", style = MaterialTheme.typography.labelSmall)
                 Text(
-                    card.health ?: "-",
+                    "${card.health ?: "-"}",
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }

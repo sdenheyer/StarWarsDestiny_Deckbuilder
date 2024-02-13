@@ -3,6 +3,7 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.compose
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -50,34 +51,36 @@ fun DeckDetailsScreen(
             val deck = (deckDetail as UiState.hasData<DeckUi>).data
 
             val characters = deck.cards.filter { it.type == "Character" }
-            val charCardSize = characters.map { it.quantity }.reduce { acc, points -> acc + points }
+            val charCardSize = characters.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0
             val battlefield = deck.cards.filter { it.type == "Battlefield" }
             val plots = deck.cards.filter { it.type == "Plot" }
-            val plotCardSize = plots.map { it.quantity }.reduce { acc, points -> acc + points }
+            val plotCardSize = plots.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0
             val upgrades = deck.cards.filter { it.type == "Upgrade" }
-            val upgradesCardSize = upgrades.map { it.quantity }.reduce { acc, points -> acc + points }
-            val upgradesDice = upgrades.map { if (it.diceRef.isNotEmpty()) it.quantity else {0} }.reduce { acc, dice -> acc + dice }
+            val upgradesCardSize = upgrades.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0
+            val upgradesDice = upgrades.map { if (it.diceRef.isNotEmpty()) it.quantity else {0} }.reduceOrNull { acc, dice -> acc + dice } ?: 0
             val downgrades = deck.cards.filter { it.type == "Downgrade" }
-            val downgradesCardSize = downgrades.map { it.quantity }.reduce { acc, points -> acc + points }
-            val downgradesDice = downgrades.map { if (it.diceRef.isNotEmpty()) it.quantity else {0} }.reduce { acc, dice -> acc + dice }
+            val downgradesCardSize = downgrades.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0
+            val downgradesDice = downgrades.map { if (it.diceRef.isNotEmpty()) it.quantity else {0} }.reduceOrNull { acc, dice -> acc + dice } ?: 0
             val support = deck.cards.filter { it.type == "Support" }
-            val supportCardSize = support.map { it.quantity }.reduce { acc, points -> acc + points }
-            val supportDice = support.map { if (it.diceRef.isNotEmpty()) it.quantity else {0} }.reduce { acc, dice -> acc + dice }
+            val supportCardSize = support.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0
+            val supportDice = support.map { if (it.diceRef.isNotEmpty()) it.quantity else {0} }.reduceOrNull { acc, dice -> acc + dice } ?: 0
             val events = deck.cards.filter { it.type == "Event" }
-            val eventsCardSize = events.map { it.quantity }.reduce { acc, points -> acc + points }
-            val eventsDice = events.map { if (it.diceRef.isNotEmpty()) it.quantity else {0} }.reduce { acc, dice -> acc + dice }
-            
-            OutlinedCard(onClick = {  }) {
+            val eventsCardSize = events.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0
+            val eventsDice = events.map { if (it.diceRef.isNotEmpty()) it.quantity else {0} }.reduceOrNull { acc, dice -> acc + dice } ?: 0
+
+            Column(modifier = Modifier.padding(padding)) {
+            OutlinedCard(onClick = {  },
+                modifier = Modifier.fillMaxWidth()) {
                 Column {
                     Row {
                         Text(deck.affiliation)
                         Text(deck.format)
                     }
                     Row {
-                        val plotPoints = plots.map { it.points.first ?: 0 }.reduce { acc, points -> acc + points}
+                        val plotPoints = plots.map { it.points.first ?: 0 }.reduceOrNull { acc, points -> acc + points} ?: 0
                         Text("Plots: ${plotPoints} points")
-                        val charPoints = characters.map { (if (it.quantity == 2) it.points.second else it.points.first) ?: 0}.reduce { acc, points -> acc + points }
-                        val charDice = characters.map { it.quantity }.reduce { acc, points -> acc + points }
+                        val charPoints = characters.map { (if (it.quantity == 2) it.points.second else it.points.first) ?: 0}.reduceOrNull { acc, points -> acc + points } ?: 0
+                        val charDice = characters.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0
                         Text("Characters: ${charPoints} points, ${charDice} dice")
                         val drawDeckSize = upgradesCardSize + downgradesCardSize + supportCardSize + eventsCardSize
                         val drawDeckDice = upgradesDice + downgradesDice + supportDice + eventsDice
@@ -86,8 +89,8 @@ fun DeckDetailsScreen(
             }
 
             LazyColumn(modifier = modifier
-                .fillMaxSize()
-                .padding(padding)) {
+            //    .fillMaxSize()
+                ) {
                 item {
                     Text(buildAnnotatedString {
                         append("Character")
@@ -203,6 +206,7 @@ fun DeckDetailsScreen(
                     )
                 }
             }
+        }
         }
     }
 }

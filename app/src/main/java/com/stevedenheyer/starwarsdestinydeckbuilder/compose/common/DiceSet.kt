@@ -1,4 +1,4 @@
-package com.stevedenheyer.starwarsdestinydeckbuilder.compose
+package com.stevedenheyer.starwarsdestinydeckbuilder.compose.common
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

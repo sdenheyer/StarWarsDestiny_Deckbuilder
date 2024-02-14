@@ -7,6 +7,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.material.Card
+import androidx.compose.material.Divider
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -17,10 +21,14 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.getInlines
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.CardUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.DeckUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
@@ -43,7 +51,7 @@ fun DeckDetailsScreen(
                    containerColor = MaterialTheme.colorScheme.primaryContainer,
                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
                ),
-                   title = { Text((deckDetail as UiState.hasData).data.name, style = MaterialTheme.typography.titleLarge) })
+                   title = { Text((deckDetail as UiState.hasData).data.name, style = MaterialTheme.typography.headlineLarge) })
         }
 
     ) { padding ->
@@ -69,34 +77,41 @@ fun DeckDetailsScreen(
             val eventsDice = events.map { if (it.diceRef.isNotEmpty()) it.quantity else {0} }.reduceOrNull { acc, dice -> acc + dice } ?: 0
 
             Column(modifier = Modifier.padding(padding)) {
-            OutlinedCard(onClick = {  },
+            Card(backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                shape = RectangleShape,
                 modifier = Modifier.fillMaxWidth()) {
                 Column {
                     Row {
-                        Text(deck.affiliation)
-                        Text(deck.format)
+                        Text(deck.affiliation, style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.weight(1f))
+                        Text(deck.format, style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.weight(1f))
                     }
-                    Row {
+                   // Column {
                         val plotPoints = plots.map { it.points.first ?: 0 }.reduceOrNull { acc, points -> acc + points} ?: 0
-                        Text("Plots: ${plotPoints} points")
+                        Text("Plots: ${plotPoints} points", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.fillMaxWidth())
                         val charPoints = characters.map { (if (it.quantity == 2) it.points.second else it.points.first) ?: 0}.reduceOrNull { acc, points -> acc + points } ?: 0
                         val charDice = characters.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0
-                        Text("Characters: ${charPoints} points, ${charDice} dice")
+                        Text("Characters: ${charPoints} points, ${charDice} dice", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.fillMaxWidth())
                         val drawDeckSize = upgradesCardSize + downgradesCardSize + supportCardSize + eventsCardSize
                         val drawDeckDice = upgradesDice + downgradesDice + supportDice + eventsDice
-                    }
+                        Text("Draw deck: ${drawDeckSize} cards, ${drawDeckDice} dice", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onPrimaryContainer, modifier = Modifier.fillMaxWidth())
+                  //  }
                 }
             }
+
+              //  Divider()
 
             LazyColumn(modifier = modifier
             //    .fillMaxSize()
                 ) {
                 item {
                     Text(buildAnnotatedString {
-                        append("Character")
-                        //TODO:  Inline graphics
-                        append("(${charCardSize})")
-                    }, style = MaterialTheme.typography.titleLarge)
+                        append("Character ")
+                        append("(${charCardSize}")
+                        appendInlineContent("dice", "dice")
+                        append(")")
+                    }, style = MaterialTheme.typography.titleLarge,
+                        inlineContent = getInlines())
                 }
 
                 items(items = characters, key = { it.code }) { card ->
@@ -124,9 +139,11 @@ fun DeckDetailsScreen(
                 item {
                     Text(buildAnnotatedString {
                         append("Plots")
-                        //TODO:  Inline graphics
-                        append("(${plotCardSize})")
-                    }, style = MaterialTheme.typography.titleLarge)
+                        append("(${plotCardSize}")
+                        appendInlineContent("cards", "cards")
+                        append(")")
+                    }, style = MaterialTheme.typography.titleLarge,
+                        inlineContent = getInlines())
                 }
 
                 items(items = plots, key = { it.code }) { card ->
@@ -142,8 +159,13 @@ fun DeckDetailsScreen(
                     Text(buildAnnotatedString {
                         append("Upgrade")
                         //TODO:  Inline graphics
-                        append("(${upgradesCardSize} ${upgradesDice})")
-                    }, style = MaterialTheme.typography.titleLarge)
+                        append("(${upgradesCardSize}")
+                        appendInlineContent("cards", "cards")
+                        append("${upgradesDice}")
+                        appendInlineContent("dice", "dice")
+                        append(")")
+                    }, style = MaterialTheme.typography.titleLarge,
+                        inlineContent = getInlines())
                 }
 
                 items(items = upgrades, key = { it.code }) { card ->
@@ -158,9 +180,13 @@ fun DeckDetailsScreen(
                 item {
                     Text(buildAnnotatedString {
                         append("Downgrade")
-                        //TODO:  Inline graphics
-                        append("(${downgradesCardSize} ${downgradesDice})")
-                    }, style = MaterialTheme.typography.titleLarge)
+                        append("(${downgradesCardSize}")
+                        appendInlineContent("cards", "cards")
+                        append("${downgradesDice}")
+                        appendInlineContent("dice", "dice")
+                        append(")")
+                    }, style = MaterialTheme.typography.titleLarge,
+                        inlineContent = getInlines())
                 }
 
                 items(items = downgrades, key = { it.code }) { card ->
@@ -175,9 +201,13 @@ fun DeckDetailsScreen(
                 item {
                     Text(buildAnnotatedString {
                         append("Support")
-                        //TODO:  Inline graphics
-                        append("(${supportCardSize} ${supportDice})")
-                    }, style = MaterialTheme.typography.titleLarge)
+                        append("(${supportCardSize}")
+                        appendInlineContent("cards", "cards")
+                        append("${supportDice}")
+                        appendInlineContent("dice", "dice")
+                        append(")")
+                    }, style = MaterialTheme.typography.titleLarge,
+                            inlineContent = getInlines())
                 }
 
                 items(items = support, key = { it.code }) { card ->
@@ -192,9 +222,13 @@ fun DeckDetailsScreen(
                 item {
                     Text(buildAnnotatedString {
                         append("Event")
-                        //TODO:  Inline graphics
-                        append("(${eventsCardSize} ${eventsDice})")
-                    }, style = MaterialTheme.typography.titleLarge)
+                        append("(${eventsCardSize}")
+                        appendInlineContent("cards", "cards")
+                        append("${eventsDice}")
+                        appendInlineContent("dice", "dice")
+                        append(")")
+                    }, style = MaterialTheme.typography.titleLarge,
+                        inlineContent = getInlines())
                 }
 
                 items(items = events, key = { it.code }) { card ->

@@ -1,4 +1,4 @@
-package com.stevedenheyer.starwarsdestinydeckbuilder.compose
+package com.stevedenheyer.starwarsdestinydeckbuilder.compose.common
 
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
 

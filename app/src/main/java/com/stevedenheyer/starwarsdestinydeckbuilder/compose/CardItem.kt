@@ -30,6 +30,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.DieGroup
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.getInlines
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.mappings.toDomain
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.model.CardDTO
 import com.stevedenheyer.starwarsdestinydeckbuilder.ui.theme.getColorFromString
@@ -41,30 +43,6 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.utils.asString
 fun CardItem(modifier: Modifier, isScreenCompact: Boolean, card: CardUi, onItemClick: (String) -> Unit) =
     if (isScreenCompact) CardItemCompact(modifier = modifier, card = card, onItemClick = onItemClick) else
         CardItemLarge(modifier = modifier, card = card, onItemClick = onItemClick)
-
-@Composable
-fun getInlines() = mapOf(
-    "cards" to InlineTextContent(Placeholder(
-        width = MaterialTheme.typography.titleLarge.fontSize,
-        height = MaterialTheme.typography.titleLarge.fontSize,
-        placeholderVerticalAlign = PlaceholderVerticalAlign.Center)) {
-        Image(painter = painterResource(id = R.drawable.noun_cards_1212866),
-            contentDescription = "cards",
-            modifier = Modifier.fillMaxSize().scale(1.1f, 1.2f),
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-        )
-    },
-    "dice" to InlineTextContent(Placeholder(
-        width = MaterialTheme.typography.titleLarge.fontSize,
-        height = MaterialTheme.typography.titleLarge.fontSize,
-        placeholderVerticalAlign = PlaceholderVerticalAlign.Center)) {
-        Image(painter = painterResource(id = R.drawable.noun_cube_4025),
-            contentDescription = "cards",
-            modifier = Modifier.fillMaxSize(),
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-        )
-    }
-)
 
 @Composable
 fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Unit) {

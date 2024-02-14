@@ -160,6 +160,7 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
 
     fun findCard(queryText: String) {
         if (queryText.isNotBlank()) {
+            cardSetSelection.value = ""
             viewModelScope.launch(Dispatchers.IO) {
                 cardListJob?.cancelAndJoin()
                 cardListJob = this.coroutineContext.job

@@ -56,6 +56,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.DieGroup
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.DieIcon
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.mappings.toDomain
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.model.CardDTO
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Format

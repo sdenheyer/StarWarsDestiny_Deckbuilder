@@ -13,8 +13,8 @@ import javax.inject.Inject
 
 class GetCardFromCode @Inject constructor(val cardRepo: CardRepositoryImpl) {
     operator fun invoke(
+        forceRemoteUpdate: Boolean = false,
         vararg codes: CardOrCode,
-        forceRemoteUpdate: Boolean = false
     ): Flow<List<CardOrCode>> = flow {
         val cards = ArrayList<CardOrCode>()
 

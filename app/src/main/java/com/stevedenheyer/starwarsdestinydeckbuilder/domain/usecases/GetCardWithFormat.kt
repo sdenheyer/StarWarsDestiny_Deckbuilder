@@ -25,9 +25,9 @@ class GetCardWithFormat @Inject constructor(val cardRepo: CardRepositoryImpl, va
         if (formatsResource.status == Resource.Status.SUCCESS && cardResource.status == Resource.Status.SUCCESS && cardResource.data != null) {
             var card = cardResource.data
 
-            val reprints = getCards(*card.reprints.toTypedArray()).first()
+            val reprints = getCards(false, *card.reprints.toTypedArray()).first()
 
-            val parellelDiceOf = getCards(*card.parallelDiceOf.toTypedArray()).first()
+            val parellelDiceOf = getCards(false, *card.parallelDiceOf.toTypedArray()).first()
 
             if (reprints.any { it is CardOrCode.hasCode} || parellelDiceOf.any { it is CardOrCode.hasCode }) {
                 emit(Resource.error(msg = formatsResource.message ?: "", data = cardResource.data))

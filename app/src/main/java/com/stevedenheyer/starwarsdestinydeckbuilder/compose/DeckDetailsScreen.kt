@@ -27,7 +27,6 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.getInlines
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.DeckUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DeckViewModel
-import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.UiDeck
 
 @Composable
 fun DeckDetailsScreen(
@@ -78,7 +77,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
             characters.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0
         val battlefield = deck.battlefieldCard
         val plot = deck.plotCard
-        val upgrades = deck.cards.filter { it.type == "Upgrade" }
+        val upgrades = deck.slots.filter { it.type == "Upgrade" }
         val upgradesCardSize =
             upgrades.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0
         val upgradesDice = upgrades.map {
@@ -86,7 +85,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                 0
             }
         }.reduceOrNull { acc, dice -> acc + dice } ?: 0
-        val downgrades = deck.cards.filter { it.type == "Downgrade" }
+        val downgrades = deck.slots.filter { it.type == "Downgrade" }
         val downgradesCardSize =
             downgrades.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0
         val downgradesDice = downgrades.map {
@@ -94,7 +93,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                 0
             }
         }.reduceOrNull { acc, dice -> acc + dice } ?: 0
-        val support = deck.cards.filter { it.type == "Support" }
+        val support = deck.slots.filter { it.type == "Support" }
         val supportCardSize =
             support.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0
         val supportDice = support.map {
@@ -102,7 +101,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                 0
             }
         }.reduceOrNull { acc, dice -> acc + dice } ?: 0
-        val events = deck.cards.filter { it.type == "Event" }
+        val events = deck.slots.filter { it.type == "Event" }
         val eventsCardSize =
             events.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0
         val eventsDice = events.map {
@@ -139,7 +138,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                     val charPoints = characters.map {
                         (if (it.isElite) it.points.second else it.points.first) ?: 0
                     }.reduceOrNull { acc, points -> acc + points } ?: 0
-                    val charDice = characters.map { it.quantity }
+                    val charDice = characters.map { if (it.isElite) 2 else it.quantity }
                         .reduceOrNull { acc, points -> acc + points } ?: 0
                     Text(
                         "Characters: ${charPoints} points, ${charDice} dice",

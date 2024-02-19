@@ -11,7 +11,7 @@ data class DeckUi(
     val plotCard: CardUi? = null,
 
     val chars: List<CardUi> = emptyList(),
-    val cards: List<CardUi> = emptyList(),
+    val slots: List<CardUi> = emptyList(),
 )
 
 fun Deck.toDeckUi() = DeckUi(

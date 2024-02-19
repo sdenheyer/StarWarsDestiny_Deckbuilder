@@ -667,7 +667,7 @@ fun DeckControls(
         "Plot" -> AddSingle(
             modifier = modifier,
             deck = deck,
-            deckHasCard = card.code == deck.battlefield,
+            deckHasCard = card.code == deck.plot,
             changeQuantity = changeQuantity
         )
 

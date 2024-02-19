@@ -8,7 +8,8 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.data.CardRepositoryImpl
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.usecases.GetCardWithFormat
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
-import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CodeOrCard
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CharacterCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Format
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.asString
@@ -78,14 +79,14 @@ fun Card.toDetailUi() = CardDetailUi(
     position = position,
     reprints = reprints.mapNotNull {
         when (it) {
-            is CodeOrCard.CardValue -> it.value.toMiniCard()
-            is CodeOrCard.CodeValue -> null
+            is CardOrCode.hasCard -> it.card.toMiniCard()
+            is CardOrCode.hasCode -> null
             }
         },
     parellelDice = parallelDiceOf.mapNotNull {
         when (it) {
-            is CodeOrCard.CardValue -> it.value.toMiniCard()
-            is CodeOrCard.CodeValue -> null
+            is CardOrCode.hasCard -> it.card.toMiniCard()
+            is CardOrCode.hasCode -> null
         }
     },
     imagesrc = imageSrc,
@@ -121,9 +122,15 @@ data class DeckDetailUi(
     val name: String,
     val formatName: String,
     val affiliationName: String,
+
     val quantity: Int,
+    val isUnique: Boolean,
+    val isElite: Boolean,
     val maxQuantity: Int,
-    val dice: Int,
+    val plot: String?,
+    val battlefield: String?,
+    val pointsUsed: Int,
+    val deckSize: Int,
 )
 
 @HiltViewModel
@@ -135,9 +142,9 @@ class DetailViewModel @Inject constructor(
 
     val code: String = checkNotNull(savedStateHandle.get("code"))
 
-    val card = getCardWithFormat(code).stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = Resource.loading())
+    val cardFlow = getCardWithFormat(code).stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = Resource.loading())
 
-    val uiCard = card.transform { resource ->
+    val uiCard = cardFlow.transform { resource ->
         when (resource.status) {
             Resource.Status.SUCCESS -> {
                 if (resource.data != null)
@@ -164,28 +171,95 @@ class DetailViewModel @Inject constructor(
         if (uiCard is CardUiState.hasData) {
             val card = uiCard.data
             val deckList = decks.map { deck ->
-                val quantity = deck.slots.find { it.cardCode == card.code }?.quantity ?: 0
+
+                val quantity = if (card.typeName == "Character")
+                    deck.characters.find { it.cardOrCode.fetchCode() == card.code }?.quantity ?: 0
+                else
+                    deck.slots.find { it.cardOrCode.fetchCode() == card.code }?.quantity ?: 0
+                val isElite = if (card.typeName == "Character" &&
+                    card.isUnique &&
+                    deck.characters.find { it.cardOrCode.fetchCode() == card.code }?.isElite ?: false)
+                    true else false
+
                 DeckDetailUi(
                     name = deck.name,
                     formatName = deck.formatName,
                     affiliationName = deck.affiliationName,
+
                     quantity = quantity,
+                    isUnique = card.isUnique,
+                    isElite = isElite,
                     maxQuantity = card.deckLimit,
-                    dice = quantity
+                    plot = deck.plotCardCode?.fetchCode(),
+                    battlefield = deck.battlefieldCardCode?.fetchCode(),
+                    pointsUsed = deck.plotPoints + (deck.characters.map { it.points * it.quantity }.reduceOrNull { acc, i ->  acc + i } ?: 0),
+                    deckSize = deck.slots.map { it.quantity }.reduceOrNull { acc, i ->  acc + i } ?: 0
                 )
             }
             emit(deckList)
         }
     }
 
-    fun writeDeck(deckName: String, quantity: Int) {
-        val limit = card.value.data?.deckLimit ?: 2
+    fun writeDeck(deckName: String, quantity: Int, isElite: Boolean) {
+        val card = (uiCard.value as CardUiState.hasData).data
+        when (card.typeName) {
+            "Battlefield" -> writeDeck(deckName)
+            "Plot" -> writeDeck(deckName)
+            "Character" -> {
+                writeDeckWithChar(deckName, quantity, isElite)
+            }
+            else -> writeDeckWithSlot(deckName, quantity)
+        }
+    }
+
+    private fun writeDeck(deckName: String) {
+        var deck = decks.value.find { it.name == deckName }
+        if (deck != null) {
+            val card = cardFlow.value.data
+            Log.d("SWD", "Writing deck: ${deck.name} ${card?.typeCode}")
+            when (card?.typeCode) {
+                "battlefield" -> if (deck.battlefieldCardCode?.fetchCode() == card.code)
+                    deck = deck.copy(battlefieldCardCode = null)
+                else
+                    deck = deck.copy(battlefieldCardCode = CardOrCode.hasCode(card.code))
+                "plot" -> deck = if (deck.plotCardCode == CardOrCode.hasCode(card.code))
+                    deck.copy(plotCardCode = null, plotPoints = 0)
+                else
+                    deck.copy(plotCardCode = CardOrCode.hasCode(card.code), plotPoints = card.points.first ?: 0)
+            }
+            viewModelScope.launch { repo.updateDeck(deck) }
+        }
+    }
+
+    private fun writeDeckWithChar(deckName: String, quantity: Int, isElite: Boolean) {
+        val deck = decks.value.find { it.name == deckName }
+        val card = try { checkNotNull(cardFlow.value.data) }
+        catch (e:IllegalStateException) {
+            return
+        }
+        if (deck != null) {
+            Log.d("SWD", "Writing deck: ${deck.name}, ${quantity}")
+            val char = CharacterCard(cardOrCode = CardOrCode.hasCode(code),
+                points = (if (isElite) card.points.second else card.points.first) ?: 0,
+                quantity = if (isElite) 1 else quantity,
+                isElite = isElite,
+                dice = if (isElite) 2 else quantity,
+                dices = null)
+            viewModelScope.launch { repo.updateDeck(deck, char) }
+        }
+    }
+
+    private fun writeDeckWithSlot(deckName: String, quantity: Int) {
+        val limit = cardFlow.value.data?.deckLimit ?: 2
         if (quantity <= limit) {
             Log.d("SWD", "Attempting slot write: ${quantity}, ${limit}")
             val deck = decks.value.find { it.name == deckName }
             if (deck != null) {
                 Log.d("SWD", "Writing deck: ${deck.name}")
-                val slot = Slot(cardCode = code, quantity = quantity, dice = quantity, dices = null)
+                val slot = Slot(cardOrCode = CardOrCode.hasCode(code),
+                    quantity = quantity,
+                    dice = if (cardFlow.value.data?.hasDie == true) quantity else 0,
+                    dices = null)
                 viewModelScope.launch { repo.updateDeck(deck, slot) }
             }
         }

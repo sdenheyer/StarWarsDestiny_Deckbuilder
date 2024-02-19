@@ -11,11 +11,27 @@ data class Deck(
     val formatName: String,
     val affiliationCode: String,
     val affiliationName: String,
+
+    val battlefieldCardCode: CardOrCode? = null,
+    val plotCardCode: CardOrCode? = null,
+    val plotPoints: Int = 0,
+
+    val characters: List<CharacterCard> = emptyList(),
+
     val slots: List<Slot> = emptyList()
 )
 
+data class CharacterCard(
+    val cardOrCode: CardOrCode,
+    val points: Int,
+    val quantity: Int,
+    val isElite: Boolean,
+    val dice: Int,
+    val dices: String?,
+)
+
 data class Slot(
-    val cardCode: String,
+    val cardOrCode: CardOrCode,
     val quantity: Int,
     val dice: Int,
     val dices: String?

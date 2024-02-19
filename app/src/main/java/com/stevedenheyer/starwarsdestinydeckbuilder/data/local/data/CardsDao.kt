@@ -17,6 +17,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardReprint
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardSetEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardSetTimeEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardSubtypeCrossRef
+import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CharacterEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.DeckBaseEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.DeckEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.FormatBannedCrossref
@@ -115,6 +116,12 @@ interface CardsDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertNewDeck(deck: DeckBaseEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertChar(charCard: CharacterEntity)
+
+    @Delete
+    suspend fun deleteChar(charCard: CharacterEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSlot(slot: SlotEntity)

@@ -3,7 +3,7 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.data.local.mappings
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardBaseEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
-import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CodeOrCard
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Subtype
 import java.net.URL
 import java.util.Date
@@ -41,8 +41,8 @@ fun CardEntity.toDomain() = Card(
     imageSrc = URL(card.imageSrc),
     label = card.label,
     cp = card.cp,
-    reprints = reprints.map { CodeOrCard.CodeValue(it.cardCode) },
-    parallelDiceOf = parellelDiceOf.map { CodeOrCard.CodeValue(it.cardCode) },
+    reprints = reprints.map { CardOrCode.hasCode(it.cardCode) },
+    parallelDiceOf = parellelDiceOf.map { CardOrCode.hasCode(it.cardCode) },
 
     timestamp = card.timestamp,
     expiry = card.expiry,

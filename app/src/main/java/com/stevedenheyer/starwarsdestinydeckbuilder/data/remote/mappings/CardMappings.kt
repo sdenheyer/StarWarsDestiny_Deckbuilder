@@ -2,8 +2,8 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.mappings
 
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.model.CardDTO
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
-import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CodeOrCard
-import java.lang.IndexOutOfBoundsException
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
+import com.stevedenheyer.starwarsdestinydeckbuilder.utils.asIntPair
 import java.net.URL
 import java.util.Date
 
@@ -27,11 +27,7 @@ fun CardDTO.toDomain() = Card(
     subtitle = subtitle,
     cost = cost,
     health = health,
-    points = points?.split("/").run {
-            val first = this?.elementAtOrNull(0)?.toInt()
-            val second = this?.elementAtOrNull(1)?.toInt()
-            Pair(first, second)
-    },
+    points = points.asIntPair(),
     text = text,
     deckLimit = deck_limit,
     flavor = flavor,
@@ -44,8 +40,8 @@ fun CardDTO.toDomain() = Card(
     imageSrc = URL(imagesrc),
     label = label,
     cp = cp,
-    reprints = reprints?.map { CodeOrCard.CodeValue(it) } ?: emptyList(),
-    parallelDiceOf = parallel_dice_of?.map { CodeOrCard.CodeValue(it) } ?: emptyList(),
+    reprints = reprints?.map { CardOrCode.hasCode(it) } ?: emptyList(),
+    parallelDiceOf = parallel_dice_of?.map { CardOrCode.hasCode(it) } ?: emptyList(),
 
     timestamp = Date().time,
 )

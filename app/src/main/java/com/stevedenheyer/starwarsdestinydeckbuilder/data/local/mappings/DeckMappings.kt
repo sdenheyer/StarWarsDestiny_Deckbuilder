@@ -1,8 +1,11 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.data.local.mappings
 
+import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CharacterEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.DeckBaseEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.DeckEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.SlotEntity
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CharacterCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
 import java.util.Date
@@ -15,6 +18,11 @@ fun DeckEntity.toDomain() = Deck(
     formatName = deck.formatName,
     affiliationCode = deck.affiliationCode,
     affiliationName = deck.affiliationName,
+
+    battlefieldCardCode = if (deck.battlefieldCardCode == null) null else CardOrCode.hasCode(deck.battlefieldCardCode),
+    plotCardCode = if (deck.plotCardCode == null) null else CardOrCode.hasCode(deck.plotCardCode),
+    plotPoints = deck.plotPoints,
+    characters = characters.map { it.toDomain() },
     slots = slots.map { it.toDomain() }
 )
 
@@ -26,10 +34,33 @@ fun Deck.toEntity() = DeckBaseEntity(
     formatName = formatName,
     affiliationCode = affiliationCode,
     affiliationName = affiliationName,
+
+    battlefieldCardCode = battlefieldCardCode?.fetchCode(),
+    plotCardCode = plotCardCode?.fetchCode(),
+    plotPoints = plotPoints,
+)
+
+fun CharacterEntity.toDomain() = CharacterCard(
+    cardOrCode = CardOrCode.hasCode(cardCode),
+    points = points,
+    quantity = quantity,
+    isElite = isElite,
+    dice = dice,
+    dices = dices,
+)
+
+fun CharacterCard.toEntity(deckName: String) = CharacterEntity(
+    deckName = deckName,
+    cardCode = cardOrCode.fetchCode(),
+    points = points,
+    quantity = quantity,
+    isElite = isElite,
+    dice = dice,
+    dices = dices,
 )
 
 fun SlotEntity.toDomain() = Slot(
-    cardCode = cardCode,
+    cardOrCode = CardOrCode.hasCode(cardCode),
     quantity = quantity,
     dice = dice,
     dices = dices,
@@ -37,7 +68,7 @@ fun SlotEntity.toDomain() = Slot(
 
 fun Slot.toEntity(deckName: String) = SlotEntity(
     deckName = deckName,
-    cardCode = cardCode,
+    cardCode = cardOrCode.fetchCode(),
     quantity = quantity,
     dice = dice,
     dices = dices,

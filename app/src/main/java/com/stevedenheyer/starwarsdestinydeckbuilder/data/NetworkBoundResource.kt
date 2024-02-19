@@ -1,6 +1,9 @@
-package com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data
+package com.stevedenheyer.starwarsdestinydeckbuilder.data
 
 import android.util.Log
+import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiErrorResponse
+import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiResponse
+import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiSuccessResponse
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.Flow
@@ -59,6 +62,6 @@ inline fun <DB, REMOTE> networkBoundResource(
         Log.d("SWD", "Fetch from local")
         emitAll(fetchFromLocal().map {
           //  Log.d("SWD", "Fetch local output, $it")
-            Resource.success(it) })
+            Resource.success(isFromDB = true, data = it) })
     }
 }

@@ -1,13 +1,14 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.data
 
+import android.util.Log
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.data.CardCache
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.CardNetwork
-import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.networkBoundResource
 import com.stevedenheyer.starwarsdestinydeckbuilder.di.IoDispatcher
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormatList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CharacterCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.repositories.CardRepository
@@ -15,7 +16,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
@@ -102,8 +102,17 @@ class CardRepositoryImpl @Inject constructor(
 
     override fun getAllDecks(): Flow<List<Deck>> = cardCache.getDecks()
 
+    override suspend fun updateDeck(deck: Deck) {
+        cardCache.updateDeck(deck)
+    }
+
     override suspend fun updateDeck(deck: Deck, slot: Slot) {
+        Log.d("SWD", "Writing new Deck: ${deck.battlefieldCardCode}")
         cardCache.updateDeck(deck, slot)
+    }
+
+    override suspend fun updateDeck(deck: Deck, char: CharacterCard) {
+        cardCache.updateDeck(deck, char)
     }
 
     override suspend fun getDeck(deckName: String): Deck = cardCache.getDeck(deckName)

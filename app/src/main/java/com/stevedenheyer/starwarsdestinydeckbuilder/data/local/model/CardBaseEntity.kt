@@ -98,27 +98,3 @@ data class CardEntity(
     )
     val parellelDiceOf: List<CardCode>,
 )
-
-
-/*
-Kinda think this should be saved in entirely separate record to mirror DTO and constructed during composition
-
-data class CardFormat(
-    @Embedded val card: CardEntity,
-    @Relation(
-        parentColumn = "code",
-        entityColumn = "cardCode"
-    )
-    val formats: List<FormatEntity>
-)
-@Entity
-data class FormatEntity(
-    @PrimaryKey val id: Long,
-    val cardCode: String,
-    val gameType: String,
-    val legality: String,
-    val balance: String,
-)
-
-
-*/

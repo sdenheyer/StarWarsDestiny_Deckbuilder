@@ -45,13 +45,6 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
 
     private val cardSetSelection = MutableStateFlow("")
 
-   /* private val query = MutableStateFlow("")
-    private val cardsByQuery = query.transform { query ->
-        if (query.isNotEmpty()) {
-            emitAll(cardRepo.findCards(query))
-        }
-    }*/
-
     private val _cardsFlow: MutableStateFlow<Resource<List<Card>>> = MutableStateFlow(Resource.success(null))
 
     val cardsFlow = _cardsFlow.mapLatest {
@@ -119,12 +112,6 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
             }
         }
 
-        /*viewModelScope.launch {
-            cardsByQuery.collect {resource ->
-                _cardsFlow.update { resource }
-            }
-        }*/
-
         refreshSets(false)
     }
 
@@ -141,14 +128,13 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
                 cardListJob?.cancelAndJoin()
                 cardListJob = this.coroutineContext.job
                 cardRepo.getCardsBySet(code, forceRemoteUpdate).collect { resource ->
-                    if (resource.status == Resource.Status.SUCCESS && !resource.data.isNullOrEmpty()) {
+                    if (resource.status == Resource.Status.SUCCESS && resource.isFromDB && !resource.data.isNullOrEmpty()) {
                         val numberOfCardsInSet = _cardSetsFlow.value.data?.cardSets?.find { it.code == code }?.known ?: 0
                         if (resource.data.size < numberOfCardsInSet) {
                             refreshCardsBySet(true)
                         }
-                    } else {
-                        _cardsFlow.update { resource }
                     }
+                    _cardsFlow.update { resource }
                 }
             }
         }

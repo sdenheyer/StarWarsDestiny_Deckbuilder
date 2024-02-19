@@ -18,6 +18,7 @@ data class CardUi(
     val diceRef: List<String>,
     val set: String,
     val quantity: Int = 0,
+    val isElite: Boolean = false,
     val isBanned: Boolean = false,
     val isRestricted: Boolean = false,
 )

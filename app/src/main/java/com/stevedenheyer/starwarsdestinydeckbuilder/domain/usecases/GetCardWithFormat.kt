@@ -4,7 +4,7 @@ import android.util.Log
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.CardRepositoryImpl
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
-import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CodeOrCard
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Format
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.asString
 import kotlinx.coroutines.flow.Flow
@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 
-class GetCardWithFormat @Inject constructor(val cardRepo: CardRepositoryImpl) {
+class GetCardWithFormat @Inject constructor(val cardRepo: CardRepositoryImpl, val getCards: GetCardFromCode) {
     operator fun invoke(code: String): Flow<Resource<Card?>> = combineTransform(
         cardRepo.getCardFormats(false),
         cardRepo.getCardbyCode(code, false)
@@ -25,44 +25,31 @@ class GetCardWithFormat @Inject constructor(val cardRepo: CardRepositoryImpl) {
         if (formatsResource.status == Resource.Status.SUCCESS && cardResource.status == Resource.Status.SUCCESS && cardResource.data != null) {
             var card = cardResource.data
 
-            val reprints = card.reprints.map {
-                when (it) {
-                    is CodeOrCard.CodeValue -> {
-                        val reprintcard = cardRepo.getCardbyCode(it.value, false).first { it.status == Resource.Status.SUCCESS && it.data != null }  //TODO:  This should be collect - not working as is
-                        CodeOrCard.CardValue(reprintcard.data!!)
-                    }
-                    is CodeOrCard.CardValue -> it
-                }
-            }
+            val reprints = getCards(*card.reprints.toTypedArray()).first()
 
-            val parellelDiceOf = card.parallelDiceOf.map {
-                when (it) {
-                    is CodeOrCard.CodeValue -> {
-                        Log.d("SWD", "Getting parallel: $it")
-                        val dicecard = cardRepo.getCardbyCode(it.value, false).first { it.status == Resource.Status.SUCCESS }
-                        CodeOrCard.CardValue(dicecard.data!!)
-                    }
-                    is CodeOrCard.CardValue -> it
-                }
+            val parellelDiceOf = getCards(*card.parallelDiceOf.toTypedArray()).first()
+
+            if (reprints.any { it is CardOrCode.hasCode} || parellelDiceOf.any { it is CardOrCode.hasCode }) {
+                emit(Resource.error(msg = formatsResource.message ?: "", data = cardResource.data))
             }
 
             card = card.copy(reprints = reprints, parallelDiceOf = parellelDiceOf)
 
             val formatList = ArrayList<Format>()
             val cardFormats = formatsResource.data
-            val reprintsSetCodes = card?.reprints?.mapNotNull {
+            val reprintsSetCodes = card.reprints.mapNotNull {
                 when (it) {
-                    is CodeOrCard.CardValue -> it.value.setCode
-                    is CodeOrCard.CodeValue -> null
+                    is CardOrCode.hasCode -> null
+                    is CardOrCode.hasCard -> it.card.setCode
                 }
             }
             cardFormats?.cardFormats?.forEach {
                 var format = Format(it.gameTypeName)
                 Log.d("SWD", "${card.setCode}, ${it}")
                 if (card.setCode in it.includedSets ||
-                    reprintsSetCodes?.any { code ->
-                        code in it.includedSets
-                    } ?: false) {
+                    reprintsSetCodes.any { set ->
+                        set in it.includedSets
+                    }) {
                     if (card.code in it.banned) {
                         format = format.copy(legality = "banned")
                     }
@@ -72,7 +59,6 @@ class GetCardWithFormat @Inject constructor(val cardRepo: CardRepositoryImpl) {
                         format = format.copy(legality = "restricted")
                     }
                     format = format.copy(balance = if (it.balance[card.code].isNullOrEmpty()) card.points.asString() else it.balance[card.code])
-
                 } else {
                     format = format.copy(legality = "banned")
                 }

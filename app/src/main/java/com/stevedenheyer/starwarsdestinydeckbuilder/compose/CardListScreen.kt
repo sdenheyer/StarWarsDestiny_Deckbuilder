@@ -1,6 +1,7 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.compose
 
 import android.database.sqlite.SQLiteConstraintException
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -142,6 +143,7 @@ fun CardListScreen(
                     }
                 )
                     LazyColumn {
+                        Log.d("SWD", "Decks: ${decksUiState.size} ${decksUiState}")
                         if (decksUiState.isNotEmpty()) {
                             item {
                                 HorizontalDivider()
@@ -371,7 +373,7 @@ fun CreateDeckDialog(
                 formatCode = formatSelection,
                 formatName = formatMap[formatSelection] ?: "",
                 affiliationCode = affiliationSelection,
-                affiliationName = affiliationMap[affiliationSelection] ?: ""
+                affiliationName = affiliationMap[affiliationSelection] ?: "",
             )
             TextButton(onClick = { onConfirmation(deck) }) {
                 Text("OK", color = MaterialTheme.colorScheme.onSecondary)

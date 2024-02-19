@@ -13,6 +13,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardSetEnti
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardSubtypeCrossRef
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.BalanceCardCrossref
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardSetTimeEntity
+import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CharacterEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.DeckBaseEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.FormatBannedCrossref
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.FormatBaseEntity
@@ -27,7 +28,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.SubTypeEnti
     (entities = [CardBaseEntity::class, CardSetEntity::class, CardSubtypeCrossRef::class, CardReprintsCrossRef::class, CardParellelDiceCrossRef::class,
                 SubTypeEntity::class, CardCode::class, FormatBaseEntity::class, SetCode::class, Balance::class, FormatSetCrossref::class,
                 FormatBannedCrossref::class, FormatRestrictedCrossref::class, BalanceCardCrossref::class, CardSetTimeEntity::class, FormatTimeEntity::class,
-                DeckBaseEntity::class, SlotEntity::class],
+                DeckBaseEntity::class, CharacterEntity::class, SlotEntity::class],
             version = 1,
             exportSchema = false
             )

@@ -3,6 +3,7 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.domain.data
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormatList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CharacterCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
 import kotlinx.coroutines.flow.Flow
@@ -17,6 +18,8 @@ interface ICardCache {
     suspend fun storeCardSets(sets: CardSetList)
     suspend fun storeFormats(formats: CardFormatList)
     suspend fun createDeck(deck: Deck)
+    suspend fun updateDeck(deck: Deck)
     suspend fun updateDeck(deck: Deck, slot: Slot)
+    suspend fun updateDeck(deck: Deck, char: CharacterCard)
     suspend fun getDeck(name: String):Deck
 }

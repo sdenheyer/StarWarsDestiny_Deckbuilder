@@ -11,7 +11,6 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardParelle
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardReprintsCrossRef
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardSetTimeEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardSubtypeCrossRef
-import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.DeckEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.FormatBannedCrossref
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.FormatRestrictedCrossref
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.FormatSetCrossref
@@ -22,7 +21,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.ICardCache
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormatList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
-import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CodeOrCard
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CharacterCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
 import kotlinx.coroutines.flow.Flow
@@ -66,18 +65,12 @@ class CardCache(
                 dao.insertCardSubtypesCross(CardSubtypeCrossRef(subTypeCode = subtype.code, code = card.code))
             }
             card.reprints.forEach {
-                val cardCode = when (it) {
-                    is CodeOrCard.CodeValue -> it.value
-                    is CodeOrCard.CardValue -> it.value.code
-                }
+                val cardCode = it.fetchCode()
                 dao.insertCardCodes(CardCode(cardCode))
                 dao.insertReprints(CardReprintsCrossRef(code = card.code, cardCode = cardCode))
             }
             card.parallelDiceOf.forEach {
-                val cardCode = when (it) {
-                    is CodeOrCard.CodeValue -> it.value
-                    is CodeOrCard.CardValue -> it.value.code
-                }
+                val cardCode = it.fetchCode()
                 dao.insertCardCodes(CardCode(cardCode))
                 dao.insertParellelDice(CardParellelDiceCrossRef(code = card.code, cardCode = cardCode))
             }
@@ -132,6 +125,9 @@ class CardCache(
         dao.insertNewDeck(deck.toEntity())
     }
 
+    override suspend fun updateDeck(deck: Deck) {
+        dao.updateDeck(deck.toEntity())
+    }
     override suspend fun updateDeck(deck: Deck, slot: Slot) {
         if (slot.quantity == 0) {
             Log.d("SWD", "Deleting slot: ${slot.quantity}")
@@ -139,6 +135,17 @@ class CardCache(
         } else {
             Log.d("SWD", "Writing new slot: ${slot.quantity}")
             dao.insertSlot(slot.toEntity(deck.name))
+        }
+        dao.updateDeck(deck.copy(updateDate = Date()).toEntity())
+    }
+
+    override suspend fun updateDeck(deck: Deck, char: CharacterCard) {
+        if (char.quantity == 0) {
+            Log.d("SWD", "Deleting character: ${char.quantity}")
+            dao.deleteChar(char.toEntity(deck.name))
+        } else {
+            Log.d("SWD", "Writing new char: ${char.quantity} ${char.points}")
+            dao.insertChar(char.toEntity(deck.name))
         }
         dao.updateDeck(deck.copy(updateDate = Date()).toEntity())
     }

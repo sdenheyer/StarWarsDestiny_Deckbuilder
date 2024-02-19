@@ -3,6 +3,7 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.domain.data
 data class Resource<out Output>(
     val status: Status,
     val data: Output?,
+    val isFromDB: Boolean,
     val message: String?
 ) {
 
@@ -13,10 +14,11 @@ data class Resource<out Output>(
     }
 
     companion object {
-        fun <Output> success(data: Output?): Resource<Output> {
+        fun <Output> success(data: Output?, isFromDB: Boolean = false): Resource<Output> {
             return Resource(
                 Status.SUCCESS,
                 data,
+                isFromDB,
                 null
             )
         }
@@ -25,6 +27,7 @@ data class Resource<out Output>(
             return Resource(
                 Status.ERROR,
                 data,
+                false,
                 msg
             )
         }
@@ -33,6 +36,7 @@ data class Resource<out Output>(
             return Resource(
                 Status.LOADING,
                 data,
+                false,
                 null
             )
         }

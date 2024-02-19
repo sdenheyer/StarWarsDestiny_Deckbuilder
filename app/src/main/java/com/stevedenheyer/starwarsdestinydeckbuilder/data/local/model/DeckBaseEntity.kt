@@ -15,6 +15,21 @@ data class DeckBaseEntity (
     val formatName: String,
     val affiliationCode: String,
     val affiliationName: String,
+
+    val battlefieldCardCode: String?,
+    val plotCardCode: String?,
+    val plotPoints: Int,
+)
+
+@Entity(primaryKeys = ["deckName", "cardCode"])
+data class CharacterEntity(
+    val deckName: String,
+    val cardCode: String,
+    val points: Int,
+    val isElite: Boolean,
+    val quantity: Int,
+    val dice: Int,
+    val dices: String?,
 )
 
 @Entity(primaryKeys = ["deckName", "cardCode"])
@@ -28,6 +43,12 @@ data class SlotEntity(
 
 data class DeckEntity(
     @Embedded val deck: DeckBaseEntity,
+
+    @Relation(
+        parentColumn = "name",
+        entityColumn = "deckName",
+    )
+    val characters:List<CharacterEntity>,
 
     @Relation(
         parentColumn = "name",

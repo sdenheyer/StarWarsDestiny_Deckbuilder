@@ -6,6 +6,11 @@ data class DeckUi(
     val name: String,
     val format: String,
     val affiliation: String,
+
+    val battlefieldCard: CardUi? = null,
+    val plotCard: CardUi? = null,
+
+    val chars: List<CardUi> = emptyList(),
     val cards: List<CardUi> = emptyList(),
 )
 

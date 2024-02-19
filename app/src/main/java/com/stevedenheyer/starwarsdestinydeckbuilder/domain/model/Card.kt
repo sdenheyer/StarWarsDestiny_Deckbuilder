@@ -35,11 +35,8 @@ data class Card(
     val imageSrc: URL,
     val label: String,
     val cp: Int,
-    val reprints: List<CodeOrCard<*>> = emptyList(),
-    val parallelDiceOf: List<CodeOrCard<*>> = emptyList(),
-
-    //val reprintCards: List<Card> = emptyList(),
-    //val parellelDiceCards: List<Card> = emptyList(),
+    val reprints: List<CardOrCode> = emptyList(),
+    val parallelDiceOf: List<CardOrCode> = emptyList(),
 
     val formats: List<Format>? = null,
 
@@ -57,3 +54,4 @@ data class Format(
     val legality: String? = null,
     val balance: String? = null,
 )
+

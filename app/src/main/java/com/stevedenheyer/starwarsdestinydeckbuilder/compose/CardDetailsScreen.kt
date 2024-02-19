@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -84,45 +85,49 @@ fun DetailsScreen(
     )
     val decks by detailViewModel.uiDecks.collectAsStateWithLifecycle(initialValue = emptyList())
 
-    //  Log.d("SWD", "Card State: ${cardState.isLoading}")
+    Log.d("SWD", "Card State: ${cardState.isLoading}")
 
     when (val state = cardState) {
-        is CardUiState.hasData -> {
-            if (isCompactScreen) {
-                CompactDetails(
-                    card = state.data,
-                    decks = decks
-                ) { name, quantity -> (detailViewModel::writeDeck)(name, quantity) }
-            } else {
-                Details(
-                    card = state.data,
-                    decks = decks
-                ) { name, quantity ->
-                    (detailViewModel::writeDeck)(name, quantity)
-                }
-            }
-        }
+        is CardUiState.hasData -> Details(
+            isCompactScreen = isCompactScreen,
+            card = state.data,
+            decks = decks,
+            changeCardQuantity = { deckName, quantity, isElite ->  (detailViewModel::writeDeck)(deckName, quantity, isElite) }
+        )
+            
 
         is CardUiState.noData -> {}
     }
 }
 
 @Composable
+fun Details( isCompactScreen: Boolean,
+             card: CardDetailUi,
+             decks: List<DeckDetailUi>,
+             modifier: Modifier = Modifier,
+             changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit) =
+    when (isCompactScreen) {
+        true -> CompactDetails(card = card, decks = decks, changeCardQuantity = changeCardQuantity, modifier = modifier)
+        false -> LargeDetails(card = card, decks = decks, changeCardQuantity = changeCardQuantity, modifier = modifier)
+    }
+        
+@Composable
 fun CompactDetails(
     card: CardDetailUi,
     decks: List<DeckDetailUi>,
     modifier: Modifier = Modifier,
-    changeCardQuantity: (deckName: String, quantity: Int) -> Unit
+    changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
 ) {
     LazyColumn(modifier) {
         item {
             DetailsCard(modifier = Modifier.padding(vertical = 8.dp), card = card)
         }
-        items(items = decks, key = { it.name }) { deck ->
+        items(items = decks, key = { it.name }) {deck ->
             DeckCardCompact(
                 modifier = Modifier.padding(vertical = 8.dp),
-                deck = deck
-            ) { deckName, quantity -> changeCardQuantity(deckName, quantity) }
+                deck = deck,
+                card = card,
+            ) { deckName, quantity, isElite -> changeCardQuantity(deckName, quantity, isElite) }
         }
         item {
             ImageCard(modifier = Modifier, src = card.imagesrc)
@@ -131,11 +136,11 @@ fun CompactDetails(
 }
 
 @Composable
-fun Details(
+fun LargeDetails(
     card: CardDetailUi,
     decks: List<DeckDetailUi>,
     modifier: Modifier = Modifier,
-    changeCardQuantity: (deckName: String, quantity: Int) -> Unit
+    changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
 ) {
 
     LazyColumn(
@@ -162,8 +167,9 @@ fun Details(
         items(items = decks, key = { it.name }) { deck ->
             DeckCard(
                 modifier = Modifier.fillMaxWidth(),
-                deck = deck
-            ) { deckName, quantity -> changeCardQuantity(deckName, quantity) }
+                deck = deck,
+                card = card
+            ) { deckName, quantity, isElite -> changeCardQuantity(deckName, quantity, isElite) }
         }
     }
 }
@@ -194,16 +200,19 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi) {
     }
 
     val uniqueInline = mapOf("unique" to InlineTextContent(
-        Placeholder(width = MaterialTheme.typography.titleLarge.fontSize,
-                    height = MaterialTheme.typography.titleLarge.fontSize,
-                    placeholderVerticalAlign = PlaceholderVerticalAlign.AboveBaseline)) {
-            Image(
-                painter = painterResource(id = R.drawable.unique),
-                contentDescription = "Unique",
-                modifier = Modifier.fillMaxSize(),
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-            )
-        }
+        Placeholder(
+            width = MaterialTheme.typography.titleLarge.fontSize,
+            height = MaterialTheme.typography.titleLarge.fontSize,
+            placeholderVerticalAlign = PlaceholderVerticalAlign.AboveBaseline
+        )
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.unique),
+            contentDescription = "Unique",
+            modifier = Modifier.fillMaxSize(),
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
+        )
+    }
     )
 
     OutlinedCard(
@@ -217,7 +226,7 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi) {
 
         Text(
             buildAnnotatedString {
-                appendInlineContent("unique", "unique")
+                if (card.isUnique && card.typeName == "Character") appendInlineContent("unique", "unique")
                 withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontSize = 26.sp)) {
                     append(card.name)
                 }
@@ -493,8 +502,9 @@ fun Balance(modifier: Modifier, factionColor: Color, formats: List<Format>) {
 @Composable
 fun DeckCard(
     modifier: Modifier,
+    card: CardDetailUi,
     deck: DeckDetailUi,
-    changeQuantity: (deckName: String, quantity: Int) -> Unit
+    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
 ) {
     val textModifer = Modifier
         .padding(vertical = 2.dp, horizontal = 8.dp)
@@ -508,59 +518,54 @@ fun DeckCard(
         ),
         border = BorderStroke(4.dp, color = MaterialTheme.colorScheme.onSurface)
     ) {
-        Row(modifier = Modifier
-            .padding(horizontal = 12.dp, vertical = 4.dp)
-            .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 12.dp, vertical = 4.dp)
+                .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Text(
                 deck.name,
                 style = MaterialTheme.typography.titleLarge,
-                modifier = textModifer.weight(1f),
+                modifier = textModifer,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
             Text(
                 deck.formatName,
                 style = MaterialTheme.typography.titleMedium,
-                modifier = textModifer.weight(0.6f)
+                modifier = textModifer
             )
             Text(
                 deck.affiliationName,
                 style = MaterialTheme.typography.titleMedium,
-                modifier = textModifer.weight(0.4f)
+                modifier = textModifer
             )
-            TextButton(border = BorderStroke(
-                2.dp,
-                color = MaterialTheme.colorScheme.primary
-            ),
-                enabled = (deck.quantity > 0),
-                onClick = { changeQuantity(deck.name, deck.quantity - 1) }) {
-                Text(
-                    "-",
-                    Modifier
-                        .wrapContentSize(align = Alignment.Center),
-                    softWrap = true,
-                    style = MaterialTheme.typography.titleLarge,
-                )
-            }
             Text(
-                deck.quantity.toString(),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(horizontal = 12.dp)
+                buildAnnotatedString {
+                    if (card.formats.find { it.gameType == deck.formatName }?.legality == "banned") {
+                        append("Banned. ")
+                    }
+                    when (card.typeName) {
+                        "Character" -> {
+                            append("${deck.pointsUsed} points used.")
+                        }
+                        "Battlefield" -> if (deck.battlefield != card.code && deck
+                                .battlefield != null) append("Deck has Battlefield - will replace.")
+                        "Plot" -> if (deck.plot != card.code && deck
+                                .plot != null) append("Deck has Plot - will replace.")
+                        else -> append("Deck size ${deck.deckSize} cards.")
+                    }
+                },
+                style = MaterialTheme.typography.titleSmall,
+                modifier = textModifer
             )
-            TextButton(border = BorderStroke(
-                2.dp,
-                color = MaterialTheme.colorScheme.primary,
-            ),
-                enabled = (deck.quantity < deck.maxQuantity),
-                onClick = { changeQuantity(deck.name, deck.quantity + 1) }) {
-                Text(
-                    "+",
-                    Modifier
-                        .wrapContentSize(align = Alignment.Center),
-                    softWrap = true,
-                    style = MaterialTheme.typography.titleLarge
-                )
-            }
+            DeckControls(
+                modifier = Modifier,
+                deck = deck,
+                card = card,
+                changeQuantity = changeQuantity
+            )
         }
     }
 }
@@ -569,7 +574,8 @@ fun DeckCard(
 fun DeckCardCompact(
     modifier: Modifier,
     deck: DeckDetailUi,
-    changeQuantity: (deckName: String, quantity: Int) -> Unit
+    card: CardDetailUi,
+    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
 ) {
     val textModifer = Modifier
         .padding(vertical = 2.dp, horizontal = 8.dp)
@@ -583,18 +589,43 @@ fun DeckCardCompact(
         ),
         border = BorderStroke(4.dp, color = MaterialTheme.colorScheme.onSurface)
     ) {
-        Row(modifier = Modifier
-            .padding(horizontal = 12.dp, vertical = 4.dp)
-            .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 12.dp, vertical = 4.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Column(verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier) {
-                Text(
-                    deck.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = textModifer,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        deck.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = textModifer,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Text(
+                        buildAnnotatedString {
+                            if (card.formats.find { it.gameType == deck.formatName }?.legality == "banned") {
+                                append("Banned. ")
+                            }
+                            when (card.typeName) {
+                                "Character" -> {
+                                    append("${deck.pointsUsed} points used.")
+                                }
+                                "Battlefield" -> if (deck.battlefield != card.code && deck
+                                        .battlefield != null) append("Deck has Battlefield - will replace.")
+                                "Plot" -> if (deck.plot != card.code && deck
+                                        .plot != null) append("Deck has Plot - will replace.")
+                                else -> append("Deck size ${deck.deckSize} cards.")
+                            }
+                        },
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 2,
+                        modifier = textModifer.widthIn(max = 200.dp)
+                    )
+                }
                 Row(horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(
                         deck.formatName,
@@ -608,41 +639,160 @@ fun DeckCardCompact(
                     )
                 }
             }
-            Row {
-                TextButton(border = BorderStroke(
-                    2.dp,
-                    color = MaterialTheme.colorScheme.primary
-                ),
-                    enabled = (deck.quantity > 0),
-                    onClick = { changeQuantity(deck.name, deck.quantity - 1) }) {
-                    Text(
-                        "-",
-                        Modifier
-                            .wrapContentSize(align = Alignment.Center),
-                        softWrap = true,
-                        style = MaterialTheme.typography.titleLarge,
-                    )
-                }
-                Text(
-                    deck.quantity.toString(),
-                    style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.padding(horizontal = 12.dp)
-                )
-                TextButton(border = BorderStroke(
-                    2.dp,
-                    color = MaterialTheme.colorScheme.primary,
-                ),
-                    enabled = (deck.quantity < deck.maxQuantity),
-                    onClick = { changeQuantity(deck.name, deck.quantity + 1) }) {
-                    Text(
-                        "+",
-                        Modifier
-                            .wrapContentSize(align = Alignment.Center),
-                        softWrap = true,
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                }
+            DeckControls(
+                modifier = Modifier,
+                deck = deck,
+                card = card,
+                changeQuantity = changeQuantity
+            )
+        }
+    }
+}
+
+@Composable
+fun DeckControls(
+    modifier: Modifier,
+    card: CardDetailUi,
+    deck: DeckDetailUi,
+    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
+) =
+    when (card.typeName) {
+        "Battlefield" -> AddSingle(
+            modifier = modifier,
+            deck = deck,
+            deckHasCard = card.code == deck.battlefield,
+            changeQuantity = changeQuantity
+        )
+
+        "Plot" -> AddSingle(
+            modifier = modifier,
+            deck = deck,
+            deckHasCard = card.code == deck.battlefield,
+            changeQuantity = changeQuantity
+        )
+
+        "Character" -> {
+            if (deck.isUnique)
+                AddUniqueCharacter(modifier = modifier, deck = deck, changeQuantity = changeQuantity)
+            else
+                AddMultiple(modifier = modifier, deck = deck, changeQuantity = changeQuantity)
+        }
+
+        else -> AddMultiple(modifier, deck, changeQuantity)
+    }
+
+@Composable
+fun AddUniqueCharacter(
+    modifier: Modifier,
+    deck: DeckDetailUi,
+    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
+) {
+    TextButton(border = BorderStroke(
+        2.dp,
+        color = MaterialTheme.colorScheme.primary,
+
+        ),
+        modifier = modifier.width(140.dp),
+        onClick = {
+            when  {
+                deck.quantity == 0 -> changeQuantity(deck.name, 1, false)
+                !deck.isElite -> changeQuantity(deck.name, 1, true)
+                deck.isElite -> changeQuantity(deck.name, 0, false)
             }
+        }) {
+        Text(
+            buildAnnotatedString {
+                when {
+                    deck.quantity == 0 -> append("Add")
+                    !deck.isElite -> append("Make Elite")
+                    deck.isElite -> append("Remove")
+                }
+            },
+            Modifier
+                .wrapContentSize(align = Alignment.Center),
+            softWrap = true,
+            style = MaterialTheme.typography.titleLarge,
+        )
+    }
+}
+
+@Composable
+fun AddSingle(
+    modifier: Modifier,
+    deck: DeckDetailUi,
+    deckHasCard: Boolean,
+    changeQuantity: (deckName: String, quantity: Int, _: Boolean) -> Unit
+) {
+    TextButton(border = BorderStroke(
+        2.dp,
+        color = MaterialTheme.colorScheme.primary,
+
+        ),
+        modifier = modifier.width(140.dp),
+        onClick = {
+            if (!deckHasCard) {
+                changeQuantity(deck.name, 1, false)
+            }
+            else {
+                changeQuantity(deck.name, 0, false)
+            }
+        }) {
+        Text(
+            buildAnnotatedString {
+                if (!deckHasCard) {
+                    append("Add")
+                }
+                else {
+                    append("Remove")
+                }
+            },
+            Modifier
+                .wrapContentSize(align = Alignment.Center),
+            softWrap = true,
+            style = MaterialTheme.typography.titleLarge,
+        )
+    }
+}
+
+@Composable
+fun AddMultiple(
+    modifier: Modifier,
+    deck: DeckDetailUi,
+    changeQuantity: (deckName: String, quantity: Int, _: Boolean) -> Unit
+) {
+    Row(modifier = modifier) {
+        TextButton(border = BorderStroke(
+            2.dp,
+            color = MaterialTheme.colorScheme.primary
+        ),
+            enabled = (deck.quantity > 0),
+            onClick = { changeQuantity(deck.name, deck.quantity - 1, false) }) {
+            Text(
+                "-",
+                Modifier
+                    .wrapContentSize(align = Alignment.Center),
+                softWrap = true,
+                style = MaterialTheme.typography.titleLarge,
+            )
+        }
+        Text(
+            deck.quantity.toString(),
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(horizontal = 12.dp)
+        )
+        TextButton(border = BorderStroke(
+            2.dp,
+            color = MaterialTheme.colorScheme.primary,
+        ),
+            enabled = (deck.quantity < deck.maxQuantity),
+            onClick = { changeQuantity(deck.name, deck.quantity + 1, false) }) {
+            Text(
+                "+",
+                Modifier
+                    .wrapContentSize(align = Alignment.Center),
+                softWrap = true,
+                style = MaterialTheme.typography.titleLarge
+            )
         }
     }
 }
@@ -727,15 +877,6 @@ fun parseHtml(s: String): AnnotatedString {
     }
 }
 
-/*@Preview
-@Composable
-fun HtmlParser() {
-    val t =
-        parseHtml("Blue Character only.\n<b>Action</b> - Remove this die to turn a die to a side showing a blank ([blank]).")
-    Text(t, inlineContent = CardText.inlineContent)
-
-}*/
-
 @Preview(widthDp = 500)
 @Composable
 fun FormatPreview() {
@@ -762,6 +903,34 @@ fun TextCardPreview() {
     )
 }
 
+val testCard = CardDetailUi(
+    name = "test",
+    typeName = "Battlefield",
+    affiliation = "Hero",
+    code = "00000",
+    color = "Red",
+    cost = "8",
+    parellelDice = emptyList(),
+    position = 0,
+    deckLimit = 1,
+    faction = "",
+    formats = listOf(Format(gameType = "Standard", legality = "banned", balance = "11/10")),
+    rarity = "",
+    subtitle = null,
+    subtypes = emptyList(),
+    points = "8/11",
+    flavor = null,
+    has_errata = false,
+    health = 8,
+    illustrator = null,
+    imagesrc = URL("https://db.swdrenewedhope.com/"),
+    isUnique = true,
+    reprints = emptyList(),
+    sides = emptyList(),
+    text = null,
+    setName = ""
+)
+
 @Preview(widthDp = 700)
 @Composable
 fun DecksPreview() {
@@ -772,7 +941,12 @@ fun DecksPreview() {
             formatName = "Infinite",
             quantity = 0,
             maxQuantity = 2,
-            dice = 0
+            isUnique = true,
+            battlefield = null,
+            plot = null,
+            pointsUsed = 30,
+            deckSize = 25,
+            isElite = false
         ),
         DeckDetailUi(
             name = "Loooooooongname",
@@ -780,7 +954,12 @@ fun DecksPreview() {
             formatName = "ARH Standard",
             quantity = 0,
             maxQuantity = 2,
-            dice = 0
+            isUnique = false,
+            battlefield = null,
+            plot = null,
+            pointsUsed = 30,
+            deckSize = 25,
+            isElite = false
         )
     )
     val deck = DeckDetailUi(
@@ -789,12 +968,17 @@ fun DecksPreview() {
         formatName = "Infinite",
         quantity = 0,
         maxQuantity = 2,
-        dice = 0
+        isUnique = false,
+        battlefield = null,
+        plot = null,
+        pointsUsed = 30,
+        deckSize = 25,
+        isElite = false
     )
-    DeckCard(modifier = Modifier, deck = deck) { name, quan -> }
+    DeckCard(modifier = Modifier, deck = deck, card = testCard) { name, quan, isElite -> }
 }
 
-@Preview(widthDp = 500)
+@Preview(widthDp = 400)
 @Composable
 fun DecksCompactPreview() {
     val decks = listOf(
@@ -804,7 +988,12 @@ fun DecksCompactPreview() {
             formatName = "Infinite",
             quantity = 0,
             maxQuantity = 2,
-            dice = 0
+            isUnique = false,
+            battlefield = null,
+            plot = null,
+            pointsUsed = 30,
+            deckSize = 25,
+            isElite = false
         ),
         DeckDetailUi(
             name = "Loooooooongname",
@@ -812,17 +1001,27 @@ fun DecksCompactPreview() {
             formatName = "ARH Standard",
             quantity = 0,
             maxQuantity = 2,
-            dice = 0
+            isUnique = true,
+            battlefield = null,
+            plot = null,
+            pointsUsed = 30,
+            deckSize = 25,
+            isElite = false
         )
     )
     val deck = DeckDetailUi(
         name = "test",
         affiliationName = "Hero",
-        formatName = "Infinite",
+        formatName = "Standard",
         quantity = 0,
         maxQuantity = 2,
-        dice = 0
+        isUnique = true,
+        battlefield = "00001",
+        plot = null,
+        pointsUsed = 30,
+        deckSize = 25,
+        isElite = false
     )
-    DeckCardCompact(modifier = Modifier, deck = deck) { name, quan -> }
+    DeckCardCompact(modifier = Modifier, deck = deck, card = testCard) { name, quan, isElite -> }
 }
 

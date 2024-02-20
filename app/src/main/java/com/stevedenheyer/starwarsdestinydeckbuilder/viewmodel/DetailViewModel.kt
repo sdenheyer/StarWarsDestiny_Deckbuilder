@@ -228,11 +228,12 @@ class DetailViewModel @Inject constructor(
                     deck = deck.copy(battlefieldCardCode = null)
                 else
                     deck = deck.copy(battlefieldCardCode = CardOrCode.hasCode(card.code))
-                "plot" -> deck = if (deck.plotCardCode?.fetchCode() == card.code && deck.isPlotElite)
+                "plot" -> deck = if (deck.plotCardCode?.fetchCode() == card.code && (deck.isPlotElite || card.points.second == null))
                     deck.copy(plotCardCode = null, plotPoints = 0, isPlotElite = false)
                 else
                     deck.copy(plotCardCode = CardOrCode.hasCode(card.code), isPlotElite = isElite, plotPoints = (if (isElite) card.points.second else card.points.first) ?: 0)
             }
+            Log.d("SWD", "Deck: ${deck}")
             viewModelScope.launch { repo.updateDeck(deck) }
         }
     }

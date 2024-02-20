@@ -83,7 +83,7 @@ class GetDeckWithCards @Inject constructor(private val cardRepo: CardRepositoryI
                     val charsUi = deck.characters.map {  (it.cardOrCode as CardOrCode.hasCard).card.toCardUi(format, it.quantity, it.isElite) }
                     val slotsUi = deck.slots.map { (it.cardOrCode as CardOrCode.hasCard).card.toCardUi(format, it.quantity) }
                     val battlefieldUi = try { (deck.battlefieldCardCode as CardOrCode.hasCard).card.toCardUi(format) } catch (e:NullPointerException) { null }
-                    val plotUi = try { (deck.plotCardCode as CardOrCode.hasCard).card.toCardUi(format) } catch (e:NullPointerException) { null }
+                    val plotUi = try { (deck.plotCardCode as CardOrCode.hasCard).card.toCardUi(format, isElite = deck.isPlotElite) } catch (e:NullPointerException) { null }
 
                     val deckUi = deck.toDeckUi().copy(chars = charsUi, slots = slotsUi, battlefieldCard = battlefieldUi, plotCard = plotUi)
 

@@ -77,7 +77,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
             characters.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0
         val battlefield = deck.battlefieldCard
         val plot = deck.plotCard
-        val plotPoints = (if (deck.plotCard?.isElite ?: false) deck.plotCard?.points?.first else deck.plotCard?.points?.second) ?: 0
+        val plotPoints = (if (deck.plotCard?.isElite == true) deck.plotCard.points.second else deck.plotCard?.points?.first) ?: 0
         val upgrades = deck.slots.filter { it.type == "Upgrade" }
         val upgradesCardSize =
             upgrades.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0

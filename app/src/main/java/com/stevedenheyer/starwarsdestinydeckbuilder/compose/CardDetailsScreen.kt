@@ -617,8 +617,9 @@ fun DeckCardCompact(
                                 }
                                 "Battlefield" -> if (deck.battlefield != card.code && deck
                                         .battlefield != null) append("Deck has Battlefield - will replace.")
-                                "Plot" -> if (deck.plot != card.code && deck
+                                "Plot" -> { if (deck.plot != card.code && deck
                                         .plot != null) append("Deck has Plot - will replace.")
+                                        append("${deck.pointsUsed} points used.") }
                                 else -> append("Deck size ${deck.deckSize} cards.")
                             }
                         },
@@ -740,7 +741,7 @@ fun AddSingle(
                 changeQuantity(deck.name, 1, false)
             }
             else {
-                changeQuantity(deck.name, 0, false)
+                changeQuantity(deck.name, 0, true)
             }
         }) {
         Text(

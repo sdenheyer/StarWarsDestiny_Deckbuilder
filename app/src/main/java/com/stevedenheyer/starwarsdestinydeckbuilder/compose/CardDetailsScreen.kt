@@ -63,6 +63,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.mappings.toDomai
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.model.CardDTO
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Format
 import com.stevedenheyer.starwarsdestinydeckbuilder.ui.theme.getColorFromString
+import com.stevedenheyer.starwarsdestinydeckbuilder.utils.asIntPair
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardDetailUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardUiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DeckDetailUi
@@ -664,16 +665,21 @@ fun DeckControls(
             changeQuantity = changeQuantity
         )
 
-        "Plot" -> AddSingle(
-            modifier = modifier,
-            deck = deck,
-            deckHasCard = card.code == deck.plot,
-            changeQuantity = changeQuantity
-        )
+        "Plot" -> {
+            if (card.points.asIntPair().second == null)
+            AddSingle(
+                modifier = modifier,
+                deck = deck,
+                deckHasCard = card.code == deck.plot,
+                changeQuantity = changeQuantity
+            )
+            else
+                AddElitable(modifier = modifier, deck = deck, changeQuantity = changeQuantity)
+        }
 
         "Character" -> {
             if (deck.isUnique)
-                AddUniqueCharacter(modifier = modifier, deck = deck, changeQuantity = changeQuantity)
+                AddElitable(modifier = modifier, deck = deck, changeQuantity = changeQuantity)
             else
                 AddMultiple(modifier = modifier, deck = deck, changeQuantity = changeQuantity)
         }
@@ -682,7 +688,7 @@ fun DeckControls(
     }
 
 @Composable
-fun AddUniqueCharacter(
+fun AddElitable(
     modifier: Modifier,
     deck: DeckDetailUi,
     changeQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit

@@ -18,6 +18,7 @@ data class DeckBaseEntity (
 
     val battlefieldCardCode: String?,
     val plotCardCode: String?,
+    val isPlotElite: Boolean = false,
     val plotPoints: Int,
 )
 

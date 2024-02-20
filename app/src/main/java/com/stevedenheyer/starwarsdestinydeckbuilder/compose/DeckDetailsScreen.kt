@@ -77,6 +77,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
             characters.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0
         val battlefield = deck.battlefieldCard
         val plot = deck.plotCard
+        val plotPoints = (if (deck.plotCard?.isElite ?: false) deck.plotCard?.points?.first else deck.plotCard?.points?.second) ?: 0
         val upgrades = deck.slots.filter { it.type == "Upgrade" }
         val upgradesCardSize =
             upgrades.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0
@@ -110,6 +111,13 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
             }
         }.reduceOrNull { acc, dice -> acc + dice } ?: 0
 
+        val charPoints = ((characters.map {
+            (if (it.isElite) it.points.second else (it.points.first?.times(it.quantity))) ?: 0
+        }.reduceOrNull { acc, points -> acc + points } ?: 0).plus(plotPoints))
+        val charDice = characters.map { if (it.isElite) 2 else it.quantity }
+            .reduceOrNull { acc, points -> acc + points } ?: 0
+
+
         Column(modifier = Modifier.padding(padding)) {
             Card(
                 backgroundColor = MaterialTheme.colorScheme.primaryContainer,
@@ -134,12 +142,6 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                             modifier = Modifier.weight(1f)
                         )
                     }
-                    // Column {
-                    val charPoints = characters.map {
-                        (if (it.isElite) it.points.second else it.points.first) ?: 0
-                    }.reduceOrNull { acc, points -> acc + points } ?: 0
-                    val charDice = characters.map { if (it.isElite) 2 else it.quantity }
-                        .reduceOrNull { acc, points -> acc + points } ?: 0
                     Text(
                         "Characters: ${charPoints} points, ${charDice} dice",
                         style = MaterialTheme.typography.bodyMedium,
@@ -158,21 +160,19 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    //  }
                 }
             }
 
-            //  Divider()
-
             LazyColumn(
                 modifier = modifier
-                //    .fillMaxSize()
             ) {
                 item {
                     Text(
                         buildAnnotatedString {
                             append("Character ")
                             append("(${charCardSize}")
+                            appendInlineContent("cards", "cards")
+                            append("${charDice}")
                             appendInlineContent("dice", "dice")
                             append(")")
                         }, style = MaterialTheme.typography.titleLarge,
@@ -196,14 +196,13 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                             isScreenCompact = isCompactScreen,
                             modifier = Modifier,
                             card = battlefield,
-                            onItemClick = { }
+                            onItemClick = { onCardClick(battlefield.code) }
                         )
                 }
 
 
                 item {
-                    Text(
-                        "Plot",
+                    Text("Plot(${plotPoints})",
                         style = MaterialTheme.typography.titleLarge,
                     )
                     if (plot != null)
@@ -235,7 +234,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                         isScreenCompact = isCompactScreen,
                         modifier = Modifier,
                         card = card,
-                        onItemClick = { }
+                        onItemClick = { onCardClick(card.code) }
                     )
                 }
 
@@ -258,7 +257,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                         isScreenCompact = isCompactScreen,
                         modifier = Modifier,
                         card = card,
-                        onItemClick = { }
+                        onItemClick = { onCardClick(card.code) }
                     )
                 }
 
@@ -281,7 +280,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                         isScreenCompact = isCompactScreen,
                         modifier = Modifier,
                         card = card,
-                        onItemClick = { }
+                        onItemClick = { onCardClick(card.code) }
                     )
                 }
 
@@ -304,7 +303,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                         isScreenCompact = isCompactScreen,
                         modifier = Modifier,
                         card = card,
-                        onItemClick = { }
+                        onItemClick = { onCardClick(card.code) }
                     )
                 }
             }

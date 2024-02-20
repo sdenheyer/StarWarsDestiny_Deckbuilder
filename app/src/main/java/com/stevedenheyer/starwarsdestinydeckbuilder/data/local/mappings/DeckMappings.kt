@@ -22,6 +22,7 @@ fun DeckEntity.toDomain() = Deck(
     battlefieldCardCode = if (deck.battlefieldCardCode == null) null else CardOrCode.hasCode(deck.battlefieldCardCode),
     plotCardCode = if (deck.plotCardCode == null) null else CardOrCode.hasCode(deck.plotCardCode),
     plotPoints = deck.plotPoints,
+    isPlotElite = deck.isPlotElite,
     characters = characters.map { it.toDomain() },
     slots = slots.map { it.toDomain() }
 )
@@ -37,6 +38,7 @@ fun Deck.toEntity() = DeckBaseEntity(
 
     battlefieldCardCode = battlefieldCardCode?.fetchCode(),
     plotCardCode = plotCardCode?.fetchCode(),
+    isPlotElite = isPlotElite,
     plotPoints = plotPoints,
 )
 

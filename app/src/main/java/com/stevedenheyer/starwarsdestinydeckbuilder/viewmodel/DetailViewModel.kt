@@ -172,14 +172,20 @@ class DetailViewModel @Inject constructor(
             val card = uiCard.data
             val deckList = decks.map { deck ->
 
-                val quantity = if (card.typeName == "Character")
-                    deck.characters.find { it.cardOrCode.fetchCode() == card.code }?.quantity ?: 0
-                else
-                    deck.slots.find { it.cardOrCode.fetchCode() == card.code }?.quantity ?: 0
-                val isElite = if (card.typeName == "Character" &&
-                    card.isUnique &&
-                    deck.characters.find { it.cardOrCode.fetchCode() == card.code }?.isElite ?: false)
-                    true else false
+                val quantity = when (card.typeName) {
+                    "Character" ->  deck.characters.find { it.cardOrCode.fetchCode() == card.code }?.quantity ?: 0
+                    "Battlefield" -> if (deck.battlefieldCardCode?.fetchCode() == card.code) 1 else 0
+                    "Plot" -> if (deck.plotCardCode?.fetchCode() == card.code) 1 else 0
+                    else -> deck.slots.find { it.cardOrCode.fetchCode() == card.code }?.quantity ?: 0
+                }
+
+                val isElite = when (card.typeName) {
+                    "Character" ->  if (card.isUnique &&
+                            deck.characters.find { it.cardOrCode.fetchCode() == card.code }?.isElite ?: false)
+                        true else false
+                    "Plot" -> deck.isPlotElite
+                    else -> false
+                }
 
                 DeckDetailUi(
                     name = deck.name,
@@ -204,7 +210,7 @@ class DetailViewModel @Inject constructor(
         val card = (uiCard.value as CardUiState.hasData).data
         when (card.typeName) {
             "Battlefield" -> writeDeck(deckName)
-            "Plot" -> writeDeck(deckName)
+            "Plot" -> writeDeck(deckName, isElite)
             "Character" -> {
                 writeDeckWithChar(deckName, quantity, isElite)
             }
@@ -212,20 +218,20 @@ class DetailViewModel @Inject constructor(
         }
     }
 
-    private fun writeDeck(deckName: String) {
+    private fun writeDeck(deckName: String, isElite: Boolean = false) {
         var deck = decks.value.find { it.name == deckName }
         if (deck != null) {
             val card = cardFlow.value.data
-            Log.d("SWD", "Writing deck: ${deck.name} ${card?.typeCode}")
+            Log.d("SWD", "Writing deck: ${deck.name} ${card?.typeCode} ${deck.plotCardCode?.fetchCode() ?: ""} ${isElite}")
             when (card?.typeCode) {
                 "battlefield" -> if (deck.battlefieldCardCode?.fetchCode() == card.code)
                     deck = deck.copy(battlefieldCardCode = null)
                 else
                     deck = deck.copy(battlefieldCardCode = CardOrCode.hasCode(card.code))
-                "plot" -> deck = if (deck.plotCardCode == CardOrCode.hasCode(card.code))
-                    deck.copy(plotCardCode = null, plotPoints = 0)
+                "plot" -> deck = if (deck.plotCardCode?.fetchCode() == card.code && deck.isPlotElite)
+                    deck.copy(plotCardCode = null, plotPoints = 0, isPlotElite = false)
                 else
-                    deck.copy(plotCardCode = CardOrCode.hasCode(card.code), plotPoints = card.points.first ?: 0)
+                    deck.copy(plotCardCode = CardOrCode.hasCode(card.code), isPlotElite = isElite, plotPoints = (if (isElite) card.points.second else card.points.first) ?: 0)
             }
             viewModelScope.launch { repo.updateDeck(deck) }
         }

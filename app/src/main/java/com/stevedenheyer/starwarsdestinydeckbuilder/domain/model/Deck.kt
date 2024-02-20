@@ -14,6 +14,7 @@ data class Deck(
 
     val battlefieldCardCode: CardOrCode? = null,
     val plotCardCode: CardOrCode? = null,
+    val isPlotElite: Boolean = false,
     val plotPoints: Int = 0,
 
     val characters: List<CharacterCard> = emptyList(),

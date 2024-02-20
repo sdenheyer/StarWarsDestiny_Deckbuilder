@@ -79,19 +79,18 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
                     .padding(top = 0.dp, bottom = 8.dp, start = 8.dp, end = 6.dp)
             )
 
-            if (card.quantity > 1) {
                 Text(buildAnnotatedString {
                                           append(card.quantity.toString())
                     appendInlineContent("cards", "cards")
-                    if (!card.diceRef.isNullOrEmpty()) {
-                        append(card.quantity.toString())
+                    if (card.diceRef.isNotEmpty()) {
+                        val diceQuantity = (if (card.isElite) 2 else card.quantity).toString()
+                        append(diceQuantity)
                         appendInlineContent("dice", "dice")
                     }
 
-                } , style = MaterialTheme.typography.titleLarge,
+                },  style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(top = 4.dp, end = 4.dp),
                     inlineContent = getInlines())
-            }
 
         }
         Row(
@@ -186,27 +185,25 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
                 modifier = Modifier
                     .padding(top = 0.dp, bottom = 8.dp, start = 8.dp)
             )
-            if (card.quantity > 1) {
                 Text(buildAnnotatedString {
                     append(card.quantity.toString())
                     appendInlineContent("cards", "cards")
-                    if (!card.diceRef.isNullOrEmpty()) {
-                        append(card.quantity.toString())
+                    if (card.diceRef.isNotEmpty()) {
+                        val diceQuantity = (if (card.isElite) 2 else card.quantity).toString()
+                        append(diceQuantity)
                         appendInlineContent("dice", "dice")
                     }
 
-                } , style = MaterialTheme.typography.titleLarge,
+                },  style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(top = 4.dp, end = 4.dp),
                     inlineContent = getInlines())
 
-            }
         }
         Row(
             modifier
                 .padding(top = 0.dp, bottom = 8.dp, start = 8.dp, end = 6.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            //  horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(2f)) {
                 Text("Affiliation", style = MaterialTheme.typography.labelSmall)

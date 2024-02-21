@@ -23,6 +23,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormatList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CharacterCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.OwnedCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -35,34 +36,53 @@ class CardCache(
         entity?.toDomain()
     }
 
-    override fun getCardsBySet(code: String): Flow<List<Card>> = dao.getCardsBySet(code).map { it.map { entity -> entity.toDomain() } }
+    override fun getCardsBySet(code: String): Flow<List<Card>> =
+        dao.getCardsBySet(code).map { it.map { entity -> entity.toDomain() } }
 
-    override fun findCards(query: String): Flow<List<Card>> = dao.findCards("%" + query + "%").map { it.map { entity -> entity.toDomain() }}
+    override fun findCards(query: String): Flow<List<Card>> =
+        dao.findCards("%" + query + "%").map { it.map { entity -> entity.toDomain() } }
 
     override fun getCardSets(): Flow<CardSetList> = dao.getCardSets().map {
-        val timestamp = dao.getSetTimestamp() ?: CardSetTimeEntity(timestamp = Date().time, expiry = 24 * 60 * 60 * 1000)
+        val timestamp = dao.getSetTimestamp() ?: CardSetTimeEntity(
+            timestamp = Date().time,
+            expiry = 24 * 60 * 60 * 1000
+        )
 
-        CardSetList(timestamp = timestamp.timestamp, expiry = timestamp.expiry, cardSets = it.map { it.toDomain() })
-    }
-    override fun getFormats(): Flow<CardFormatList> = dao.getFormats().map {
-        list -> CardFormatList(timestamp = Date().time, expiry = 24 * 60 * 60 * 1000, cardFormats = list.map { it.toDomain() })
+        CardSetList(
+            timestamp = timestamp.timestamp,
+            expiry = timestamp.expiry,
+            cardSets = it.map { it.toDomain() })
     }
 
-    override fun getDecks(): Flow<List<Deck>> = dao.getDecks().map { it.map { deckEntity ->  deckEntity.toDomain() }}
+    override fun getFormats(): Flow<CardFormatList> = dao.getFormats().map { list ->
+        CardFormatList(
+            timestamp = Date().time,
+            expiry = 24 * 60 * 60 * 1000,
+            cardFormats = list.map { it.toDomain() })
+    }
+
+    override fun getDecks(): Flow<List<Deck>> =
+        dao.getDecks().map { it.map { deckEntity -> deckEntity.toDomain() } }
+
     override suspend fun storeCards(cards: List<Card>) {
-       // Log.d("SWD", "Writing cards: ${cards.size}")
+        // Log.d("SWD", "Writing cards: ${cards.size}")
         cards.forEach() { card ->
             val cardEntity = card.toEntity()
-         //   Log.d("SWD", "Writing card: ${card.code}, ${card.name}")
+            //   Log.d("SWD", "Writing card: ${card.code}, ${card.name}")
             try {
                 dao.insertCards(cardEntity)
-            } catch(e: SQLiteConstraintException) {
+            } catch (e: SQLiteConstraintException) {
                 Log.d("SWD", "Already exists!  ${cardEntity.name}")
                 dao.updateCard(cardEntity)
             }
             card.subtypes?.forEach { subtype ->
                 dao.insertSubtypes(SubTypeEntity(subtype.code, subtype.name))
-                dao.insertCardSubtypesCross(CardSubtypeCrossRef(subTypeCode = subtype.code, code = card.code))
+                dao.insertCardSubtypesCross(
+                    CardSubtypeCrossRef(
+                        subTypeCode = subtype.code,
+                        code = card.code
+                    )
+                )
             }
             card.reprints.forEach {
                 val cardCode = it.fetchCode()
@@ -72,7 +92,12 @@ class CardCache(
             card.parallelDiceOf.forEach {
                 val cardCode = it.fetchCode()
                 dao.insertCardCodes(CardCode(cardCode))
-                dao.insertParellelDice(CardParellelDiceCrossRef(code = card.code, cardCode = cardCode))
+                dao.insertParellelDice(
+                    CardParellelDiceCrossRef(
+                        code = card.code,
+                        cardCode = cardCode
+                    )
+                )
             }
         }
     }
@@ -82,7 +107,7 @@ class CardCache(
             val set = it.toEntity()
             try {
                 dao.insertCardSets(set)
-            } catch(e: SQLiteConstraintException) {
+            } catch (e: SQLiteConstraintException) {
                 dao.updateCardSet(set)
             }
         }
@@ -94,31 +119,62 @@ class CardCache(
             val format = it.toEntity()
             try {
                 dao.insertFormats(format.cardFormat)
-            } catch(e: SQLiteConstraintException) {
+            } catch (e: SQLiteConstraintException) {
                 dao.updateFormat(format.cardFormat)
             }
             it.includedSets.forEach { set ->
                 dao.insertSetCodes(SetCode(set))
-                dao.insertIncludedSetsCrossRef(FormatSetCrossref(gameTypeCode = format.cardFormat.gameTypeCode, setCode = set))
+                dao.insertIncludedSetsCrossRef(
+                    FormatSetCrossref(
+                        gameTypeCode = format.cardFormat.gameTypeCode,
+                        setCode = set
+                    )
+                )
             }
             it.balance.forEach { map ->
                 dao.insertBalance(Balance(cardCode = map.key, balance = map.value))
-                dao.insertBalanceCrossRef(BalanceCardCrossref(gameTypeCode = format.cardFormat.gameTypeCode, cardCode = map.key, balance = map.value))
+                dao.insertBalanceCrossRef(
+                    BalanceCardCrossref(
+                        gameTypeCode = format.cardFormat.gameTypeCode,
+                        cardCode = map.key,
+                        balance = map.value
+                    )
+                )
             }
             it.banned.forEach { code ->
                 dao.insertCardCodes(CardCode(code))
-                dao.insertBannedCardsCrossRef(FormatBannedCrossref(gameTypeCode = format.cardFormat.gameTypeCode, cardCode = code))
+                dao.insertBannedCardsCrossRef(
+                    FormatBannedCrossref(
+                        gameTypeCode = format.cardFormat.gameTypeCode,
+                        cardCode = code
+                    )
+                )
             }
             it.restricted.forEach { code ->
                 dao.insertCardCodes(CardCode(code))
-                dao.insertRestrictedCardsCrossRef(FormatRestrictedCrossref(gameTypeCode = format.cardFormat.gameTypeCode, cardCode = code))
+                dao.insertRestrictedCardsCrossRef(
+                    FormatRestrictedCrossref(
+                        gameTypeCode = format.cardFormat.gameTypeCode,
+                        cardCode = code
+                    )
+                )
             }
             it.restrictedPairs.forEach { map ->          //Just saving all the keys - not sure how to handle this exactly
                 dao.insertCardCodes(CardCode(map.key))
-                dao.insertRestrictedCardsCrossRef(FormatRestrictedCrossref(gameTypeCode = format.cardFormat.gameTypeCode, cardCode = map.key))
+                dao.insertRestrictedCardsCrossRef(
+                    FormatRestrictedCrossref(
+                        gameTypeCode = format.cardFormat.gameTypeCode,
+                        cardCode = map.key
+                    )
+                )
             }
         }
-        dao.insertFormatTimestamp(FormatTimeEntity(timestamp = formatlist.timestamp, expiry = formatlist.expiry))
+        dao.insertFormatTimestamp(
+            FormatTimeEntity(
+                timestamp = formatlist.timestamp,
+                expiry = formatlist.expiry
+            )
+        )
     }
 
     override suspend fun createDeck(deck: Deck) {
@@ -128,6 +184,7 @@ class CardCache(
     override suspend fun updateDeck(deck: Deck) {
         dao.updateDeck(deck.toEntity())
     }
+
     override suspend fun updateDeck(deck: Deck, slot: Slot) {
         if (slot.quantity == 0) {
             Log.d("SWD", "Deleting slot: ${slot.quantity}")
@@ -151,4 +208,9 @@ class CardCache(
     }
 
     override suspend fun getDeck(name: String): Deck = dao.getDeck(name).toDomain()
+
+    override fun getOwnedCards(): Flow<List<OwnedCard>> =
+        dao.getOwnedCards().map { it.codes.map { it.toDomain() } }
+
+    override suspend fun storeOwnedCards(vararg cards: OwnedCard) = dao.insertOwnedCard(*cards.map { it.toEntity() }.toTypedArray())
 }

@@ -6,6 +6,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormatList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CharacterCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.OwnedCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
 import kotlinx.coroutines.flow.Flow
 
@@ -32,4 +33,8 @@ interface CardRepository {
     suspend fun updateDeck(deck: Deck, char: CharacterCard)
 
     suspend fun getDeck(deckName: String): Deck
+
+    fun getOwnedCards():Flow<List<OwnedCard>>
+
+    suspend fun insertOwnedCards(vararg cards:OwnedCard)
 }

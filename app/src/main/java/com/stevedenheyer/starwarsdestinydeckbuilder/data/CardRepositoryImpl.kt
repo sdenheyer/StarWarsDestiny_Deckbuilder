@@ -10,6 +10,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormatList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CharacterCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.OwnedCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.repositories.CardRepository
 import kotlinx.coroutines.CoroutineDispatcher
@@ -116,4 +117,8 @@ class CardRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getDeck(deckName: String): Deck = cardCache.getDeck(deckName)
+
+    override fun getOwnedCards(): Flow<List<OwnedCard>> = cardCache.getOwnedCards()
+
+    override suspend fun insertOwnedCards(vararg cards: OwnedCard) = cardCache.storeOwnedCards(*cards)
 }

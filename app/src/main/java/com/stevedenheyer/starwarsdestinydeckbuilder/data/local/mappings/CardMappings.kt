@@ -89,5 +89,5 @@ fun Card.toEntity() = CardBaseEntity(
     cp = cp,
 
     timestamp = Date().time,
-    expiry = expiry
+    expiry = expiry,
 )

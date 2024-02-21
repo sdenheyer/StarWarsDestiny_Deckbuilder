@@ -2,6 +2,7 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.CardUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.CardRepositoryImpl
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
@@ -12,6 +13,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.toCardUi
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
@@ -47,37 +49,41 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
 
     private val _cardsFlow: MutableStateFlow<Resource<List<Card>>> = MutableStateFlow(Resource.success(null))
 
-    val cardsFlow = _cardsFlow.mapLatest {
-                resource ->
-                when (resource.status) {
-                    Resource.Status.LOADING -> {
-                        if (resource.data.isNullOrEmpty()) {
-                            UiState.noData(isLoading = true, errorMessage = resource.message)
-                        } else {
-                            UiState.hasData(isLoading = true, errorMessage = resource.message, data = resource.data.map { it.toCardUi() })
-                        }
-                    }
-                    Resource.Status.ERROR -> {
-                        if (resource.data.isNullOrEmpty()) {
-                            UiState.noData(isLoading = false, errorMessage = resource.message)
-                        } else {
-                            UiState.hasData(isLoading = false, errorMessage = resource.message, data = resource.data.map { it.toCardUi() })
-                        }
-                    }
-                    Resource.Status.SUCCESS -> {
-                        if (resource.data.isNullOrEmpty()) {
-                            UiState.noData(isLoading = false, errorMessage = resource.message)
-                        } else {
-                            UiState.hasData(isLoading = false, errorMessage = resource.message, data = resource.data.map { card ->
-                               /* val deck = _decksFlow.value.find { it.name == deckSelection.value }
-                                val quantity = deck?.slots?.find { it.cardCode == card.code }?.quantity ?: 0*/
-                                card.toCardUi()
-                                    //.copy(quantity = quantity)
-                            })
-                        }
-                    }
-                }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val cardsFlow = _cardsFlow.mapLatest { resource ->
+        if (resource.data.isNullOrEmpty()) {
+            val isLoading = (resource.status == Resource.Status.LOADING)
+            UiState.noData(isLoading = isLoading, errorMessage = resource.message)
+        } else {
+            val data = resource.data.map { it.toCardUi() }
+            when (resource.status) {
+                Resource.Status.LOADING -> UiState.hasData(
+                    isLoading = true,
+                    errorMessage = resource.message,
+                    data = data
+                )
+
+                Resource.Status.ERROR -> UiState.hasData(
+                    isLoading = false,
+                    errorMessage = resource.message,
+                    data = data
+                )
+
+                Resource.Status.SUCCESS -> UiState.hasData(
+                    isLoading = false,
+                    errorMessage = resource.message,
+                    data = data
+                )
             }
+        }
+    }.combine(cardRepo.getOwnedCards()) { uiState, ownedCards ->
+        if (uiState is UiState.noData || ownedCards.isNullOrEmpty()) {
+            uiState
+        } else {
+            //Do Stuff
+            uiState
+        }
+    }
 
     private val _decksFlow = cardRepo.getAllDecks().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 

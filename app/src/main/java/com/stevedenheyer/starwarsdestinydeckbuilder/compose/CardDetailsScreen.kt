@@ -86,6 +86,21 @@ fun DetailsScreen(
     )
     val decks by detailViewModel.uiDecks.collectAsStateWithLifecycle(initialValue = emptyList())
 
+    val owned by detailViewModel.ownedCardsUi.collectAsStateWithLifecycle(initialValue = DeckDetailUi(
+        name = "",
+        formatName = "",
+        affiliationName = "",
+
+        quantity = 0,
+        isUnique = false,
+        isElite = false,
+        maxQuantity = Int.MAX_VALUE,
+        plot = null,
+        battlefield = null,
+        pointsUsed = 0,
+        deckSize = 0
+    ))
+
     Log.d("SWD", "Card State: ${cardState.isLoading}")
 
     when (val state = cardState) {
@@ -93,7 +108,9 @@ fun DetailsScreen(
             isCompactScreen = isCompactScreen,
             card = state.data,
             decks = decks,
-            changeCardQuantity = { deckName, quantity, isElite ->  (detailViewModel::writeDeck)(deckName, quantity, isElite) }
+            changeCardQuantity = { deckName, quantity, isElite ->  (detailViewModel::writeDeck)(deckName, quantity, isElite) },
+            owned = owned,
+            changeOwnedQuantity = { _, quantity, _ -> }
         )
             
 
@@ -105,23 +122,44 @@ fun DetailsScreen(
 fun Details( isCompactScreen: Boolean,
              card: CardDetailUi,
              decks: List<DeckDetailUi>,
+             owned: DeckDetailUi,
              modifier: Modifier = Modifier,
-             changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit) =
+             changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
+             changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit) {
     when (isCompactScreen) {
-        true -> CompactDetails(card = card, decks = decks, changeCardQuantity = changeCardQuantity, modifier = modifier)
-        false -> LargeDetails(card = card, decks = decks, changeCardQuantity = changeCardQuantity, modifier = modifier)
+        true -> CompactDetails(
+            card = card,
+            decks = decks,
+            owned = owned,
+            changeCardQuantity = changeCardQuantity,
+            changeOwnedQuantity = changeOwnedQuantity,
+            modifier = modifier
+        )
+
+        false -> LargeDetails(
+            card = card,
+            decks = decks,
+            changeCardQuantity = changeCardQuantity,
+            modifier = modifier
+        )
     }
+}
         
 @Composable
 fun CompactDetails(
     card: CardDetailUi,
     decks: List<DeckDetailUi>,
+    owned: DeckDetailUi,
     modifier: Modifier = Modifier,
-    changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
+    changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
+    changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
 ) {
     LazyColumn(modifier) {
         item {
             DetailsCard(modifier = Modifier.padding(vertical = 8.dp), card = card)
+        }
+        item {
+            OwnedCard(modifier = Modifier.padding(vertical = 8.dp), owned = owned, changeQuantity = changeOwnedQuantity)
         }
         items(items = decks, key = { it.name }) {deck ->
             DeckCardCompact(
@@ -227,7 +265,7 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi) {
 
         Text(
             buildAnnotatedString {
-                if (card.isUnique && card.typeName == "Character") appendInlineContent("unique", "unique")
+                if (card.isUnique && (card.typeName == "Character" || card.typeName == "Plot")) appendInlineContent("unique", "unique")
                 withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontSize = 26.sp)) {
                     append(card.name)
                 }
@@ -501,6 +539,45 @@ fun Balance(modifier: Modifier, factionColor: Color, formats: List<Format>) {
 }
 
 @Composable
+fun OwnedCard(
+    modifier: Modifier,
+    owned: DeckDetailUi,
+    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
+) {
+    val textModifer = Modifier
+        .padding(vertical = 2.dp, horizontal = 8.dp)
+    OutlinedCard(
+        modifier = modifier
+            .padding(top = 8.dp)
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        ),
+        border = BorderStroke(4.dp, color = MaterialTheme.colorScheme.onSurface)
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 12.dp, vertical = 4.dp)
+                .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                "Quantity of cards owned",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = textModifer,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+
+
+            AddMultiple(modifier = Modifier, deck = owned, changeQuantity = changeQuantity)
+        }
+    }
+}
+
+@Composable
 fun DeckCard(
     modifier: Modifier,
     card: CardDetailUi,
@@ -703,16 +780,16 @@ fun AddElitable(
         onClick = {
             when  {
                 deck.quantity == 0 -> changeQuantity(deck.name, 1, false)
-                !deck.isElite -> changeQuantity(deck.name, 1, true)
-                deck.isElite -> changeQuantity(deck.name, 0, false)
+                deck.quantity == 1 -> changeQuantity(deck.name, 2, true)
+                deck.quantity == 2 -> changeQuantity(deck.name, 0, false)
             }
         }) {
         Text(
             buildAnnotatedString {
                 when {
                     deck.quantity == 0 -> append("Add")
-                    !deck.isElite -> append("Make Elite")
-                    deck.isElite -> append("Remove")
+                    deck.quantity == 1 -> append("Make Elite")
+                    deck.quantity == 2 -> append("Remove")
                 }
             },
             Modifier

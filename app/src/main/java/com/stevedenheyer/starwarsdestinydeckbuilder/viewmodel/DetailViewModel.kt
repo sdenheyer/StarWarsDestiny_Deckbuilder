@@ -198,11 +198,39 @@ class DetailViewModel @Inject constructor(
                     maxQuantity = card.deckLimit,
                     plot = deck.plotCardCode?.fetchCode(),
                     battlefield = deck.battlefieldCardCode?.fetchCode(),
-                    pointsUsed = deck.plotPoints + (deck.characters.map { it.points * it.quantity }.reduceOrNull { acc, i ->  acc + i } ?: 0),
+                    pointsUsed = deck.plotPoints + (deck.characters.map {
+                        if (card.isUnique) it.points
+                        else
+                        it.points * it.quantity }.reduceOrNull { acc, i ->  acc + i } ?: 0),
                     deckSize = deck.slots.map { it.quantity }.reduceOrNull { acc, i ->  acc + i } ?: 0
                 )
             }
             emit(deckList)
+        }
+    }
+
+    private val ownedCards = repo.getOwnedCards().stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = emptyList())
+
+    val ownedCardsUi = combineTransform(ownedCards, uiCard) { owned, state ->
+        if (state is CardUiState.hasData) {
+            val card = state.data
+            val quantity = owned.find { it.card.fetchCode() == card.code }?.quantity ?: 0
+
+            val ownedDetail = DeckDetailUi(
+                name = "",
+                formatName = "",
+                affiliationName = "",
+
+                quantity = quantity,
+                isUnique = card.isUnique,
+                isElite = false,
+                maxQuantity = Int.MAX_VALUE,
+                plot = null,
+                battlefield = null,
+                pointsUsed = 0,
+                deckSize = owned.size
+            )
+            emit(ownedDetail)
         }
     }
 
@@ -248,9 +276,9 @@ class DetailViewModel @Inject constructor(
             Log.d("SWD", "Writing deck: ${deck.name}, ${quantity}")
             val char = CharacterCard(cardOrCode = CardOrCode.hasCode(code),
                 points = (if (isElite) card.points.second else card.points.first) ?: 0,
-                quantity = if (isElite) 1 else quantity,
+                quantity = quantity,
                 isElite = isElite,
-                dice = if (isElite) 2 else quantity,
+                dice = quantity,
                 dices = null)
             viewModelScope.launch { repo.updateDeck(deck, char) }
         }

@@ -27,6 +27,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.FormatEntit
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.FormatRestrictedCrossref
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.FormatSetCrossref
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.FormatTimeEntity
+import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.OwnedCardsBaseEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.OwnedCardsEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.SetCode
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.SlotEntity
@@ -148,4 +149,7 @@ interface CardsDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOwnedCard(vararg code: CodeQuantity)
+
+    @Insert
+    suspend fun createOwnedCards(ownedCards: OwnedCardsBaseEntity = OwnedCardsBaseEntity())
 }

@@ -26,6 +26,10 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.OwnedCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import java.util.Date
 
@@ -209,8 +213,16 @@ class CardCache(
 
     override suspend fun getDeck(name: String): Deck = dao.getDeck(name).toDomain()
 
-    override fun getOwnedCards(): Flow<List<OwnedCard>> =
-        dao.getOwnedCards().map { it.codes.map { it.toDomain() } }
+    override fun getOwnedCards(): Flow<List<OwnedCard>> = flow {
+
+        dao.getOwnedCards().collect {
+            emit(try {
+                it.codes
+            } catch (e: NullPointerException) {
+                dao.createOwnedCards()
+                dao.getOwnedCards().first().codes }.map { it.toDomain() })
+        }
+    }
 
     override suspend fun storeOwnedCards(vararg cards: OwnedCard) = dao.insertOwnedCard(*cards.map { it.toEntity() }.toTypedArray())
 }

@@ -78,7 +78,7 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
                 modifier = Modifier
                     .padding(top = 0.dp, bottom = 8.dp, start = 8.dp, end = 6.dp)
             )
-
+            if (card.quantity > 0)
                 Text(buildAnnotatedString {
                                           append(card.quantity.toString())
                     appendInlineContent("cards", "cards")
@@ -185,6 +185,7 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
                 modifier = Modifier
                     .padding(top = 0.dp, bottom = 8.dp, start = 8.dp)
             )
+            if (card.quantity > 0)
                 Text(buildAnnotatedString {
                     append(card.quantity.toString())
                     appendInlineContent("cards", "cards")

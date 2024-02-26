@@ -10,6 +10,8 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.toCardUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.usecases.GetCardFromCode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +24,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
@@ -42,8 +45,23 @@ data class UiDeck(
     val name: String,
 )
 
+
+
+sealed class ListType
+
+class ListTypeNone: ListType()
+
+data class ListTypeBySet(val setName: String):ListType()
+
+data class ListTypeByQuery(val queryTerms: List<Pair<String, String>>):ListType()
+
+class ListTypeCollection():ListType()
+
+
 @HiltViewModel
-class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl) : ViewModel() {
+class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl,
+                        private val getCardFromCode: GetCardFromCode) : ViewModel() {
+    val listTypeFlow:MutableStateFlow<ListType> = MutableStateFlow(ListTypeNone())
 
     private val cardSetSelection = MutableStateFlow("")
 
@@ -77,11 +95,15 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
             }
         }
     }.combine(cardRepo.getOwnedCards()) { uiState, ownedCards ->
-        if (uiState is UiState.noData || ownedCards.isNullOrEmpty()) {
-            uiState
-        } else {
-            //Do Stuff
-            uiState
+        when (val state = uiState) {
+            is UiState.noData -> uiState
+            is UiState.hasData -> {
+                val cards = state.data.map {card ->
+                    val quantity = (ownedCards.find { it.card.fetchCode() == card.code }?.quantity) ?: 0
+                    card.copy(quantity = quantity)
+                }
+                (uiState as UiState.hasData).copy(data = cards)
+            }
         }
     }
 
@@ -147,11 +169,13 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
         }
 
     fun setCardSetSelection(code: String) {
+        listTypeFlow.update { ListTypeBySet(setName = code) }
         cardSetSelection.update { code }
     }
 
     fun findCard(queryText: String) {
         if (queryText.isNotBlank()) {
+            listTypeFlow.update { ListTypeByQuery(listOf(Pair("Name", queryText))) }
             cardSetSelection.value = ""
             viewModelScope.launch(Dispatchers.IO) {
                 cardListJob?.cancelAndJoin()
@@ -163,6 +187,36 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
             }
         }
 
+
+    fun showCollection() {
+        viewModelScope.launch(Dispatchers.IO) {
+            cardListJob?.cancelAndJoin()
+            cardListJob = this.coroutineContext.job
+            cardRepo.getOwnedCards().collect {cards ->
+                val list = ArrayList<Card>()
+                    cards.forEach {
+                    val card = getCardFromCode(false, it.card).first().first()
+
+                    when (card) {
+                        is CardOrCode.hasCode -> {
+                            _cardsFlow.update {
+                                Resource(
+                                    Resource.Status.ERROR,
+                                    list,
+                                    true,
+                                    message = card.msg
+                                )
+                            }
+                            return@forEach
+                        }
+                        is CardOrCode.hasCard -> list.add(card.card)
+                    }
+                }
+                _cardsFlow.update { Resource(Resource.Status.SUCCESS, list, true, message = null) }
+            }
+
+        }
+    }
     suspend fun createDeck(deck: Deck) = cardRepo.createDeck(deck)
 
 }

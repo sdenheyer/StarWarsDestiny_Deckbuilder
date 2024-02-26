@@ -11,6 +11,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CharacterCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Format
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.OwnedCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.asString
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -142,30 +143,59 @@ class DetailViewModel @Inject constructor(
 
     val code: String = checkNotNull(savedStateHandle.get("code"))
 
-    val cardFlow = getCardWithFormat(code).stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = Resource.loading())
+    val cardFlow = getCardWithFormat(code).stateIn(
+        viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = Resource.loading()
+    )
 
     val uiCard = cardFlow.transform { resource ->
         when (resource.status) {
             Resource.Status.SUCCESS -> {
                 if (resource.data != null)
-                    emit(CardUiState.hasData(isLoading = false, errorMessage = null, data = resource.data.toDetailUi()))
+                    emit(
+                        CardUiState.hasData(
+                            isLoading = false,
+                            errorMessage = null,
+                            data = resource.data.toDetailUi()
+                        )
+                    )
             }
+
             Resource.Status.LOADING -> {
                 if (resource.data != null)
-                    emit(CardUiState.hasData(isLoading = true, errorMessage = null, data = resource.data.toDetailUi()))
+                    emit(
+                        CardUiState.hasData(
+                            isLoading = true,
+                            errorMessage = null,
+                            data = resource.data.toDetailUi()
+                        )
+                    )
                 else
                     emit(CardUiState.noData(isLoading = true, errorMessage = null))
             }
+
             Resource.Status.ERROR -> {
                 if (resource.data != null)
-                    emit(CardUiState.hasData(isLoading = false, errorMessage = resource.message, data = resource.data.toDetailUi()))
+                    emit(
+                        CardUiState.hasData(
+                            isLoading = false,
+                            errorMessage = resource.message,
+                            data = resource.data.toDetailUi()
+                        )
+                    )
                 else
                     emit(CardUiState.noData(isLoading = false, errorMessage = resource.message))
             }
-    }
-    }.stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = CardUiState.noData(isLoading = true, errorMessage = null))
+        }
+    }.stateIn(
+        viewModelScope,
+        started = SharingStarted.Eagerly,
+        initialValue = CardUiState.noData(isLoading = true, errorMessage = null)
+    )
 
-    private val decks = repo.getAllDecks().stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = emptyList())
+    private val decks = repo.getAllDecks()
+        .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = emptyList())
 
     val uiDecks = combineTransform(decks, uiCard) { decks, uiCard ->
         if (uiCard is CardUiState.hasData) {
@@ -173,16 +203,21 @@ class DetailViewModel @Inject constructor(
             val deckList = decks.map { deck ->
 
                 val quantity = when (card.typeName) {
-                    "Character" ->  deck.characters.find { it.cardOrCode.fetchCode() == card.code }?.quantity ?: 0
+                    "Character" -> deck.characters.find { it.cardOrCode.fetchCode() == card.code }?.quantity
+                        ?: 0
+
                     "Battlefield" -> if (deck.battlefieldCardCode?.fetchCode() == card.code) 1 else 0
                     "Plot" -> if (deck.plotCardCode?.fetchCode() == card.code) 1 else 0
-                    else -> deck.slots.find { it.cardOrCode.fetchCode() == card.code }?.quantity ?: 0
+                    else -> deck.slots.find { it.cardOrCode.fetchCode() == card.code }?.quantity
+                        ?: 0
                 }
 
                 val isElite = when (card.typeName) {
-                    "Character" ->  if (card.isUnique &&
-                            deck.characters.find { it.cardOrCode.fetchCode() == card.code }?.isElite ?: false)
+                    "Character" -> if (card.isUnique &&
+                        deck.characters.find { it.cardOrCode.fetchCode() == card.code }?.isElite ?: false
+                    )
                         true else false
+
                     "Plot" -> deck.isPlotElite
                     else -> false
                 }
@@ -201,15 +236,18 @@ class DetailViewModel @Inject constructor(
                     pointsUsed = deck.plotPoints + (deck.characters.map {
                         if (card.isUnique) it.points
                         else
-                        it.points * it.quantity }.reduceOrNull { acc, i ->  acc + i } ?: 0),
-                    deckSize = deck.slots.map { it.quantity }.reduceOrNull { acc, i ->  acc + i } ?: 0
+                            it.points * it.quantity
+                    }.reduceOrNull { acc, i -> acc + i } ?: 0),
+                    deckSize = deck.slots.map { it.quantity }.reduceOrNull { acc, i -> acc + i }
+                        ?: 0
                 )
             }
             emit(deckList)
         }
     }
 
-    private val ownedCards = repo.getOwnedCards().stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = emptyList())
+    private val ownedCards = repo.getOwnedCards()
+        .stateIn(viewModelScope, started = SharingStarted.Eagerly, initialValue = emptyList())
 
     val ownedCardsUi = combineTransform(ownedCards, uiCard) { owned, state ->
         if (state is CardUiState.hasData) {
@@ -242,6 +280,7 @@ class DetailViewModel @Inject constructor(
             "Character" -> {
                 writeDeckWithChar(deckName, quantity, isElite)
             }
+
             else -> writeDeckWithSlot(deckName, quantity)
         }
     }
@@ -250,16 +289,26 @@ class DetailViewModel @Inject constructor(
         var deck = decks.value.find { it.name == deckName }
         if (deck != null) {
             val card = cardFlow.value.data
-            Log.d("SWD", "Writing deck: ${deck.name} ${card?.typeCode} ${deck.plotCardCode?.fetchCode() ?: ""} ${isElite}")
+            Log.d(
+                "SWD",
+                "Writing deck: ${deck.name} ${card?.typeCode} ${deck.plotCardCode?.fetchCode() ?: ""} ${isElite}"
+            )
             when (card?.typeCode) {
                 "battlefield" -> if (deck.battlefieldCardCode?.fetchCode() == card.code)
                     deck = deck.copy(battlefieldCardCode = null)
                 else
                     deck = deck.copy(battlefieldCardCode = CardOrCode.hasCode(card.code))
-                "plot" -> deck = if (deck.plotCardCode?.fetchCode() == card.code && (deck.isPlotElite || card.points.second == null))
-                    deck.copy(plotCardCode = null, plotPoints = 0, isPlotElite = false)
-                else
-                    deck.copy(plotCardCode = CardOrCode.hasCode(card.code), isPlotElite = isElite, plotPoints = (if (isElite) card.points.second else card.points.first) ?: 0)
+
+                "plot" -> deck =
+                    if (deck.plotCardCode?.fetchCode() == card.code && (deck.isPlotElite || card.points.second == null))
+                        deck.copy(plotCardCode = null, plotPoints = 0, isPlotElite = false)
+                    else
+                        deck.copy(
+                            plotCardCode = CardOrCode.hasCode(card.code),
+                            isPlotElite = isElite,
+                            plotPoints = (if (isElite) card.points.second else card.points.first)
+                                ?: 0
+                        )
             }
             Log.d("SWD", "Deck: ${deck}")
             viewModelScope.launch { repo.updateDeck(deck) }
@@ -268,18 +317,21 @@ class DetailViewModel @Inject constructor(
 
     private fun writeDeckWithChar(deckName: String, quantity: Int, isElite: Boolean) {
         val deck = decks.value.find { it.name == deckName }
-        val card = try { checkNotNull(cardFlow.value.data) }
-        catch (e:IllegalStateException) {
+        val card = try {
+            checkNotNull(cardFlow.value.data)
+        } catch (e: IllegalStateException) {
             return
         }
         if (deck != null) {
             Log.d("SWD", "Writing deck: ${deck.name}, ${quantity}")
-            val char = CharacterCard(cardOrCode = CardOrCode.hasCode(code),
+            val char = CharacterCard(
+                cardOrCode = CardOrCode.hasCode(code),
                 points = (if (isElite) card.points.second else card.points.first) ?: 0,
                 quantity = quantity,
                 isElite = isElite,
                 dice = quantity,
-                dices = null)
+                dices = null
+            )
             viewModelScope.launch { repo.updateDeck(deck, char) }
         }
     }
@@ -291,14 +343,26 @@ class DetailViewModel @Inject constructor(
             val deck = decks.value.find { it.name == deckName }
             if (deck != null) {
                 Log.d("SWD", "Writing deck: ${deck.name}")
-                val slot = Slot(cardOrCode = CardOrCode.hasCode(code),
+                val slot = Slot(
+                    cardOrCode = CardOrCode.hasCode(code),
                     quantity = quantity,
                     dice = if (cardFlow.value.data?.hasDie == true) quantity else 0,
-                    dices = null)
+                    dices = null
+                )
                 viewModelScope.launch { repo.updateDeck(deck, slot) }
             }
         }
+    }
 
+    fun writeOwned(quantity: Int) {
+        val code = cardFlow.value.data?.code
+        if (code != null) {
+            val ownedCard = OwnedCard(card = CardOrCode.hasCode(code), quantity = quantity)
+            viewModelScope.launch { repo.insertOwnedCards(ownedCard) }
+        }
     }
-    }
+
+}
+
+
 

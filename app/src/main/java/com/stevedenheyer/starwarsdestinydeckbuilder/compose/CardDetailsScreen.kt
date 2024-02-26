@@ -110,7 +110,7 @@ fun DetailsScreen(
             decks = decks,
             changeCardQuantity = { deckName, quantity, isElite ->  (detailViewModel::writeDeck)(deckName, quantity, isElite) },
             owned = owned,
-            changeOwnedQuantity = { _, quantity, _ -> }
+            changeOwnedQuantity = { _, quantity, _ -> (detailViewModel::writeOwned)(quantity)}
         )
             
 
@@ -139,7 +139,9 @@ fun Details( isCompactScreen: Boolean,
         false -> LargeDetails(
             card = card,
             decks = decks,
+            owned = owned,
             changeCardQuantity = changeCardQuantity,
+            changeOwnedQuantity = changeOwnedQuantity,
             modifier = modifier
         )
     }
@@ -178,8 +180,10 @@ fun CompactDetails(
 fun LargeDetails(
     card: CardDetailUi,
     decks: List<DeckDetailUi>,
+    owned: DeckDetailUi,
     modifier: Modifier = Modifier,
-    changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
+    changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
+    changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
 ) {
 
     LazyColumn(
@@ -202,6 +206,9 @@ fun LargeDetails(
                         .padding(horizontal = 2.dp)
                 )
             }
+        }
+        item {
+            OwnedCard(modifier = Modifier.padding(vertical = 8.dp), owned = owned, changeQuantity = changeOwnedQuantity)
         }
         items(items = decks, key = { it.name }) { deck ->
             DeckCard(

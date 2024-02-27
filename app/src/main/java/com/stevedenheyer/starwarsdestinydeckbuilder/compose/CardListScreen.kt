@@ -180,9 +180,11 @@ fun CardListScreen(
         Scaffold(
 
             topBar = {
-                QueryTopBar(queryText, setQueryText,
-                    { (cardVM::findCard)(queryText.text) },
-                    { scope.launch { drawerState.apply { if (isClosed) open() else close() } } })
+                QueryTopBar(queryText = queryText,
+                    setQueryText = setQueryText,
+                    submitQuery = { (cardVM::findCard)(queryText.text) },
+                    openDrawer = { scope.launch { drawerState.apply { if (isClosed) open() else close() } } },
+                    openSortMenu = {  })
             },
 
             snackbarHost = {
@@ -190,41 +192,44 @@ fun CardListScreen(
             }
 
         ) { padding ->
-            when (val state = listUiState) {
-                is UiState.hasData -> CardList(
-                    isCompactScreen,
-                    cards = state.data,
-                    modifier = modifier.padding(padding),
-                    onItemClick = onCardClick,
-                    onRefreshSwipe = { (cardVM::refreshCardsBySet)(true) }
-                )
+            Box {
 
-                is UiState.noData -> {
-                    if (state.isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .wrapContentSize(Alignment.Center)
-                                .width(100.dp),
-                            trackColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
+                when (val state = listUiState) {
+                    is UiState.hasData -> CardList(
+                        isCompactScreen,
+                        cards = state.data,
+                        modifier = modifier.padding(padding),
+                        onItemClick = onCardClick,
+                        onRefreshSwipe = { (cardVM::refreshCardsBySet)(true) }
+                    )
 
-                    if (setsUiState.errorMessage != null) {
-                        LaunchedEffect(snackbarHostState) {
-                            val result = snackbarHostState.showSnackbar(
-                                setsUiState.errorMessage!!,
-                                actionLabel = "Retry",
-                                duration = SnackbarDuration.Indefinite
+                    is UiState.noData -> {
+                        if (state.isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .wrapContentSize(Alignment.Center)
+                                    .width(100.dp),
+                                trackColor = MaterialTheme.colorScheme.onPrimaryContainer
                             )
-                            if (result == SnackbarResult.ActionPerformed) {
-                                cardVM.refreshSets(true)
-                            }
                         }
-                    } else {
-                        if (listUiState.errorMessage != null) {
+
+                        if (setsUiState.errorMessage != null) {
                             LaunchedEffect(snackbarHostState) {
-                                snackbarHostState.showSnackbar(listUiState.errorMessage!!)
+                                val result = snackbarHostState.showSnackbar(
+                                    setsUiState.errorMessage!!,
+                                    actionLabel = "Retry",
+                                    duration = SnackbarDuration.Indefinite
+                                )
+                                if (result == SnackbarResult.ActionPerformed) {
+                                    cardVM.refreshSets(true)
+                                }
+                            }
+                        } else {
+                            if (listUiState.errorMessage != null) {
+                                LaunchedEffect(snackbarHostState) {
+                                    snackbarHostState.showSnackbar(listUiState.errorMessage!!)
+                                }
                             }
                         }
                     }

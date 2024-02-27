@@ -176,6 +176,7 @@ fun CompactDetails(
     }
 }
 
+@OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun LargeDetails(
     card: CardDetailUi,

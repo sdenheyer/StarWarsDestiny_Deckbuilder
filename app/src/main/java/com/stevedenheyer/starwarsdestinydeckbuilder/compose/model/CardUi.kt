@@ -17,6 +17,7 @@ data class CardUi(
     val rarity: String,
     val diceRef: List<String>,
     val set: String,
+    val position: Int,
     val quantity: Int = 0,
     val isElite: Boolean = false,
     val isBanned: Boolean = false,
@@ -36,7 +37,8 @@ fun Card.toCardUi() = CardUi(
     type = typeName,
     rarity = rarityName,
     diceRef = sides ?: emptyList(),
-    set = setName
+    set = setName,
+    position = position
 )
 
 

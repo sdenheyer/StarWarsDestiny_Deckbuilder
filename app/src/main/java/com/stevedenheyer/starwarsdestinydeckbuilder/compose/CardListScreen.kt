@@ -116,6 +116,8 @@ fun CardListScreen(
 
     val decksUiState by cardVM.decksFlow.collectAsStateWithLifecycle(initialValue = emptyList())
 
+    val sortState by cardVM.sortStateFlow.collectAsStateWithLifecycle()
+
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -181,10 +183,11 @@ fun CardListScreen(
 
             topBar = {
                 QueryTopBar(queryText = queryText,
+                    sortState = sortState,
                     setQueryText = setQueryText,
                     submitQuery = { (cardVM::findCard)(queryText.text) },
                     openDrawer = { scope.launch { drawerState.apply { if (isClosed) open() else close() } } },
-                    openSortMenu = {  })
+                    changeSortState = { sortState -> (cardVM::setSort)(sortState) })
             },
 
             snackbarHost = {

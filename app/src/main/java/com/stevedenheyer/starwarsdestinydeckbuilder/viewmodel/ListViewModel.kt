@@ -3,6 +3,8 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.CardUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortState
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.CardRepositoryImpl
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
@@ -26,6 +28,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
@@ -46,26 +49,30 @@ data class UiDeck(
 )
 
 
-
 sealed class ListType
 
-class ListTypeNone: ListType()
+class ListTypeNone : ListType()
 
-data class ListTypeBySet(val setName: String):ListType()
+data class ListTypeBySet(val setName: String) : ListType()
 
-data class ListTypeByQuery(val queryTerms: List<Pair<String, String>>):ListType()
+data class ListTypeByQuery(val queryTerms: List<Pair<String, String>>) : ListType()
 
-class ListTypeCollection():ListType()
+class ListTypeCollection() : ListType()
 
 
 @HiltViewModel
-class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl,
-                        private val getCardFromCode: GetCardFromCode) : ViewModel() {
-    val listTypeFlow:MutableStateFlow<ListType> = MutableStateFlow(ListTypeNone())
+class CardViewModel @Inject constructor(
+    private val cardRepo: CardRepositoryImpl,
+    private val getCardFromCode: GetCardFromCode
+) : ViewModel() {
+    val listTypeFlow: MutableStateFlow<ListType> = MutableStateFlow(ListTypeNone())
+
+    val sortStateFlow: MutableStateFlow<SortUi> = MutableStateFlow(SortUi())
 
     private val cardSetSelection = MutableStateFlow("")
 
-    private val _cardsFlow: MutableStateFlow<Resource<List<Card>>> = MutableStateFlow(Resource.success(null))
+    private val _cardsFlow: MutableStateFlow<Resource<List<Card>>> =
+        MutableStateFlow(Resource.success(null))
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val cardsFlow = _cardsFlow.mapLatest { resource ->
@@ -98,38 +105,77 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
         when (val state = uiState) {
             is UiState.noData -> uiState
             is UiState.hasData -> {
-                val cards = state.data.map {card ->
-                    val quantity = (ownedCards.find { it.card.fetchCode() == card.code }?.quantity) ?: 0
+                val cards = state.data.map { card ->
+                    val quantity =
+                        (ownedCards.find { it.card.fetchCode() == card.code }?.quantity) ?: 0
                     card.copy(quantity = quantity)
                 }
                 (uiState as UiState.hasData).copy(data = cards)
             }
         }
-    }
+    }.combine(sortStateFlow) { uiState, sortState ->
+        when (val state = uiState) {
+            is UiState.noData -> uiState
+            is UiState.hasData -> {
+                var cards = state.data
+                if (!sortState.showHero) {
+                    cards = cards.filterNot { it.affiliation == "Hero" }
+                }
+                if (!sortState.showVillain) {
+                    cards = cards.filterNot { it.affiliation == "Villain" }
+                }
+                when (sortState.sortState) {
+                    SortState.SET -> cards = cards.sortedBy { it.position }.sortedBy { it.set }
+                    SortState.NAME -> cards = cards.sortedBy { it.name }
+                    SortState.FACTION -> cards = cards.sortedBy { it.faction }
+                    SortState.POINTS_COST -> cards = cards.sortedBy { it.cost }.sortedBy { it.points.first }
+                    else -> {}
+                }
+                (uiState as UiState.hasData).copy(data = cards)
+            }
+        }
 
-    private val _decksFlow = cardRepo.getAllDecks().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    }.flowOn(Dispatchers.IO)
+
+    private val _decksFlow =
+        cardRepo.getAllDecks().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val decksFlow = _decksFlow.map { decks ->
         decks.map { UiDeck(name = it.name) }
     }
 
-    private val _cardSetsFlow:MutableStateFlow<Resource<CardSetList>> = MutableStateFlow(Resource.success(null))
+    private val _cardSetsFlow: MutableStateFlow<Resource<CardSetList>> =
+        MutableStateFlow(Resource.success(null))
 
-    val cardSetsFlow = _cardSetsFlow.map  { response ->
+    val cardSetsFlow = _cardSetsFlow.map { response ->
         val setList = ArrayList<UiCardSet>()
 
         if (response.data != null) {
-            response.data.cardSets.forEach {set ->
+            response.data.cardSets.forEach { set ->
                 setList.add(UiCardSet(code = set.code, name = set.name, postition = set.position))
             }
         }
 
         when (response.status) {
-            Resource.Status.LOADING -> UiState.hasData(isLoading = true, errorMessage = response.message, data = setList.toList())
-            Resource.Status.ERROR -> UiState.hasData(isLoading = false, errorMessage = response.message, data = setList.toList())
-            Resource.Status.SUCCESS -> UiState.hasData(isLoading = false, errorMessage = response.message, data = setList.toList())
-            }
+            Resource.Status.LOADING -> UiState.hasData(
+                isLoading = true,
+                errorMessage = response.message,
+                data = setList.toList()
+            )
+
+            Resource.Status.ERROR -> UiState.hasData(
+                isLoading = false,
+                errorMessage = response.message,
+                data = setList.toList()
+            )
+
+            Resource.Status.SUCCESS -> UiState.hasData(
+                isLoading = false,
+                errorMessage = response.message,
+                data = setList.toList()
+            )
         }
+    }
 
     private var cardListJob: Job? = null
 
@@ -157,7 +203,8 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
                 cardListJob = this.coroutineContext.job
                 cardRepo.getCardsBySet(code, forceRemoteUpdate).collect { resource ->
                     if (resource.status == Resource.Status.SUCCESS && resource.isFromDB && !resource.data.isNullOrEmpty()) {
-                        val numberOfCardsInSet = _cardSetsFlow.value.data?.cardSets?.find { it.code == code }?.known ?: 0
+                        val numberOfCardsInSet =
+                            _cardSetsFlow.value.data?.cardSets?.find { it.code == code }?.known ?: 0
                         if (resource.data.size < numberOfCardsInSet) {
                             refreshCardsBySet(true)
                         }
@@ -166,7 +213,7 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
                 }
             }
         }
-        }
+    }
 
     fun setCardSetSelection(code: String) {
         listTypeFlow.update { ListTypeBySet(setName = code) }
@@ -181,20 +228,19 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
                 cardListJob?.cancelAndJoin()
                 cardListJob = this.coroutineContext.job
                 cardRepo.findCards(queryText).collect { resource ->
-                        _cardsFlow.update { resource }
-                    }
+                    _cardsFlow.update { resource }
                 }
             }
         }
-
+    }
 
     fun showCollection() {
         viewModelScope.launch(Dispatchers.IO) {
             cardListJob?.cancelAndJoin()
             cardListJob = this.coroutineContext.job
-            cardRepo.getOwnedCards().collect {cards ->
+            cardRepo.getOwnedCards().collect { cards ->
                 val list = ArrayList<Card>()
-                    cards.forEach {
+                cards.forEach {
                     val card = getCardFromCode(false, it.card).first().first()
 
                     when (card) {
@@ -209,6 +255,7 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
                             }
                             return@forEach
                         }
+
                         is CardOrCode.hasCard -> list.add(card.card)
                     }
                 }
@@ -217,6 +264,17 @@ class CardViewModel @Inject constructor(private val cardRepo: CardRepositoryImpl
 
         }
     }
+
+    fun setSort(sortState: SortState) {
+        when (sortState) {
+            SortState.SHOW_HERO -> { val newValue = !sortStateFlow.value.showHero
+                                    sortStateFlow.update { it.copy(showHero = newValue) }}
+            SortState.SHOW_VILLAIN -> { val newValue = !sortStateFlow.value.showVillain
+                sortStateFlow.update { it.copy(showVillain = newValue) }}
+            else -> { sortStateFlow.update { it.copy(sortState = sortState) }}
+        }
+    }
+
     suspend fun createDeck(deck: Deck) = cardRepo.createDeck(deck)
 
 }

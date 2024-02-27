@@ -577,9 +577,6 @@ fun OwnedCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-
-
-
             AddMultiple(modifier = Modifier, deck = owned, changeQuantity = changeQuantity)
         }
     }

@@ -16,6 +16,7 @@ import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -97,14 +98,15 @@ fun CreateDeckDialog(
         },
         text = {
             Column {
-                TextField(
+                OutlinedTextField(
                     value = deckName,
                     onValueChange = { deckName = it },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        focusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.outline
                     )
                 )
                 Row {

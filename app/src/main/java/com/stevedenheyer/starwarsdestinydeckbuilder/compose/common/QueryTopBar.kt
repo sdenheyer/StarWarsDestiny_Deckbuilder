@@ -2,13 +2,7 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.compose.common
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -16,34 +10,24 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuItemColors
-import androidx.compose.material3.MultiChoiceSegmentedButtonRow
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,28 +43,28 @@ fun QueryTopBar(
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
+    val popupXoffset = remember { mutableStateOf(0) }
+
     val sortMenuExpanded = remember { mutableStateOf(false) }
 
     val queryMenuExpaneded = remember { mutableStateOf(false) }
-
-    val (cardTextQuery, setCardTextQuery) = rememberSaveable(stateSaver = TextFieldValue.Saver) {
-        mutableStateOf(TextFieldValue(""))
-    }
 
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer,
             titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
         ),
+        modifier = Modifier.onGloballyPositioned {
+                                                 popupXoffset.value = it.size.height
+        },
         title = {
-            TextField(
+           /* TextField(
                 value = queryText,
                 onValueChange = { setQueryText(it) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Search,
-                    keyboardType = KeyboardType.Email,
-                    autoCorrect = false
+                    keyboardType = KeyboardType.Text,
                 ),
                 keyboardActions = KeyboardActions(
                     onSearch = {
@@ -93,69 +77,22 @@ fun QueryTopBar(
                     MutableInteractionSource()
                 }.also { interactionSource ->
                     LaunchedEffect(key1 = interactionSource) {
-                        interactionSource.interactions.collect {interaction ->
+                        interactionSource.interactions.collect { interaction ->
                             if (interaction is PressInteraction.Release) {
+                                keyboardController?.show()
                                 queryMenuExpaneded.value = true
                             }
                         }
                     }
                 }
-
             )
-            DropdownMenu(expanded = queryMenuExpaneded.value, onDismissRequest = { queryMenuExpaneded.value = false }) {
-                TextField(value = cardTextQuery,
-                    onValueChange = { setCardTextQuery(it) },
-                    label = { Text("Card Text:") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Search,
-                        keyboardType = KeyboardType.Email,
-                        autoCorrect = false
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onSearch = {
-                            keyboardController?.hide()
-                            focusManager.clearFocus()
-                            //submitQuery(queryText.text)
-                        }
-                    ),
-                    modifier = Modifier.wrapContentWidth(Alignment.CenterHorizontally)
-                    )
 
-                MultiChoiceSegmentedButtonRow {
-                    SegmentedButton(checked = false, onCheckedChange = {}, shape = SegmentedButtonDefaults.itemShape(
-                        index = 0,
-                        count = 4
-                    )) {
-                        Text("Command")
-                    }
-                    SegmentedButton(checked = false, onCheckedChange = {}, shape = SegmentedButtonDefaults.itemShape(
-                        index = 1,
-                        count = 4
-                    )) {
-                        Text("Force")
-                    }
-                    SegmentedButton(checked = false, onCheckedChange = {}, shape = SegmentedButtonDefaults.itemShape(
-                        index = 2,
-                        count = 4
-                    )) {
-                        Text("Rogue")
-                    }
-                    SegmentedButton(checked = false, onCheckedChange = {}, shape = SegmentedButtonDefaults.itemShape(
-                        index = 3,
-                        count = 4
-                    )) {
-                        Text("General")
-                    }
-                }
-
-
-            }
+*/
         },
         navigationIcon = {
             IconButton(onClick = {
-                keyboardController?.hide()
-                focusManager.clearFocus()
+              //  keyboardController?.hide()
+             //   focusManager.clearFocus()
                 openDrawer()
             }) {
                 Image(
@@ -166,6 +103,18 @@ fun QueryTopBar(
             }
         },
         actions = {
+            IconButton(onClick = { queryMenuExpaneded.value = true }) {
+                Image(
+                    painter = painterResource(id = R.drawable.baseline_search_24),
+                    contentDescription = "Query",
+                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimaryContainer)
+                )
+            }
+
+            if (queryMenuExpaneded.value) {
+                QueryPopup(popupYoffset = popupXoffset.value, onDismiss = { queryMenuExpaneded.value = false })
+            }
+
             IconButton(onClick = { sortMenuExpanded.value = true }) {
                 Image(
                     painter = painterResource(id = R.drawable.baseline_sort_24),
@@ -246,3 +195,5 @@ fun QueryTopBar(
         }
     )
 }
+
+

@@ -19,7 +19,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -39,11 +38,11 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.sp
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
+import com.stevedenheyer.starwarsdestinydeckbuilder.utils.affiliationMap
+import com.stevedenheyer.starwarsdestinydeckbuilder.utils.dropDownInline
+import com.stevedenheyer.starwarsdestinydeckbuilder.utils.formatMap
 import java.util.Date
 
-val formatMap =
-    mapOf("STD" to "Standard", "TRI" to "Trilogy", "INF" to "Infinite", "ARHS" to "ARH Standard")
-val affiliationMap = mapOf("hero" to "Hero", "villain" to "Villain", "neutral" to "Neutral")
 
 @Composable
 fun CreateDeckDialog(
@@ -61,21 +60,6 @@ fun CreateDeckDialog(
 
     var affiliationDropDownExpanded by remember { mutableStateOf(false) }
     var affiliationSelection by remember { mutableStateOf("hero") }
-
-    val inlineContent = mapOf("dropDownArrow" to InlineTextContent(
-        placeholder = Placeholder(
-            width = 14.sp,
-            height = 24.sp,
-            placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter
-        )
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.baseline_arrow_drop_down_24),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer)
-        )
-    })
 
     AlertDialog(title = { Text(titleText) },
         onDismissRequest = onDismissRequest,
@@ -130,7 +114,7 @@ fun CreateDeckDialog(
                                     append(formatMap[formatSelection] ?: "Format")
                                     appendInlineContent("dropDownArrow", "[dropDownArrow]")
                                 },
-                                inlineContent = inlineContent,
+                                inlineContent = dropDownInline,
                             )
                         }
                         DropdownMenu(
@@ -167,7 +151,7 @@ fun CreateDeckDialog(
                                     append(affiliationMap[affiliationSelection] ?: "Affiliation")
                                     appendInlineContent("dropDownArrow", "[dropDownArrow]")
                                 },
-                                inlineContent = inlineContent,
+                                inlineContent = dropDownInline,
                             )
                         }
                         DropdownMenu(

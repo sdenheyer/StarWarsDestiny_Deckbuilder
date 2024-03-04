@@ -64,6 +64,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.model.CardDTO
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Format
 import com.stevedenheyer.starwarsdestinydeckbuilder.ui.theme.getColorFromString
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.asIntPair
+import com.stevedenheyer.starwarsdestinydeckbuilder.utils.getUniqueInline
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardDetailUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardUiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DeckDetailUi
@@ -246,22 +247,6 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi) {
         })
     }
 
-    val uniqueInline = mapOf("unique" to InlineTextContent(
-        Placeholder(
-            width = MaterialTheme.typography.titleLarge.fontSize,
-            height = MaterialTheme.typography.titleLarge.fontSize,
-            placeholderVerticalAlign = PlaceholderVerticalAlign.AboveBaseline
-        )
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.unique),
-            contentDescription = "Unique",
-            modifier = Modifier.fillMaxSize(),
-            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-        )
-    }
-    )
-
     OutlinedCard(
         modifier = modifier,
         colors = CardDefaults.cardColors(
@@ -284,7 +269,7 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi) {
             },
             style = MaterialTheme.typography.titleLarge,
             overflow = TextOverflow.Ellipsis,
-            inlineContent = uniqueInline,
+            inlineContent = getUniqueInline(size = MaterialTheme.typography.titleLarge.fontSize, color = MaterialTheme.colorScheme.onSurface ),
             modifier = Modifier
                 .background(color = cardColor)
                 .padding(start = 12.dp, top = 12.dp, bottom = 8.dp)

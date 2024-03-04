@@ -5,8 +5,10 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
 import androidx.room.Transaction
 import androidx.room.Update
+import androidx.sqlite.db.SupportSQLiteQuery
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.Balance
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.BalanceCardCrossref
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardBaseEntity
@@ -65,9 +67,8 @@ interface CardsDao {
     @Query("SELECT * FROM cardbaseentity WHERE code = :code")
     fun getCardByCode(code: String): Flow<CardEntity?>
 
-    @Transaction
-    @Query("SELECT * FROM cardbaseentity WHERE name LIKE :query")
-    fun findCards(query: String): Flow<List<CardEntity>>
+    @RawQuery
+    fun findCards(query: SupportSQLiteQuery): Flow<List<CardEntity>>
 
     @Insert
     fun insertCardSets(vararg sets: CardSetEntity)

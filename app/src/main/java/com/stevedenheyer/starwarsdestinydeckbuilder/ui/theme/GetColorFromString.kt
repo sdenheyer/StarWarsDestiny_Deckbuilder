@@ -6,11 +6,11 @@ import androidx.compose.ui.graphics.Color
 
 @Composable
 fun getColorFromString(s: String): Color {
-    when (s) {
-        "red" -> return LocalFactionColorScheme.current.factionRed
-        "blue" -> return LocalFactionColorScheme.current.factionBlue
-        "gray" -> return LocalFactionColorScheme.current.factionGrey
-        "yellow" -> return LocalFactionColorScheme.current.factionYellow
-        else -> return Color.Unspecified
+    return when (s) {
+        "red" -> LocalFactionColorScheme.current.factionRed
+        "blue" -> LocalFactionColorScheme.current.factionBlue
+        "gray" -> LocalFactionColorScheme.current.factionGrey
+        "yellow" -> LocalFactionColorScheme.current.factionYellow
+        else -> Color.Unspecified
     }
 }

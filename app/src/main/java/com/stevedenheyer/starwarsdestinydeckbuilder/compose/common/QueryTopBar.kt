@@ -22,26 +22,26 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.UiCardSet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QueryTopBar(
-    queryText: TextFieldValue,
+    sets: List<UiCardSet>,
     sortState: SortUi,
-    setQueryText: (TextFieldValue) -> Unit,
-    submitQuery: (String) -> Unit,
+    submitQuery: (QueryUi) -> Unit,
     openDrawer: () -> Unit,
     changeSortState: (SortState) -> Unit,
 ) {
 
-    val keyboardController = LocalSoftwareKeyboardController.current
-    val focusManager = LocalFocusManager.current
+  //  val keyboardController = LocalSoftwareKeyboardController.current
+ //   val focusManager = LocalFocusManager.current
 
     val popupXoffset = remember { mutableStateOf(0) }
 
@@ -58,36 +58,6 @@ fun QueryTopBar(
                                                  popupXoffset.value = it.size.height
         },
         title = {
-           /* TextField(
-                value = queryText,
-                onValueChange = { setQueryText(it) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Search,
-                    keyboardType = KeyboardType.Text,
-                ),
-                keyboardActions = KeyboardActions(
-                    onSearch = {
-                        keyboardController?.hide()
-                        focusManager.clearFocus()
-                        submitQuery(queryText.text)
-                    }
-                ),
-                interactionSource = remember {
-                    MutableInteractionSource()
-                }.also { interactionSource ->
-                    LaunchedEffect(key1 = interactionSource) {
-                        interactionSource.interactions.collect { interaction ->
-                            if (interaction is PressInteraction.Release) {
-                                keyboardController?.show()
-                                queryMenuExpaneded.value = true
-                            }
-                        }
-                    }
-                }
-            )
-
-*/
         },
         navigationIcon = {
             IconButton(onClick = {
@@ -112,7 +82,7 @@ fun QueryTopBar(
             }
 
             if (queryMenuExpaneded.value) {
-                QueryPopup(popupYoffset = popupXoffset.value, onDismiss = { queryMenuExpaneded.value = false })
+                QueryPopup(sets = sets, popupYoffset = popupXoffset.value, onDismiss = { queryMenuExpaneded.value = false }, submitQuery = { submitQuery(it) })
             }
 
             IconButton(onClick = { sortMenuExpanded.value = true }) {

@@ -1,5 +1,6 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.domain.repositories
 
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormatList
@@ -20,7 +21,7 @@ interface CardRepository {
 
     fun getCardFormats(forceRemoteUpdate: Boolean): Flow<Resource<CardFormatList>>
 
-    fun findCards(query: String): Flow<Resource<List<Card>>>
+    fun findCards(query: QueryUi): Flow<Resource<List<Card>>>
 
     suspend fun createDeck(deck: Deck)
 

@@ -1,7 +1,13 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.data
 
 import android.util.Log
+import androidx.sqlite.db.SimpleSQLiteQuery
+import androidx.sqlite.db.SupportSQLiteQuery
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.OperatorUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.data.CardCache
+import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiErrorResponse
+import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiSuccessResponse
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.CardNetwork
 import com.stevedenheyer.starwarsdestinydeckbuilder.di.IoDispatcher
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
@@ -13,10 +19,17 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.OwnedCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.repositories.CardRepository
+import com.stevedenheyer.starwarsdestinydeckbuilder.utils.setCodeMap
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
@@ -31,12 +44,14 @@ class CardRepositoryImpl @Inject constructor(
     override fun getCardbyCode(code: String, forceRemoteUpdate: Boolean): Flow<Resource<Card?>> {
         return networkBoundResource(
             fetchFromLocal = { cardCache.getCardByCode(code) },
-            shouldFetchFromRemote = { it == null ||
-                    (forceRemoteUpdate) ||
-                    (Date().time - (it.timestamp) > (it.expiry))},
+            shouldFetchFromRemote = {
+                it == null ||
+                        (forceRemoteUpdate) ||
+                        (Date().time - (it.timestamp) > (it.expiry))
+            },
             fetchFromRemote = { cardNetwork.getCardByCode(code) },
             processRemoteResponse = { },
-            saveRemoteData = { coroutineScope.launch(dispatcher) { cardCache.storeCards(listOf(it)) } },
+            saveRemoteData = { cardCache.storeCards(listOf(it)) },
             onFetchFailed = { _, _ -> }
 
         ).flowOn(dispatcher)
@@ -52,23 +67,24 @@ class CardRepositoryImpl @Inject constructor(
             },
             fetchFromRemote = { cardNetwork.getCardSets() },
             processRemoteResponse = { },
-            saveRemoteData = {
-                coroutineScope.launch(dispatcher) {
-                    cardCache.storeCardSets(it)
-                }
-            },
+            saveRemoteData = { cardCache.storeCardSets(it) },
             onFetchFailed = { _, _ -> }
         ).flowOn(dispatcher)
     }
 
-    override fun getCardsBySet(code: String, forceRemoteUpdate: Boolean): Flow<Resource<List<Card>>> {
+    override fun getCardsBySet(
+        code: String,
+        forceRemoteUpdate: Boolean
+    ): Flow<Resource<List<Card>>> {
         return networkBoundResource(
             fetchFromLocal = { cardCache.getCardsBySet(code) },
-            shouldFetchFromRemote = { it.isNullOrEmpty() ||
-                    (forceRemoteUpdate) },
+            shouldFetchFromRemote = {
+                it.isNullOrEmpty() ||
+                        (forceRemoteUpdate)
+            },
             fetchFromRemote = { cardNetwork.getCardsBySet(code) },
             processRemoteResponse = { },
-            saveRemoteData = { coroutineScope.launch(dispatcher) { cardCache.storeCards(it) } },
+            saveRemoteData = { cardCache.storeCards(it) },
             onFetchFailed = { _, _ -> }
         ).flowOn(dispatcher)
     }
@@ -76,26 +92,67 @@ class CardRepositoryImpl @Inject constructor(
     override fun getCardFormats(forceRemoteUpdate: Boolean): Flow<Resource<CardFormatList>> {
         return networkBoundResource(
             fetchFromLocal = { cardCache.getFormats() },
-            shouldFetchFromRemote = { it?.cardFormats.isNullOrEmpty() ||
-                    (forceRemoteUpdate) ||
-                    (Date().time - (it?.timestamp ?: 0L) > (it?.expiry ?: 0L))},
+            shouldFetchFromRemote = {
+                it?.cardFormats.isNullOrEmpty() ||
+                        (forceRemoteUpdate) ||
+                        (Date().time - (it?.timestamp ?: 0L) > (it?.expiry ?: 0L))
+            },
             fetchFromRemote = { cardNetwork.getFormats() },
             processRemoteResponse = { },
-            saveRemoteData = { coroutineScope.launch(dispatcher) { cardCache.storeFormats(it) } },
+            saveRemoteData = { cardCache.storeFormats(it) },
             onFetchFailed = { _, _ -> }
         ).flowOn(dispatcher)
     }
 
-    override fun findCards(query: String): Flow<Resource<List<Card>>> {
+    override fun findCards(query: QueryUi): Flow<Resource<List<Card>>> {
         return networkBoundResource(
-            fetchFromLocal = { cardCache.findCards(query) },
+            fetchFromLocal = {
+                cardCache.findCards(query).map { cards ->
+                    if (query.byFormat.isNotBlank()) {
+                        val formats =
+                            getCardFormats(false).first { it.status != Resource.Status.LOADING }
+                       // Log.d("SWD", "formatsresrouce: ${formats.status}")
+                        if (formats.status == Resource.Status.SUCCESS) {
+                            cards.filter { card ->
+                              //  Log.d("SWD", "formats: ${formats.data?.cardFormats}")
+                                val format =
+                                    formats.data?.cardFormats?.find { it.gameTypeCode == query.byFormat }
+                                if (format == null) {
+                                    true
+                                } else {
+                                    val cardCodes =
+                                        listOf(card.code, *card.reprints.map { it.fetchCode() }.toTypedArray())
+                                    val setCodes = listOf(
+                                        card.setCode,
+                                        *card.reprints.mapNotNull { code ->
+                                            setCodeMap[code.fetchCode().substring(0, 2)]
+                                        }.toTypedArray()
+                                    )
+                                    Log.d("SWD", "Checking codes: ${setCodes}")
+                                    if (!(setCodes.any { it in format.includedSets }) || cardCodes.any { it in format.banned })
+                                        false
+                                    else {
+                                        true
+                                    }
+                                }
+                            }
+                        } else {
+                            cards
+
+                        }
+                    } else {
+                        cards
+                    }
+                }
+            },
             shouldFetchFromRemote = { true },
             fetchFromRemote = { cardNetwork.findCards(query) },
-            processRemoteResponse = { },
-            saveRemoteData =  { coroutineScope.launch(dispatcher) { cardCache.storeCards(it) }},
+            processRemoteResponse = {},
+            saveRemoteData = { cardCache.storeCards(it) },
             onFetchFailed = { _, _ -> }
         )
     }
+
 
     override suspend fun createDeck(deck: Deck) {
         cardCache.createDeck(deck)
@@ -120,5 +177,6 @@ class CardRepositoryImpl @Inject constructor(
 
     override fun getOwnedCards(): Flow<List<OwnedCard>> = cardCache.getOwnedCards()
 
-    override suspend fun insertOwnedCards(vararg cards: OwnedCard) = cardCache.storeOwnedCards(*cards)
+    override suspend fun insertOwnedCards(vararg cards: OwnedCard) =
+        cardCache.storeOwnedCards(*cards)
 }

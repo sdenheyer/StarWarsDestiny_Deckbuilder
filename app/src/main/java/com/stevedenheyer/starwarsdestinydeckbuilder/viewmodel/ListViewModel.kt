@@ -2,7 +2,7 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.CardUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.CardRepositoryImpl
@@ -15,24 +15,19 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.toCardUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.usecases.GetCardFromCode
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 
@@ -220,17 +215,15 @@ class CardViewModel @Inject constructor(
         cardSetSelection.update { code }
     }
 
-    fun findCard(queryText: String) {
-        if (queryText.isNotBlank()) {
-            listTypeFlow.update { ListTypeByQuery(listOf(Pair("Name", queryText))) }
+    fun findCards(query: QueryUi) {
+            listTypeFlow.update { ListTypeByQuery(listOf(Pair("Name", query.byCardName))) }
             cardSetSelection.value = ""
             viewModelScope.launch(Dispatchers.IO) {
                 cardListJob?.cancelAndJoin()
                 cardListJob = this.coroutineContext.job
-                cardRepo.findCards(queryText).collect { resource ->
+                cardRepo.findCards(query).collect { resource ->
                     _cardsFlow.update { resource }
                 }
-            }
         }
     }
 

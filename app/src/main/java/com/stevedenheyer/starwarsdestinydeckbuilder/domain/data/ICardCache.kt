@@ -1,5 +1,7 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.domain.data
 
+import androidx.sqlite.db.SupportSQLiteQuery
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormatList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
@@ -11,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 interface ICardCache {
     fun getCardByCode(code: String): Flow<Card?>
     fun getCardsBySet(code: String): Flow<List<Card>>
-    fun findCards(query: String): Flow<List<Card>>
+    fun findCards(query: QueryUi): Flow<List<Card>>
     fun getCardSets(): Flow<CardSetList>
     fun getFormats(): Flow<CardFormatList>
     fun getDecks():Flow<List<Deck>>

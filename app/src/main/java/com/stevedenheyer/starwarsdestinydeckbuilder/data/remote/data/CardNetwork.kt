@@ -1,6 +1,8 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data
 
 import android.util.Log
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.OperatorUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.mappings.toDomain
 import com.stevedenheyer.starwarsdestinydeckbuilder.di.IoDispatcher
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.ICardNetwork
@@ -91,10 +93,10 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
 
     }.flowOn(dispatcher)
 
-    override fun findCards(query: String): Flow<ApiResponse<List<Card>>> = flow {
+    override fun findCards(query: QueryUi): Flow<ApiResponse<List<Card>>> = flow {
 
         val apiResponse = try {
-            val response = cardService.findCards(query)
+            val response = cardService.findCards(getRemoteQueryString(query))
             //  Log.d("SWD", "Response rec'd: ${response.body()?.size}")
             val expiry = getExpiry(response.headers())
             if (response.body() != null) {
@@ -107,23 +109,91 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
         }
         emit(apiResponse)
     }.flowOn(dispatcher)
-}
 
-fun getExpiry(headers: Headers): Long {
-    var expiry = 24 * 60 * 60 * 1000L
-    val cacheControl = headers.values("cache-control")
-    cacheControl.forEach {
-        if (!it.endsWith("public", true)) {
-            try {
-               // Log.d("SWD", "Cache control header: $it")
-                expiry = it.substringAfter("=").toLong() * 1000
-                // expiry = 60 * 1000 //TEST VALUE
-                Log.d("SWD", "Expiry: $expiry")
-            } catch (e: NumberFormatException) {
-                Log.d("SWD", "Couldn't find an integer in the string")
+    private fun getRemoteQueryString(query: QueryUi): String {
+        val queryString = StringBuilder()
+
+        query.run {
+            if (byCardName.isNotBlank()) {
+                queryString.append("${byCardName} ")
             }
 
+            if (byColors.size < 4) {
+                queryString.append("f:")
+                byColors.forEachIndexed { i, color ->
+                    queryString.append("${color}")
+                    if (i < query.byColors.size - 1)
+                        queryString.append("|")
+                    else
+                        queryString.append(" ")
+                }
+            }
+
+            byHealth.run {
+                if (number != 0) {
+                    queryString.append("h")
+                    when (operator) {
+                        OperatorUi.LESS_THAN -> queryString.append("<")
+                        OperatorUi.MORE_THAN -> queryString.append(">")
+                        OperatorUi.EQUALS -> queryString.append(":")
+                    }
+                    queryString.append("${number} ")
+                }
+            }
+
+            if (byFormat.isNotBlank()) {
+                queryString.append("m:${byFormat} ")
+            }
+
+            byCost.run {
+                if (number != 0) {
+                    queryString.append("h")
+                    when (operator) {
+                        OperatorUi.LESS_THAN -> queryString.append("<")
+                        OperatorUi.MORE_THAN -> queryString.append(">")
+                        OperatorUi.EQUALS -> queryString.append(":")
+                    }
+                    queryString.append("${number} ")
+                }
+            }
+
+            if (bySet.isNotBlank()) {
+                queryString.append("s:${bySet} ")
+            }
+
+            if (byType.isNotBlank()) {
+                queryString.append("t:${byType} ")
+            }
+
+            if (byUnique) {
+                queryString.append("u:1 ")
+            }
+
+            if (byCardText.isNotBlank()) {
+                queryString.append("x:${byCardText} ")
+            }
         }
+
+        return queryString.toString()
     }
-    return expiry
+
+    private fun getExpiry(headers: Headers): Long {
+        var expiry = 24 * 60 * 60 * 1000L
+        val cacheControl = headers.values("cache-control")
+        cacheControl.forEach {
+            if (!it.endsWith("public", true)) {
+                try {
+                    // Log.d("SWD", "Cache control header: $it")
+                    expiry = it.substringAfter("=").toLong() * 1000
+                    // expiry = 60 * 1000 //TEST VALUE
+                    Log.d("SWD", "Expiry: $expiry")
+                } catch (e: NumberFormatException) {
+                    Log.d("SWD", "Couldn't find an integer in the string")
+                }
+
+            }
+        }
+        return expiry
+    }
 }
+

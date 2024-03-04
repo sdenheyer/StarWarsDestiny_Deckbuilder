@@ -2,6 +2,10 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.data.local.data
 
 import android.database.sqlite.SQLiteConstraintException
 import android.util.Log
+import androidx.sqlite.db.SimpleSQLiteQuery
+import androidx.sqlite.db.SupportSQLiteQuery
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.OperatorUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.mappings.toDomain
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.mappings.toEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.Balance
@@ -43,8 +47,8 @@ class CardCache(
     override fun getCardsBySet(code: String): Flow<List<Card>> =
         dao.getCardsBySet(code).map { it.map { entity -> entity.toDomain() } }
 
-    override fun findCards(query: String): Flow<List<Card>> =
-        dao.findCards("%" + query + "%").map { it.map { entity -> entity.toDomain() } }
+    override fun findCards(query: QueryUi): Flow<List<Card>> =
+        dao.findCards(getLocalQueryString(query)).map { it.map { entity -> entity.toDomain() } }
 
     override fun getCardSets(): Flow<CardSetList> = dao.getCardSets().map {
         val timestamp = dao.getSetTimestamp() ?: CardSetTimeEntity(
@@ -225,4 +229,69 @@ class CardCache(
     }
 
     override suspend fun storeOwnedCards(vararg cards: OwnedCard) = dao.insertOwnedCard(*cards.map { it.toEntity() }.toTypedArray())
+
+    private fun getLocalQueryString(query: QueryUi): SupportSQLiteQuery {
+        val queryString = StringBuilder("SELECT * FROM cardbaseentity WHERE ")
+
+        query.run {
+            if (byCardName.isNotBlank()) {
+                queryString.append("name LIKE '%${byCardName}%' AND ")
+            }
+
+            if (byColors.size < 4) {
+                queryString.append("factionCode = ")
+                byColors.forEachIndexed { i, color ->
+                    queryString.append("'${color}'")
+                    if (i < query.byColors.size - 1)
+                        queryString.append(" OR factionCode = ")
+                    else
+                        queryString.append(" AND ")
+                }
+            }
+
+            byHealth.run {
+                if (number != 0) {
+                    queryString.append("health ")
+                    when (operator) {
+                        OperatorUi.LESS_THAN -> queryString.append("< ")
+                        OperatorUi.MORE_THAN -> queryString.append("> ")
+                        OperatorUi.EQUALS -> queryString.append("= ")
+                    }
+                    queryString.append("${number} AND ")
+                }
+            }
+
+            //TODO: format not included in cardentity - handle in NetworkBoundResource
+
+            byCost.run {
+                if (number != 0) {
+                    queryString.append("cost ")
+                    when (operator) {
+                        OperatorUi.LESS_THAN -> queryString.append("< ")
+                        OperatorUi.MORE_THAN -> queryString.append("> ")
+                        OperatorUi.EQUALS -> queryString.append("= ")
+                    }
+                    queryString.append("${number} AND ")
+                }
+            }
+
+            if (bySet.isNotBlank()) {
+                queryString.append("setCode = '${bySet}' AND ")
+            }
+
+            if (byType.isNotBlank()) {
+                queryString.append("typeCode = '${byType}' AND ")
+            }
+
+            if (byUnique) {
+                queryString.append("isUnique = TRUE AND ")
+            }
+
+            if (byCardText.isNotBlank()) {
+                queryString.append("text LIKE '%${byCardText}%'")
+            }
+        }
+
+        return SimpleSQLiteQuery(queryString.toString().removeSuffix(" AND "))
+    }
 }

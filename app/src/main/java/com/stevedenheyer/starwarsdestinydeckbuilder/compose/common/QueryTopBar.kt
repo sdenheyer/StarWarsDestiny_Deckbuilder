@@ -9,6 +9,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.MenuItemColors
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -102,13 +103,9 @@ fun QueryTopBar(
                 )
             ) {
 
-                val menuItemColors = MenuItemColors(
+                val menuItemColors = MenuDefaults.itemColors(
                     textColor = MaterialTheme.colorScheme.onSecondary,
                     disabledTextColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                    leadingIconColor = MaterialTheme.colorScheme.onSecondary,
-                    disabledLeadingIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    trailingIconColor = MaterialTheme.colorScheme.onSecondary,
-                    disabledTrailingIconColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
 
                 DropdownMenuItem(
@@ -130,14 +127,14 @@ fun QueryTopBar(
                     colors = menuItemColors,
                     onClick = { changeSortState(SortState.FACTION) },
                     enabled = (sortState.sortState != SortState.FACTION),
-                    modifier = if (sortState.sortState != SortState.FACTION) Modifier.background(color = MaterialTheme.colorScheme.tertiary) else Modifier
+                    modifier = if (sortState.sortState == SortState.FACTION) Modifier.background(color = MaterialTheme.colorScheme.tertiaryContainer) else Modifier
                 )
                 DropdownMenuItem(
                     text = { Text("Sort by Points/Cost") },
                     colors = menuItemColors,
                     onClick = { changeSortState(SortState.POINTS_COST) },
                     enabled = (sortState.sortState != SortState.POINTS_COST),
-                    modifier = if (sortState.sortState != SortState.POINTS_COST) Modifier.background(color = MaterialTheme.colorScheme.tertiary) else Modifier
+                    modifier = if (sortState.sortState == SortState.POINTS_COST) Modifier.background(color = MaterialTheme.colorScheme.tertiaryContainer) else Modifier
                 )
                 DropdownMenuItem(text = {
                     Text(buildAnnotatedString {

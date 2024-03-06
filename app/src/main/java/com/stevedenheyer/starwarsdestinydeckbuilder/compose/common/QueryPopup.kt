@@ -380,22 +380,37 @@ fun QueryPopup(modifier: Modifier = Modifier, sets: List<UiCardSet>, popupYoffse
                 }
             }
             Button(onClick = {
-                val query = QueryUi(
-                byCardName = nameQuery.text,
-                byCardText = cardTextQuery.text,
-                byColors = colors.toList(),
-                byCost = costNumbericQuery.value,
-                byHealth = healthNumbericQuery.value,
-                byFormat = formatSelected.value ?: "",
-                bySet = setSelected.value ?: "",
-                byType = typeSelected.value ?: "",
-                byUnique = unqiueCheckbox.value
-                )
-               // Log.d("SWD", "Query: ${query}")
-                submitQuery(query)
+                if (
+                    nameQuery.text.isBlank() &&
+                    cardTextQuery.text.isBlank() &&
+                    costNumbericQuery.value.number == 0 &&
+                    healthNumbericQuery.value.number == 0 &&
+                    colors.size == 4 &&
+                    formatSelected.value.isNullOrBlank() &&
+                    setSelected.value.isNullOrBlank() &&
+                    typeSelected.value.isNullOrBlank() &&
+                    unqiueCheckbox.value == false
+                ) {
+                    //Do nothing if not values set
+                } else {
+                    val query = QueryUi(
+                        byCardName = nameQuery.text,
+                        byCardText = cardTextQuery.text,
+                        byColors = colors.toList(),
+                        byCost = costNumbericQuery.value,
+                        byHealth = healthNumbericQuery.value,
+                        byFormat = formatSelected.value ?: "",
+                        bySet = setSelected.value ?: "",
+                        byType = typeSelected.value ?: "",
+                        byUnique = unqiueCheckbox.value
+                    )
+                    submitQuery(query)
+                    onDismiss()
+                }
                              },
                 modifier = Modifier.align(Alignment.End)) {
                 Text("Search")
+
             }
         }
     }

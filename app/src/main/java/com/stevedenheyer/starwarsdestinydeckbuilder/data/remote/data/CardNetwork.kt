@@ -147,7 +147,7 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
 
             byCost.run {
                 if (number != 0) {
-                    queryString.append("h")
+                    queryString.append("o")
                     when (operator) {
                         OperatorUi.LESS_THAN -> queryString.append("<")
                         OperatorUi.MORE_THAN -> queryString.append(">")

@@ -292,6 +292,10 @@ class CardCache(
             }
         }
 
+        if (queryString.endsWith("WHERE ")) {
+            return SimpleSQLiteQuery("SELECT * FROM cardbaseentity")   //Corner Case:  Only format selected
+        }
+
         return SimpleSQLiteQuery(queryString.toString().removeSuffix(" AND "))
     }
 }

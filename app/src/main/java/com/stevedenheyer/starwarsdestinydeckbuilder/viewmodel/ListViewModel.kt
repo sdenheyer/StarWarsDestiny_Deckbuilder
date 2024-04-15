@@ -1,15 +1,10 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortState
-import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.CardRepositoryImpl
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
@@ -122,10 +117,10 @@ class CardViewModel @Inject constructor(
             is UiState.noData -> uiState
             is UiState.hasData -> {
                 var cards = state.data
-                if (!sortState.showHero) {
+                if (sortState.hideHero) {
                     cards = cards.filterNot { it.affiliation == "Hero" }
                 }
-                if (!sortState.showVillain) {
+                if (sortState.hideVillain) {
                     cards = cards.filterNot { it.affiliation == "Villain" }
                 }
                 when (sortState.sortState) {
@@ -199,6 +194,8 @@ class CardViewModel @Inject constructor(
             }
         }*/
         refreshSets(false)
+
+        showCollection()
     }
 
     fun refreshSets(forceRemoteUpdate: Boolean) = viewModelScope.launch(Dispatchers.IO) {

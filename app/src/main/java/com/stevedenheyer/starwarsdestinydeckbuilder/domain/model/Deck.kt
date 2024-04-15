@@ -29,7 +29,9 @@ data class CharacterCard(
     val isElite: Boolean,
     val dice: Int,
     val dices: String?,
-)
+) {
+
+}
 
 data class Slot(
     val cardOrCode: CardOrCode,

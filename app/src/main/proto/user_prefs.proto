@@ -4,8 +4,8 @@ option java_package = "com.stevedenheyer.starwarsdestinydeckbuilder";
 option java_multiple_files = true;
 
 message UserSettings {
-    bool show_hero = 1;
-    bool show_villain = 2;
+    bool hide_hero = 1;
+    bool hide_villain = 2;
     SortBy sort_by = 3;
 
     enum SortBy {

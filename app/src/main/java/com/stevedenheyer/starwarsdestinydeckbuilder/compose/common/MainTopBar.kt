@@ -23,11 +23,8 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
-import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
-import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SavedQueriesUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
-import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.UiCardSet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -124,7 +121,7 @@ fun MainTopBar(
                 )
                 DropdownMenuItem(text = {
                     Text(buildAnnotatedString {
-                        if (sortState.showHero)
+                        if (sortState.hideHero)
                             append("Hide")
                         else
                             append("Show")
@@ -132,10 +129,10 @@ fun MainTopBar(
                     })
                 },
                     colors = menuItemColors,
-                    onClick = { changeSortState(SortState.SHOW_HERO) })
+                    onClick = { changeSortState(SortState.HIDE_HERO) })
                 DropdownMenuItem(text = {
                     Text(buildAnnotatedString {
-                        if (sortState.showVillain)
+                        if (sortState.hideVillain)
                             append("Hide")
                         else
                             append("Show")

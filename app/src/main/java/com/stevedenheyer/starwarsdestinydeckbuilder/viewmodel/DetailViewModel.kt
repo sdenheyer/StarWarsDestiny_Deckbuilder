@@ -132,7 +132,9 @@ data class CardDetailDeckUi(
     val battlefield: String?,
     val pointsUsed: Int,
     val deckSize: Int,
-)
+) {
+
+}
 
 @HiltViewModel
 class DetailViewModel @Inject constructor(
@@ -234,7 +236,7 @@ class DetailViewModel @Inject constructor(
                     plot = deck.plotCardCode?.fetchCode(),
                     battlefield = deck.battlefieldCardCode?.fetchCode(),
                     pointsUsed = deck.plotPoints + (deck.characters.map {
-                        if (card.isUnique) it.points
+                        if (it.isElite) it.points
                         else
                             it.points * it.quantity
                     }.reduceOrNull { acc, i -> acc + i } ?: 0),
@@ -254,6 +256,7 @@ class DetailViewModel @Inject constructor(
             val card = state.data
             val quantity = owned.find { it.card.fetchCode() == card.code }?.quantity ?: 0
 
+            //TODO:  Make a separate sealed class for this, jesus
             val ownedDetail = CardDetailDeckUi(
                 name = "",
                 formatName = "",

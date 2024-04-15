@@ -556,7 +556,7 @@ fun OwnedCard(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                "Quantity of cards owned",
+                "Quantity owned",
                 style = MaterialTheme.typography.titleLarge,
                 modifier = textModifer,
                 maxLines = 1,
@@ -600,12 +600,22 @@ fun DeckCard(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                deck.formatName,
+                buildAnnotatedString {
+                    append(deck.formatName)
+                    if (card.formats.find { it.gameType == deck.formatName }?.legality == "banned") {
+                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.error)) { append(" !") }
+                    }
+                },
                 style = MaterialTheme.typography.titleMedium,
                 modifier = textModifer
             )
             Text(
-                deck.affiliationName,
+                buildAnnotatedString {
+                    append(deck.affiliationName)
+                    if (card.affiliation != deck.affiliationName && card.affiliation != "Neutral") {
+                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.error)) { append(" !") }
+                    }
+                },
                 style = MaterialTheme.typography.titleMedium,
                 modifier = textModifer
             )
@@ -697,12 +707,22 @@ fun DeckCardCompact(
                 }
                 Row(horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(
-                        deck.formatName,
+                        buildAnnotatedString {
+                            append(deck.formatName)
+                            if (card.formats.find { it.gameType == deck.formatName }?.legality == "banned") {
+                                withStyle(SpanStyle(color = MaterialTheme.colorScheme.error)) { append(" !") }
+                            }
+                        },
                         style = MaterialTheme.typography.titleMedium,
                         modifier = textModifer.width(120.dp)
                     )
                     Text(
-                        deck.affiliationName,
+                        buildAnnotatedString {
+                        append(deck.affiliationName)
+                        if (card.affiliation != deck.affiliationName && card.affiliation != "Neutral") {
+                            withStyle(SpanStyle(color = MaterialTheme.colorScheme.error)) { append(" !") }
+                        }
+                },
                         style = MaterialTheme.typography.titleMedium,
                         modifier = textModifer
                     )

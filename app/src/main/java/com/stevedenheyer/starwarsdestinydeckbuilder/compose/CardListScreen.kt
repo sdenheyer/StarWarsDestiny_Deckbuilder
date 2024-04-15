@@ -1,7 +1,6 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.compose
 
 import android.database.sqlite.SQLiteConstraintException
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -14,10 +13,6 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.pullrefresh.PullRefreshIndicator
-import androidx.compose.material.pullrefresh.pullRefresh
-import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
@@ -96,8 +91,8 @@ fun CardListScreen(
 
     val sortState by cardVM.sortStateFlow.collectAsStateWithLifecycle(
         initialValue = SortUi(
-            showHero = true,
-            showVillain = true,
+            hideHero = true,
+            hideVillain = true,
             sortState = SortState.SET
         )
     )
@@ -234,12 +229,12 @@ fun CardListScreen(
                     if (listType is ListTypeNone) {
 
                     } else {
-                        if (!sortState.showHero || !sortState.showVillain) {
+                        if (sortState.hideHero || sortState.hideVillain) {
                             Text(buildAnnotatedString {
-                                if (!sortState.showHero && !sortState.showVillain) {
+                                if (sortState.hideHero && sortState.hideVillain) {
                                     append("Heros & Villains hidden")
                                 } else {
-                                    if (!sortState.showHero) {
+                                    if (sortState.hideHero) {
                                         append("Heros hidden")
                                     } else {
                                         append("Villains hidden")

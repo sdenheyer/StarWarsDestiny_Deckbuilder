@@ -2,17 +2,12 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.data
 
 import android.util.Log
 import androidx.datastore.core.DataStore
-import androidx.sqlite.db.SimpleSQLiteQuery
-import androidx.sqlite.db.SupportSQLiteQuery
 import com.stevedenheyer.starwarsdestinydeckbuilder.UserSettings
-import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.OperatorUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SavedQueriesUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.data.CardCache
-import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiErrorResponse
-import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiSuccessResponse
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.CardNetwork
 import com.stevedenheyer.starwarsdestinydeckbuilder.di.IoDispatcher
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
@@ -29,13 +24,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.transform
-import kotlinx.coroutines.launch
 import java.util.Date
 import javax.inject.Inject
 
@@ -220,8 +210,8 @@ class CardRepositoryImpl @Inject constructor(
 
     override fun sortStateFlow(): Flow<SortUi> = dataStore.data.map { userSettings ->
         SortUi(
-            showHero = userSettings.showHero,
-            showVillain = userSettings.showVillain,
+            hideHero = userSettings.hideHero,
+            hideVillain = userSettings.hideVillain,
             sortState = when (userSettings.sortBy) {
                 UserSettings.SortBy.UNRECOGNIZED -> SortState.SET
                 UserSettings.SortBy.SORTBY_NAME -> SortState.NAME
@@ -236,8 +226,8 @@ class CardRepositoryImpl @Inject constructor(
         dataStore.updateData { currentSettings ->
             currentSettings.toBuilder().apply {
                 when (sortState) {
-                    SortState.SHOW_HERO -> setShowHero(!currentSettings.showHero)
-                    SortState.SHOW_VILLAIN -> setShowVillain(!currentSettings.showVillain)
+                    SortState.HIDE_HERO -> setHideHero(!currentSettings.hideHero)
+                    SortState.SHOW_VILLAIN -> setHideVillain(!currentSettings.hideVillain)
                     SortState.NAME -> setSortBy(UserSettings.SortBy.SORTBY_NAME)
                     SortState.SET -> setSortBy(UserSettings.SortBy.SORTBY_SET)
                     SortState.FACTION -> setSortBy(UserSettings.SortBy.SORTBY_FACTION)

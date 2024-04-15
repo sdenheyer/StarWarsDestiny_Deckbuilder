@@ -6,6 +6,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.utils.asString
 data class CardUi(
     val code: String,
     val name: String,
+    val isUnique: Boolean,
     val subtitle: String,
     val affiliation: String,
     val faction: String,
@@ -18,15 +19,22 @@ data class CardUi(
     val diceRef: List<String>,
     val set: String,
     val position: Int,
+
     val quantity: Int = 0,
+
     val isElite: Boolean = false,
     val isBanned: Boolean = false,
     val isRestricted: Boolean = false,
+
+    val uniqueWarning: Boolean = false,
+    val factionMismatchWarning: Boolean = false,
+    val affiliationMismatchWarning: Boolean = false,
 )
 
 fun Card.toCardUi() = CardUi(
     code = code,
     name = name,
+    isUnique = isUnique,
     subtitle = subtitle ?: "",
     affiliation = affiliationName ?: "",
     faction = factionName,

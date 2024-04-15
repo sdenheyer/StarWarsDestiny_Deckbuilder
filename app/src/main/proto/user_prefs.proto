@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option java_package = "com.stevedenheyer.starwarsdestinydeckbuilder";
+option java_multiple_files = true;
+
+message UserSettings {
+    bool show_hero = 1;
+    bool show_villain = 2;
+    SortBy sort_by = 3;
+
+    enum SortBy {
+        SORTBY_SET = 0;
+        SORTBY_NAME = 1;
+        SORTBY_FACTION = 2;
+        SORTBY_POINTS_COST = 3;
+    }
+
+    repeated string cardNameQueries = 4;
+    repeated string cardTextQueries = 5;
+}

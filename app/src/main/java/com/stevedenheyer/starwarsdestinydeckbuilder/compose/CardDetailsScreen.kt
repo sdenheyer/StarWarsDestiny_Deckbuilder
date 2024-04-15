@@ -67,7 +67,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.utils.asIntPair
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.getUniqueInline
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardDetailUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardUiState
-import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DeckDetailUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardDetailDeckUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DetailViewModel
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.toDetailUi
 import java.net.URL
@@ -87,7 +87,7 @@ fun DetailsScreen(
     )
     val decks by detailViewModel.uiDecks.collectAsStateWithLifecycle(initialValue = emptyList())
 
-    val owned by detailViewModel.ownedCardsUi.collectAsStateWithLifecycle(initialValue = DeckDetailUi(
+    val owned by detailViewModel.ownedCardsUi.collectAsStateWithLifecycle(initialValue = CardDetailDeckUi(
         name = "",
         formatName = "",
         affiliationName = "",
@@ -120,13 +120,13 @@ fun DetailsScreen(
 }
 
 @Composable
-fun Details( isCompactScreen: Boolean,
-             card: CardDetailUi,
-             decks: List<DeckDetailUi>,
-             owned: DeckDetailUi,
-             modifier: Modifier = Modifier,
-             changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
-             changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit) {
+fun Details(isCompactScreen: Boolean,
+            card: CardDetailUi,
+            decks: List<CardDetailDeckUi>,
+            owned: CardDetailDeckUi,
+            modifier: Modifier = Modifier,
+            changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
+            changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit) {
     when (isCompactScreen) {
         true -> CompactDetails(
             card = card,
@@ -151,8 +151,8 @@ fun Details( isCompactScreen: Boolean,
 @Composable
 fun CompactDetails(
     card: CardDetailUi,
-    decks: List<DeckDetailUi>,
-    owned: DeckDetailUi,
+    decks: List<CardDetailDeckUi>,
+    owned: CardDetailDeckUi,
     modifier: Modifier = Modifier,
     changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
     changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
@@ -181,8 +181,8 @@ fun CompactDetails(
 @Composable
 fun LargeDetails(
     card: CardDetailUi,
-    decks: List<DeckDetailUi>,
-    owned: DeckDetailUi,
+    decks: List<CardDetailDeckUi>,
+    owned: CardDetailDeckUi,
     modifier: Modifier = Modifier,
     changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
     changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
@@ -534,7 +534,7 @@ fun Balance(modifier: Modifier, factionColor: Color, formats: List<Format>) {
 @Composable
 fun OwnedCard(
     modifier: Modifier,
-    owned: DeckDetailUi,
+    owned: CardDetailDeckUi,
     changeQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
 ) {
     val textModifer = Modifier
@@ -571,7 +571,7 @@ fun OwnedCard(
 fun DeckCard(
     modifier: Modifier,
     card: CardDetailUi,
-    deck: DeckDetailUi,
+    deck: CardDetailDeckUi,
     changeQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
 ) {
     val textModifer = Modifier
@@ -641,7 +641,7 @@ fun DeckCard(
 @Composable
 fun DeckCardCompact(
     modifier: Modifier,
-    deck: DeckDetailUi,
+    deck: CardDetailDeckUi,
     card: CardDetailUi,
     changeQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
 ) {
@@ -722,7 +722,7 @@ fun DeckCardCompact(
 fun DeckControls(
     modifier: Modifier,
     card: CardDetailUi,
-    deck: DeckDetailUi,
+    deck: CardDetailDeckUi,
     changeQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
 ) =
     when (card.typeName) {
@@ -758,7 +758,7 @@ fun DeckControls(
 @Composable
 fun AddElitable(
     modifier: Modifier,
-    deck: DeckDetailUi,
+    deck: CardDetailDeckUi,
     changeQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
 ) {
     TextButton(border = BorderStroke(
@@ -793,7 +793,7 @@ fun AddElitable(
 @Composable
 fun AddSingle(
     modifier: Modifier,
-    deck: DeckDetailUi,
+    deck: CardDetailDeckUi,
     deckHasCard: Boolean,
     changeQuantity: (deckName: String, quantity: Int, _: Boolean) -> Unit
 ) {
@@ -831,7 +831,7 @@ fun AddSingle(
 @Composable
 fun AddMultiple(
     modifier: Modifier,
-    deck: DeckDetailUi,
+    deck: CardDetailDeckUi,
     changeQuantity: (deckName: String, quantity: Int, _: Boolean) -> Unit
 ) {
     Row(modifier = modifier) {
@@ -1009,7 +1009,7 @@ val testCard = CardDetailUi(
 @Composable
 fun DecksPreview() {
     val decks = listOf(
-        DeckDetailUi(
+        CardDetailDeckUi(
             name = "test",
             affiliationName = "Hero",
             formatName = "Infinite",
@@ -1022,7 +1022,7 @@ fun DecksPreview() {
             deckSize = 25,
             isElite = false
         ),
-        DeckDetailUi(
+        CardDetailDeckUi(
             name = "Loooooooongname",
             affiliationName = "Villain",
             formatName = "ARH Standard",
@@ -1036,7 +1036,7 @@ fun DecksPreview() {
             isElite = false
         )
     )
-    val deck = DeckDetailUi(
+    val deck = CardDetailDeckUi(
         name = "test",
         affiliationName = "Hero",
         formatName = "Infinite",
@@ -1056,7 +1056,7 @@ fun DecksPreview() {
 @Composable
 fun DecksCompactPreview() {
     val decks = listOf(
-        DeckDetailUi(
+        CardDetailDeckUi(
             name = "test",
             affiliationName = "Hero",
             formatName = "Infinite",
@@ -1069,7 +1069,7 @@ fun DecksCompactPreview() {
             deckSize = 25,
             isElite = false
         ),
-        DeckDetailUi(
+        CardDetailDeckUi(
             name = "Loooooooongname",
             affiliationName = "Villain",
             formatName = "ARH Standard",
@@ -1083,7 +1083,7 @@ fun DecksCompactPreview() {
             isElite = false
         )
     )
-    val deck = DeckDetailUi(
+    val deck = CardDetailDeckUi(
         name = "test",
         affiliationName = "Hero",
         formatName = "Standard",

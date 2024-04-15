@@ -1,10 +1,15 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.data
 
 import android.util.Log
+import androidx.datastore.core.DataStore
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
+import com.stevedenheyer.starwarsdestinydeckbuilder.UserSettings
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.OperatorUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SavedQueriesUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortState
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.data.CardCache
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiErrorResponse
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiSuccessResponse
@@ -37,6 +42,7 @@ import javax.inject.Inject
 class CardRepositoryImpl @Inject constructor(
     private val cardCache: CardCache,
     private val cardNetwork: CardNetwork,
+    private val dataStore: DataStore<UserSettings>,
     private val coroutineScope: CoroutineScope,
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
 ) : CardRepository {
@@ -58,6 +64,8 @@ class CardRepositoryImpl @Inject constructor(
     }
 
     override fun getCardSets(forceRemoteUpdate: Boolean): Flow<Resource<CardSetList>> {
+       // return flow { Resource.loading(CardSetList(0, 100000, emptyList())) }  //TODO: Testing...
+
         return networkBoundResource(
             fetchFromLocal = { cardCache.getCardSets() },
             shouldFetchFromRemote = {
@@ -76,6 +84,8 @@ class CardRepositoryImpl @Inject constructor(
         code: String,
         forceRemoteUpdate: Boolean
     ): Flow<Resource<List<Card>>> {
+        // return flow { Resource.loading(listOf<Card>()) }  //TODO: Testing...
+
         return networkBoundResource(
             fetchFromLocal = { cardCache.getCardsBySet(code) },
             shouldFetchFromRemote = {
@@ -138,7 +148,6 @@ class CardRepositoryImpl @Inject constructor(
                             }
                         } else {
                             cards
-
                         }
                     } else {
                         cards
@@ -153,6 +162,35 @@ class CardRepositoryImpl @Inject constructor(
         )
     }
 
+    override fun fetchSavedQueries(): Flow<SavedQueriesUi> = dataStore.data.map {userSettings ->
+        Log.d("SWD", "Fucking protocol buffers: ${userSettings.cardNameQueriesList}")
+        SavedQueriesUi(
+            nameQueries = userSettings.cardNameQueriesList,
+            textQueries = userSettings.cardTextQueriesList
+        )
+    }
+
+    override suspend fun updateSavedNameQueries(newQuery: String) {
+        dataStore.updateData { userSettings ->
+            val queries = userSettings.cardNameQueriesList.toMutableList()
+            if (newQuery.isNotBlank() && !queries.contains(newQuery))
+                queries.add(newQuery)
+            if (queries.size > 6)
+                queries.removeFirst()
+            userSettings.toBuilder().clearCardNameQueries().addAllCardNameQueries(queries).build()
+        }
+    }
+
+    override suspend fun updateSavedTextQueries(newQuery: String) {
+        dataStore.updateData { userSettings ->
+            val queries = userSettings.cardTextQueriesList.toMutableList()
+            if (newQuery.isNotBlank() && !queries.contains(newQuery))
+                queries.add(newQuery)
+            if (queries.size > 6)
+                queries.removeFirst()
+            userSettings.toBuilder().clearCardTextQueries().addAllCardTextQueries(queries).build()
+        }
+    }
 
     override suspend fun createDeck(deck: Deck) {
         cardCache.createDeck(deck)
@@ -179,4 +217,33 @@ class CardRepositoryImpl @Inject constructor(
 
     override suspend fun insertOwnedCards(vararg cards: OwnedCard) =
         cardCache.storeOwnedCards(*cards)
+
+    override fun sortStateFlow(): Flow<SortUi> = dataStore.data.map { userSettings ->
+        SortUi(
+            showHero = userSettings.showHero,
+            showVillain = userSettings.showVillain,
+            sortState = when (userSettings.sortBy) {
+                UserSettings.SortBy.UNRECOGNIZED -> SortState.SET
+                UserSettings.SortBy.SORTBY_NAME -> SortState.NAME
+                UserSettings.SortBy.SORTBY_SET -> SortState.SET
+                UserSettings.SortBy.SORTBY_FACTION -> SortState.FACTION
+                UserSettings.SortBy.SORTBY_POINTS_COST -> SortState.POINTS_COST
+            }
+        )
+    }
+
+    override suspend fun setSortByState(sortState: SortState) {
+        dataStore.updateData { currentSettings ->
+            currentSettings.toBuilder().apply {
+                when (sortState) {
+                    SortState.SHOW_HERO -> setShowHero(!currentSettings.showHero)
+                    SortState.SHOW_VILLAIN -> setShowVillain(!currentSettings.showVillain)
+                    SortState.NAME -> setSortBy(UserSettings.SortBy.SORTBY_NAME)
+                    SortState.SET -> setSortBy(UserSettings.SortBy.SORTBY_SET)
+                    SortState.FACTION -> setSortBy(UserSettings.SortBy.SORTBY_FACTION)
+                    SortState.POINTS_COST -> setSortBy(UserSettings.SortBy.SORTBY_POINTS_COST)
+            }
+            }.build()
+        }
+    }
 }

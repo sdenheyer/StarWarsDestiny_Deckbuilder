@@ -26,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.getInlines
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.DeckUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
+import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DeckDetailUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DeckViewModel
 
 @Composable
@@ -55,7 +56,7 @@ fun DeckDetailsScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: DeckUi, onCardClick: (String) -> Unit) {
+fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: DeckDetailUi, onCardClick: (String) -> Unit) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(colors = TopAppBarDefaults.topAppBarColors(
@@ -72,7 +73,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
 
     ) { padding ->
 
-        val characters = deck.chars
+       /* val characters = deck.chars
         val charCardSize =
             characters.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0
         val battlefield = deck.battlefieldCard
@@ -116,7 +117,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
         }.reduceOrNull { acc, points -> acc + points } ?: 0).plus(plotPoints))
         val charDice = characters.map { if (it.isElite) 2 else it.quantity }
             .reduceOrNull { acc, points -> acc + points } ?: 0
-
+*/
 
         Column(modifier = Modifier.padding(padding)) {
             Card(
@@ -143,16 +144,16 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                         )
                     }
                     Text(
-                        "Characters: ${charPoints} points, ${charDice} dice",
+                        "Characters: ${deck.charPoints} points, ${deck.charDice} dice",
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.fillMaxWidth()
                     )
                     val drawDeckSize =
-                        upgradesCardSize + downgradesCardSize + supportCardSize + eventsCardSize
+                        deck.upgrades.size + deck.downgrades.size + deck.support.size + deck.events.size
                     val drawDeckDice =
-                        upgradesDice + downgradesDice + supportDice + eventsDice
+                        deck.upgrades.dice + deck.downgrades.dice + deck.support.dice + deck.events.dice
                     Text(
                         "Draw deck: ${drawDeckSize} cards, ${drawDeckDice} dice",
                         style = MaterialTheme.typography.bodyMedium,
@@ -170,9 +171,9 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                     Text(
                         buildAnnotatedString {
                             append("Character ")
-                            append("(${charCardSize}")
+                            append("(${deck.charCardSize}")
                             appendInlineContent("cards", "cards")
-                            append("${charDice}")
+                            append("${deck.charDice}")
                             appendInlineContent("dice", "dice")
                             append(")")
                         }, style = MaterialTheme.typography.titleLarge,
@@ -180,7 +181,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                     )
                 }
 
-                items(items = characters, key = { it.code }) { card ->
+                items(items = deck.characters, key = { it.code }) { card ->
                     CardItem(
                         isScreenCompact = isCompactScreen,
                         modifier = Modifier,
@@ -191,26 +192,26 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
 
                 item {
                     Text("Battlefield", style = MaterialTheme.typography.titleLarge)
-                    if (battlefield != null)
+                    if (deck.battlefield != null)
                         CardItem(
                             isScreenCompact = isCompactScreen,
                             modifier = Modifier,
-                            card = battlefield,
-                            onItemClick = { onCardClick(battlefield.code) }
+                            card = deck.battlefield,
+                            onItemClick = { onCardClick(deck.battlefield.code) }
                         )
                 }
 
 
                 item {
-                    Text("Plot(${plotPoints})",
+                    Text("Plot(${deck.plotPoints})",
                         style = MaterialTheme.typography.titleLarge,
                     )
-                    if (plot != null)
+                    if (deck.plot != null)
                         CardItem(
                             isScreenCompact = isCompactScreen,
                             modifier = Modifier,
-                            card = plot,
-                            onItemClick = { onCardClick(plot.code) }
+                            card = deck.plot,
+                            onItemClick = { onCardClick(deck.plot.code) }
                         )
                 }
 
@@ -219,9 +220,9 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                         buildAnnotatedString {
                             append("Upgrade")
                             //TODO:  Inline graphics
-                            append("(${upgradesCardSize}")
+                            append("(${deck.upgrades.size}")
                             appendInlineContent("cards", "cards")
-                            append("${upgradesDice}")
+                            append("${deck.upgrades.dice}")
                             appendInlineContent("dice", "dice")
                             append(")")
                         }, style = MaterialTheme.typography.titleLarge,
@@ -229,7 +230,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                     )
                 }
 
-                items(items = upgrades, key = { it.code }) { card ->
+                items(items = deck.upgrades.cards, key = { it.code }) { card ->
                     CardItem(
                         isScreenCompact = isCompactScreen,
                         modifier = Modifier,
@@ -242,9 +243,9 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                     Text(
                         buildAnnotatedString {
                             append("Downgrade")
-                            append("(${downgradesCardSize}")
+                            append("(${deck.downgrades.size}")
                             appendInlineContent("cards", "cards")
-                            append("${downgradesDice}")
+                            append("${deck.downgrades.dice}")
                             appendInlineContent("dice", "dice")
                             append(")")
                         }, style = MaterialTheme.typography.titleLarge,
@@ -252,7 +253,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                     )
                 }
 
-                items(items = downgrades, key = { it.code }) { card ->
+                items(items = deck.downgrades.cards, key = { it.code }) { card ->
                     CardItem(
                         isScreenCompact = isCompactScreen,
                         modifier = Modifier,
@@ -265,9 +266,9 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                     Text(
                         buildAnnotatedString {
                             append("Support")
-                            append("(${supportCardSize}")
+                            append("(${deck.support.size}")
                             appendInlineContent("cards", "cards")
-                            append("${supportDice}")
+                            append("${deck.support.dice}")
                             appendInlineContent("dice", "dice")
                             append(")")
                         }, style = MaterialTheme.typography.titleLarge,
@@ -275,7 +276,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                     )
                 }
 
-                items(items = support, key = { it.code }) { card ->
+                items(items = deck.support.cards, key = { it.code }) { card ->
                     CardItem(
                         isScreenCompact = isCompactScreen,
                         modifier = Modifier,
@@ -288,9 +289,9 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                     Text(
                         buildAnnotatedString {
                             append("Event")
-                            append("(${eventsCardSize}")
+                            append("(${deck.events.size}")
                             appendInlineContent("cards", "cards")
-                            append("${eventsDice}")
+                            append("${deck.events.dice}")
                             appendInlineContent("dice", "dice")
                             append(")")
                         }, style = MaterialTheme.typography.titleLarge,
@@ -298,7 +299,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                     )
                 }
 
-                items(items = events, key = { it.code }) { card ->
+                items(items = deck.events.cards, key = { it.code }) { card ->
                     CardItem(
                         isScreenCompact = isCompactScreen,
                         modifier = Modifier,

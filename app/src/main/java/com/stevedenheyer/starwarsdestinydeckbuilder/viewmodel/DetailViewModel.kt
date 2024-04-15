@@ -119,7 +119,7 @@ sealed interface CardUiState {
     ):CardUiState
 }
 
-data class DeckDetailUi(
+data class CardDetailDeckUi(
     val name: String,
     val formatName: String,
     val affiliationName: String,
@@ -222,7 +222,7 @@ class DetailViewModel @Inject constructor(
                     else -> false
                 }
 
-                DeckDetailUi(
+                CardDetailDeckUi(
                     name = deck.name,
                     formatName = deck.formatName,
                     affiliationName = deck.affiliationName,
@@ -254,7 +254,7 @@ class DetailViewModel @Inject constructor(
             val card = state.data
             val quantity = owned.find { it.card.fetchCode() == card.code }?.quantity ?: 0
 
-            val ownedDetail = DeckDetailUi(
+            val ownedDetail = CardDetailDeckUi(
                 name = "",
                 formatName = "",
                 affiliationName = "",

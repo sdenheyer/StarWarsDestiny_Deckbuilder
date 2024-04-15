@@ -1,14 +1,23 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.compose
 
 import android.database.sqlite.SQLiteConstraintException
+import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
@@ -43,11 +52,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.CreateDeckDialog
-import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.QueryTopBar
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.MainTopBar
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.QueryDialog
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.SelectionDrawer
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SavedQueriesUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortState
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardViewModel
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
+import com.stevedenheyer.starwarsdestinydeckbuilder.utils.dpToPx
+import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.ListTypeByQuery
+import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.ListTypeBySet
+import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.ListTypeCollection
+import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.ListTypeNone
 import kotlinx.coroutines.launch
+import java.lang.ClassCastException
 
 @Composable
 fun CardListScreen(
@@ -71,9 +90,26 @@ fun CardListScreen(
         )
     )
 
+    val listType by cardVM.listTypeFlow.collectAsStateWithLifecycle()
+
     val decksUiState by cardVM.decksFlow.collectAsStateWithLifecycle(initialValue = emptyList())
 
-    val sortState by cardVM.sortStateFlow.collectAsStateWithLifecycle()
+    val sortState by cardVM.sortStateFlow.collectAsStateWithLifecycle(
+        initialValue = SortUi(
+            showHero = true,
+            showVillain = true,
+            sortState = SortState.SET
+        )
+    )
+
+    val savedQueries by cardVM.savedQueries.collectAsStateWithLifecycle(
+        initialValue = SavedQueriesUi(
+            emptyList(),
+            emptyList()
+        )
+    )
+
+    val queryMenuExpaneded = remember { mutableStateOf(false) }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
@@ -92,17 +128,24 @@ fun CardListScreen(
             SelectionDrawer(
                 decksUiState = decksUiState,
                 setsUiState = setsUiState,
-                createNewDeck = { focusManager.clearFocus()
+                createNewDeck = {
+                    focusManager.clearFocus()
                     keyboardController?.hide()
-                   // setQueryText(TextFieldValue("", composition = null))
                     openCreateDeckDialog.value = true
-                    scope.launch { drawerState.close() } },
-                selectDeck = { deckName -> onDeckSelect(deckName)
-                    scope.launch { drawerState.close() } },
-                selectSet = { setCode -> (cardVM::setCardSetSelection)(setCode)
-                    scope.launch { drawerState.close() }},
-                selectCollection = { (cardVM::showCollection)()
-                    scope.launch { drawerState.close() }}
+                    scope.launch { drawerState.close() }
+                },
+                selectDeck = { deckName ->
+                    onDeckSelect(deckName)
+                    scope.launch { drawerState.close() }
+                },
+                selectSet = { setCode ->
+                    (cardVM::setCardSetSelection)(setCode)
+                    scope.launch { drawerState.close() }
+                },
+                selectCollection = {
+                    (cardVM::showCollection)()
+                    scope.launch { drawerState.close() }
+                }
             )
         })
 
@@ -135,12 +178,11 @@ fun CardListScreen(
         Scaffold(
 
             topBar = {
-                QueryTopBar(
-                    sets = if (setsUiState is UiState.noData) emptyList() else (setsUiState as UiState.hasData).data,
+                MainTopBar(
                     sortState = sortState,
-                    submitQuery = { (cardVM::findCards)(it) },
                     openDrawer = { scope.launch { drawerState.apply { if (isClosed) open() else close() } } },
-                    changeSortState = { sortState -> (cardVM::setSort)(sortState) })
+                    changeSortState = { sortState -> (cardVM::setSort)(sortState) },
+                    openQuery = { queryMenuExpaneded.value = true })
             },
 
             snackbarHost = {
@@ -148,49 +190,145 @@ fun CardListScreen(
             }
 
         ) { padding ->
-            Box {
+            Box(
+                modifier = Modifier
+                    .padding(padding)
+                    .fillMaxSize()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.primaryContainer)
+                ) {
+                    when (val type = listType) {
+                        is ListTypeBySet -> Text(
+                            "Set: ${type.setName}",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentWidth(align = Alignment.CenterHorizontally)
+                        )
 
-                when (val state = listUiState) {
-                    is UiState.hasData -> CardList(
-                        isCompactScreen,
-                        cards = state.data,
-                        modifier = modifier.padding(padding),
-                        onItemClick = onCardClick,
-                        onRefreshSwipe = { (cardVM::refreshCardsBySet)(true) }
-                    )
+                        is ListTypeCollection -> Text(
+                            "My Collection",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentWidth(align = Alignment.CenterHorizontally)
+                        )
 
-                    is UiState.noData -> {
-                        if (state.isLoading) {
-                            CircularProgressIndicator(
+                        is ListTypeByQuery -> Text(
+                            "Query",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentWidth(align = Alignment.CenterHorizontally)
+                        )
+
+                        is ListTypeNone -> {}
+
+                    }
+                    if (listType is ListTypeNone) {
+
+                    } else {
+                        if (!sortState.showHero || !sortState.showVillain) {
+                            Text(buildAnnotatedString {
+                                if (!sortState.showHero && !sortState.showVillain) {
+                                    append("Heros & Villains hidden")
+                                } else {
+                                    if (!sortState.showHero) {
+                                        append("Heros hidden")
+                                    } else {
+                                        append("Villains hidden")
+                                    }
+                                }
+                            },
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .wrapContentSize(Alignment.Center)
-                                    .width(100.dp),
-                                trackColor = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
+                                    .fillMaxWidth()
+                                    .wrapContentWidth(align = Alignment.CenterHorizontally))
                         }
 
-                        if (setsUiState.errorMessage != null) {
-                            LaunchedEffect(snackbarHostState) {
-                                val result = snackbarHostState.showSnackbar(
-                                    setsUiState.errorMessage!!,
-                                    actionLabel = "Retry",
-                                    duration = SnackbarDuration.Indefinite
-                                )
-                                if (result == SnackbarResult.ActionPerformed) {
-                                    cardVM.refreshSets(true)
-                                }
-                            }
-                        } else {
-                            if (listUiState.errorMessage != null) {
+                        val numCards = try { (listUiState as UiState.hasData).data.size } catch(e: ClassCastException) { 0 }
+
+                        Text("${numCards} cards",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentWidth(align = Alignment.CenterHorizontally))
+                    }
+
+
+                    when (val state = listUiState) {
+                        is UiState.hasData -> CardList(
+                            isCompactScreen,
+                            cards = state.data,
+                            modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer),
+                            onItemClick = onCardClick,
+                            onRefreshSwipe = { (cardVM::refreshList)() }
+                        )
+
+                        is UiState.noData -> {
+                            CardList(
+                                isCompactScreen,
+                                cards = emptyList(),
+                                modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer),
+                                onItemClick = onCardClick,
+                                onRefreshSwipe = { (cardVM::refreshList)() }
+                            )
+
+                            if (setsUiState.errorMessage != null) {
                                 LaunchedEffect(snackbarHostState) {
-                                    snackbarHostState.showSnackbar(listUiState.errorMessage!!)
+                                    val result = snackbarHostState.showSnackbar(
+                                        setsUiState.errorMessage!!,
+                                        actionLabel = "Retry",
+                                        duration = SnackbarDuration.Indefinite
+                                    )
+                                    if (result == SnackbarResult.ActionPerformed) {
+                                        cardVM.refreshSets(true)
+                                    }
+                                }
+                            } else {
+                                if (listUiState.errorMessage != null) {
+                                    LaunchedEffect(snackbarHostState) {
+                                        snackbarHostState.showSnackbar(listUiState.errorMessage!!)
+                                    }
                                 }
                             }
                         }
                     }
                 }
+
+                if (queryMenuExpaneded.value) {
+                    QueryDialog(isCompactScreen = isCompactScreen,
+                        sets = if (setsUiState is UiState.noData) emptyList() else (setsUiState as UiState.hasData).data,
+                        popupYoffset = padding.calculateTopPadding().dpToPx().toInt(),
+                        savedQueries = savedQueries,
+                        onDismiss = { queryMenuExpaneded.value = false },
+                        submitQuery = { query -> (cardVM::findCards)(query) })
+                }
+
+                if (listUiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .wrapContentSize(Alignment.Center)
+                            .width(100.dp),
+                        trackColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+
+                //Log.d("SWD", "Main List Screen: ${listUiState.isLoading}")
+                /* PullRefreshIndicator(refreshing = true, state = refreshState, modifier = Modifier.fillMaxSize().wrapContentSize(
+                     Alignment.Center))*/
             }
+
+
         }
     }
 }
@@ -215,7 +353,6 @@ fun Button() {
     Button(onClick = { }) {
         Text(buildAnnotatedString {
             append("Format")
-
             appendInlineContent("dropDownArrow", "[dropDownArrow]")
         }, inlineContent = inlineContent, modifier = Modifier)
     }

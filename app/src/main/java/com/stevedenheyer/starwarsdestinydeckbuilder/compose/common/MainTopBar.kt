@@ -10,7 +10,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
-import androidx.compose.material3.MenuItemColors
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -19,36 +18,29 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SavedQueriesUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.UiCardSet
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QueryTopBar(
-    sets: List<UiCardSet>,
+fun MainTopBar(
     sortState: SortUi,
-    submitQuery: (QueryUi) -> Unit,
+    openQuery: () -> Unit,
     openDrawer: () -> Unit,
     changeSortState: (SortState) -> Unit,
 ) {
 
-  //  val keyboardController = LocalSoftwareKeyboardController.current
- //   val focusManager = LocalFocusManager.current
-
     val popupXoffset = remember { mutableStateOf(0) }
 
     val sortMenuExpanded = remember { mutableStateOf(false) }
-
-    val queryMenuExpaneded = remember { mutableStateOf(false) }
 
     CenterAlignedTopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(
@@ -62,8 +54,6 @@ fun QueryTopBar(
         },
         navigationIcon = {
             IconButton(onClick = {
-              //  keyboardController?.hide()
-             //   focusManager.clearFocus()
                 openDrawer()
             }) {
                 Image(
@@ -74,16 +64,12 @@ fun QueryTopBar(
             }
         },
         actions = {
-            IconButton(onClick = { queryMenuExpaneded.value = true }) {
+            IconButton(onClick = { openQuery() }) {
                 Image(
                     painter = painterResource(id = R.drawable.baseline_search_24),
                     contentDescription = "Query",
                     colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimaryContainer)
                 )
-            }
-
-            if (queryMenuExpaneded.value) {
-                QueryPopup(sets = sets, popupYoffset = popupXoffset.value, onDismiss = { queryMenuExpaneded.value = false }, submitQuery = { submitQuery(it) })
             }
 
             IconButton(onClick = { sortMenuExpanded.value = true }) {

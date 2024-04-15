@@ -38,8 +38,16 @@ inline fun <DB, REMOTE> networkBoundResource(
                       //  Log.d("SWD", "Saving to db: $it.size")
                         saveRemoteData(it) }
                     emitAll(fetchFromLocal().map { dbData ->
-                      //  Log.d("SWD", "Getting from db: $dbData.size")
-                        Resource.success(dbData)
+                        if (apiResponse.body is Collection<*> && dbData is Collection<*>) {
+                            if (apiResponse.body.size == dbData.size) {
+                                Resource.success(dbData)
+                            } else {
+                                Resource.loading(dbData)
+                            }
+                        } else {
+                            //  Log.d("SWD", "Getting from db: $dbData.size")
+                            Resource.success(dbData)
+                        }
                     })
                 }
 

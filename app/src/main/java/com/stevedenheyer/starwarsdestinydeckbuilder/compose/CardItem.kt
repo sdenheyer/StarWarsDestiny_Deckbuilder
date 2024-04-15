@@ -2,6 +2,7 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.compose
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,10 +16,12 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.Placeholder
@@ -47,7 +50,7 @@ fun CardItem(modifier: Modifier, isScreenCompact: Boolean, card: CardUi, onItemC
 @Composable
 fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Unit) {
     val factionColor = getColorFromString(card.color)
-    OutlinedCard(modifier = modifier,
+    OutlinedCard(modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
             contentColor = MaterialTheme.colorScheme.onSurface
@@ -63,6 +66,7 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
                     withStyle(style = SpanStyle(color = factionColor)) {
                         append(card.name)
                     }
+                    if (card.uniqueWarning) { withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.error)) { append(" !") } }
                     if (card.subtitle.isNotBlank()) {
                         withStyle(
                             style = SpanStyle(
@@ -101,16 +105,23 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
             Column(modifier = Modifier.weight(2f)) {
                 Text("Affiliation", style = MaterialTheme.typography.labelSmall)
                 Text(
-                    card.affiliation,
+                    buildAnnotatedString {
+                        append(card.affiliation)
+                        if (card.affiliationMismatchWarning) { append(" !") }
+                    },
                     style = MaterialTheme.typography.bodyMedium,
+                    color = if (card.affiliationMismatchWarning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
                 )
             }
             Column(modifier = Modifier.weight(3f)) {
                 Text("Faction", style = MaterialTheme.typography.labelSmall)
                 Text(
-                    card.faction,
+                    buildAnnotatedString {
+                    append(card.faction)
+                    if (card.factionMismatchWarning) { append(" !") }
+                },
                     style = MaterialTheme.typography.bodyMedium,
-                )
+                    color = if (card.factionMismatchWarning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,)
             }
             Column(modifier = Modifier.weight(2f)) {
                 val pointCostLabel = if (card.cost != null) "Cost" else "Points"
@@ -156,7 +167,7 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
 @Composable
 fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> Unit) {
     val factionColor = getColorFromString(card.color)
-    OutlinedCard(modifier = modifier,
+    OutlinedCard(modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
             contentColor = MaterialTheme.colorScheme.onSurface
@@ -170,7 +181,8 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
                     withStyle(style = SpanStyle(color = factionColor)) {
                         append(card.name)
                     }
-                    if (card.subtitle.isNotBlank()) {
+                    if (card.uniqueWarning) { withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.error)) { append(" !") } }
+                  /*  if (card.subtitle.isNotBlank()) {
                         withStyle(
                             style = SpanStyle(
                                 fontSize = MaterialTheme.typography.titleMedium.fontSize
@@ -178,12 +190,12 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
                         ) {
                             append("  -  ${card.subtitle}")
                         }
-                    }
+                    }*/
                 },
                 style = MaterialTheme.typography.headlineMedium,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
-                    .padding(top = 0.dp, bottom = 8.dp, start = 8.dp)
+                    .padding(top = 0.dp, start = 8.dp)
             )
             if (card.quantity > 0)
                 Text(buildAnnotatedString {
@@ -198,27 +210,42 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
                 },  style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(top = 4.dp, end = 4.dp),
                     inlineContent = getInlines())
-
         }
+        if (card.subtitle.isNotBlank()) {
+            Text("${card.subtitle}",
+                style = MaterialTheme.typography.bodyLarge,
+               // fontSize = MaterialTheme.typography.titleMedium,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .padding(top = 0.dp, start = 8.dp))
+        }
+
         Row(
             modifier
-                .padding(top = 0.dp, bottom = 8.dp, start = 8.dp, end = 6.dp)
+                .padding(top = 4.dp, bottom = 8.dp, start = 8.dp, end = 6.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(2f)) {
                 Text("Affiliation", style = MaterialTheme.typography.labelSmall)
                 Text(
-                    card.affiliation,
+                    buildAnnotatedString {
+                        append(card.affiliation)
+                        if (card.affiliationMismatchWarning) { append(" !") }
+                    },
                     style = MaterialTheme.typography.bodyMedium,
+                    color = if (card.affiliationMismatchWarning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
                 )
             }
             Column(modifier = Modifier.weight(3f)) {
                 Text("Faction", style = MaterialTheme.typography.labelSmall)
                 Text(
-                    card.faction,
+                    buildAnnotatedString {
+                        append(card.faction)
+                        if (card.factionMismatchWarning) { append(" !") }
+                    },
                     style = MaterialTheme.typography.bodyMedium,
-                )
+                    color = if (card.factionMismatchWarning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,)
             }
             Column(modifier = Modifier.weight(2f)) {
                 val pointCostLabel = if (card.cost != null) "Cost" else "Points"
@@ -256,7 +283,7 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
 @Preview(widthDp = 800)
 @Composable
 fun Preview() {
-    CardItem(card = CardDTO.testCard.toDomain().toCardUi().copy(quantity = 2), isScreenCompact = false, modifier = Modifier) {
+    CardItem(card = CardDTO.testCard.toDomain().toCardUi().copy(quantity = 2, affiliationMismatchWarning = true, factionMismatchWarning = true, uniqueWarning = true), isScreenCompact = false, modifier = Modifier) {
 
     }
 }
@@ -264,5 +291,5 @@ fun Preview() {
 @Preview(widthDp = 500)
 @Composable
 fun PreviewCompact() {
-    CardItem(card = CardDTO.testCard.toDomain().toCardUi().copy(quantity = 2), isScreenCompact = true, modifier = Modifier) {}
+    CardItem(card = CardDTO.testCard.toDomain().toCardUi().copy(quantity = 2, affiliationMismatchWarning = true, factionMismatchWarning = true, uniqueWarning = true), isScreenCompact = true, modifier = Modifier) {}
 }

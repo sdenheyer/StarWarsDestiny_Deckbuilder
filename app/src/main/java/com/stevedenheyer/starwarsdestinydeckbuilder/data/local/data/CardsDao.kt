@@ -67,6 +67,7 @@ interface CardsDao {
     @Query("SELECT * FROM cardbaseentity WHERE code = :code")
     fun getCardByCode(code: String): Flow<CardEntity?>
 
+    @Transaction
     @RawQuery
     fun findCards(query: SupportSQLiteQuery): Flow<List<CardEntity>>
 

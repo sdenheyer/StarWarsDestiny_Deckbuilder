@@ -1,6 +1,9 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.domain.repositories
 
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SavedQueriesUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortState
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormatList
@@ -21,6 +24,12 @@ interface CardRepository {
 
     fun getCardFormats(forceRemoteUpdate: Boolean): Flow<Resource<CardFormatList>>
 
+    fun fetchSavedQueries(): Flow<SavedQueriesUi>
+
+    suspend fun updateSavedNameQueries(newQuery: String)
+
+    suspend fun updateSavedTextQueries(newQuery: String)
+
     fun findCards(query: QueryUi): Flow<Resource<List<Card>>>
 
     suspend fun createDeck(deck: Deck)
@@ -38,4 +47,8 @@ interface CardRepository {
     fun getOwnedCards():Flow<List<OwnedCard>>
 
     suspend fun insertOwnedCards(vararg cards:OwnedCard)
+
+    fun sortStateFlow():Flow<SortUi>
+
+    suspend fun setSortByState(sortState: SortState)
 }

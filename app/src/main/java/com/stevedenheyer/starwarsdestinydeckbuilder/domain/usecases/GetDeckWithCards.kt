@@ -2,6 +2,7 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.domain.usecases
 
 import android.util.Log
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.CardUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.DeckUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.CardRepositoryImpl
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
@@ -23,9 +24,17 @@ class GetDeckWithCards @Inject constructor(private val cardRepo: CardRepositoryI
         cardRepo.getCardFormats(forceRemoteUpdate).collect { response ->
             when (response.status) {
                 Resource.Status.LOADING -> { emit(UiState.hasData(isLoading = true, errorMessage = null, data = deck.toDeckUi())) }
-                Resource.Status.ERROR -> { emit(UiState.hasData(isLoading = false, errorMessage = response.message, data = deck.toDeckUi())) }
-                Resource.Status.SUCCESS -> {
 
+                Resource.Status.ERROR -> { emit(
+                    UiState.noData<DeckUi>(
+                        isLoading = false,
+                        errorMessage = response.message
+                    )
+                )
+                return@collect
+                }
+
+                Resource.Status.SUCCESS -> {
                         val format: CardFormat = try{
                             checkNotNull(response.data?.cardFormats?.find { it.gameTypeName == deck.formatName })
                     } catch (e: IllegalStateException) {
@@ -38,7 +47,8 @@ class GetDeckWithCards @Inject constructor(private val cardRepo: CardRepositoryI
                     val chars = getCardsUi(*charCodes)
 
                     when (val state = chars) {
-                        is UiState.noData -> emit(UiState.hasData(isLoading = false, errorMessage = chars.errorMessage, data = deck.toDeckUi()))
+                        is UiState.noData -> { emit(UiState.hasData(isLoading = false, errorMessage = chars.errorMessage, data = deck.toDeckUi()))
+                                            return@collect }
                         is UiState.hasData -> { val charCards = deck.characters.map { charCard ->
                                 val card = checkNotNull(state.data.find { it.fetchCode() == charCard.cardOrCode.fetchCode() })
                                 charCard.copy(cardOrCode = card)
@@ -53,7 +63,8 @@ class GetDeckWithCards @Inject constructor(private val cardRepo: CardRepositoryI
                     val slots = getCardsUi(*slotCodes)
 
                     when (val state = slots) {
-                        is UiState.noData -> emit(UiState.hasData(isLoading = false, errorMessage = chars.errorMessage, data = deck.toDeckUi()))
+                        is UiState.noData -> { emit(UiState.hasData(isLoading = false, errorMessage = chars.errorMessage, data = deck.toDeckUi()))
+                                            return@collect}
                         is UiState.hasData -> { val slotCards = deck.slots.map { slotCard ->
                             val card = checkNotNull(state.data.find { it.fetchCode() == slotCard.cardOrCode.fetchCode() })
                             slotCard.copy(cardOrCode = card)
@@ -74,7 +85,9 @@ class GetDeckWithCards @Inject constructor(private val cardRepo: CardRepositoryI
                     if (deck.plotCardCode != null) {
                         val plot = getCardsUi(deck.plotCardCode!!)
                         when (plot) {
-                            is UiState.noData -> emit(UiState.hasData(isLoading = false, errorMessage = chars.errorMessage, data = deck.toDeckUi()))
+                            is UiState.noData -> { emit(UiState.hasData(isLoading = false, errorMessage = chars.errorMessage, data = deck.toDeckUi()))
+                                return@collect
+                            }
                             is UiState.hasData -> deck = deck.copy(plotCardCode = plot.data.first())
                         }
                     }

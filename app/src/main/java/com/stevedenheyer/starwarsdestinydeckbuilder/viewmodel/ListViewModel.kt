@@ -1,5 +1,10 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
@@ -43,17 +48,19 @@ data class UiDeck(
     val name: String,
 )
 
-
 sealed class ListType
 
 class ListTypeNone : ListType()
 
-data class ListTypeBySet(val setName: String) : ListType()
+data class ListTypeBySet(
+    val setName: String,
+) : ListType()
 
-data class ListTypeByQuery(val queryTerms: List<Pair<String, String>>) : ListType()
+data class ListTypeByQuery(
+    val queryTerms: QueryUi,
+) : ListType()
 
 class ListTypeCollection() : ListType()
-
 
 @HiltViewModel
 class CardViewModel @Inject constructor(
@@ -62,9 +69,11 @@ class CardViewModel @Inject constructor(
 ) : ViewModel() {
     val listTypeFlow: MutableStateFlow<ListType> = MutableStateFlow(ListTypeNone())
 
-    val sortStateFlow: MutableStateFlow<SortUi> = MutableStateFlow(SortUi())
+    val sortStateFlow = cardRepo.sortStateFlow()
 
-    private val cardSetSelection = MutableStateFlow("")
+    val savedQueries = cardRepo.fetchSavedQueries()
+
+    private val cardSetSelection = mutableStateOf("")
 
     private val _cardsFlow: MutableStateFlow<Resource<List<Card>>> =
         MutableStateFlow(Resource.success(null))
@@ -123,7 +132,9 @@ class CardViewModel @Inject constructor(
                     SortState.SET -> cards = cards.sortedBy { it.position }.sortedBy { it.set }
                     SortState.NAME -> cards = cards.sortedBy { it.name }
                     SortState.FACTION -> cards = cards.sortedBy { it.faction }
-                    SortState.POINTS_COST -> cards = cards.sortedBy { it.cost }.sortedBy { it.points.first }
+                    SortState.POINTS_COST -> cards =
+                        cards.sortedBy { it.cost }.sortedBy { it.points.first }
+
                     else -> {}
                 }
                 (uiState as UiState.hasData).copy(data = cards)
@@ -152,11 +163,18 @@ class CardViewModel @Inject constructor(
         }
 
         when (response.status) {
-            Resource.Status.LOADING -> UiState.hasData(
-                isLoading = true,
-                errorMessage = response.message,
-                data = setList.toList()
-            )
+
+            Resource.Status.LOADING -> {
+                if (setList.isNotEmpty()) {
+                    UiState.hasData(
+                        isLoading = true,
+                        errorMessage = response.message,
+                        data = setList.toList()
+                    )
+                } else {
+                    UiState.noData(isLoading = true, errorMessage = response.message)
+                }
+            }
 
             Resource.Status.ERROR -> UiState.hasData(
                 isLoading = false,
@@ -175,12 +193,11 @@ class CardViewModel @Inject constructor(
     private var cardListJob: Job? = null
 
     init {
-        viewModelScope.launch {
+        /*viewModelScope.launch {
             cardSetSelection.collect {
                 refreshCardsBySet(false)
             }
-        }
-
+        }*/
         refreshSets(false)
     }
 
@@ -199,7 +216,8 @@ class CardViewModel @Inject constructor(
                 cardRepo.getCardsBySet(code, forceRemoteUpdate).collect { resource ->
                     if (resource.status == Resource.Status.SUCCESS && resource.isFromDB && !resource.data.isNullOrEmpty()) {
                         val numberOfCardsInSet =
-                            _cardSetsFlow.value.data?.cardSets?.find { it.code == code }?.known ?: 0
+                            _cardSetsFlow.value.data?.cardSets?.find { it.code == code }?.known
+                                ?: 0
                         if (resource.data.size < numberOfCardsInSet) {
                             refreshCardsBySet(true)
                         }
@@ -210,24 +228,38 @@ class CardViewModel @Inject constructor(
         }
     }
 
+    fun refreshList() {
+        when (val type = listTypeFlow.value) {
+            is ListTypeBySet -> refreshCardsBySet(true)
+            is ListTypeByQuery -> findCards(type.queryTerms)
+            is ListTypeCollection -> {}
+            is ListTypeNone -> {}
+        }
+    }
+
     fun setCardSetSelection(code: String) {
-        listTypeFlow.update { ListTypeBySet(setName = code) }
-        cardSetSelection.update { code }
+        cardSetSelection.value = code
+        val setName = _cardSetsFlow.value.data?.cardSets?.find { it.code == code }?.name ?: ""
+        listTypeFlow.update { ListTypeBySet(setName = setName) }
+        refreshCardsBySet(false)
     }
 
     fun findCards(query: QueryUi) {
-            listTypeFlow.update { ListTypeByQuery(listOf(Pair("Name", query.byCardName))) }
-            cardSetSelection.value = ""
-            viewModelScope.launch(Dispatchers.IO) {
-                cardListJob?.cancelAndJoin()
-                cardListJob = this.coroutineContext.job
-                cardRepo.findCards(query).collect { resource ->
-                    _cardsFlow.update { resource }
-                }
+        listTypeFlow.update { ListTypeByQuery(query) }
+        cardSetSelection.value = ""
+        viewModelScope.launch(Dispatchers.IO) {
+            cardListJob?.cancelAndJoin()
+            cardListJob = this.coroutineContext.job
+            cardRepo.updateSavedNameQueries(query.byCardName)
+            cardRepo.updateSavedTextQueries(query.byCardText)
+            cardRepo.findCards(query).collect { resource ->
+                _cardsFlow.update { resource }
+            }
         }
     }
 
     fun showCollection() {
+        listTypeFlow.update { ListTypeCollection() }
         viewModelScope.launch(Dispatchers.IO) {
             cardListJob?.cancelAndJoin()
             cardListJob = this.coroutineContext.job
@@ -252,20 +284,20 @@ class CardViewModel @Inject constructor(
                         is CardOrCode.hasCard -> list.add(card.card)
                     }
                 }
-                _cardsFlow.update { Resource(Resource.Status.SUCCESS, list, true, message = null) }
+                _cardsFlow.update {
+                    Resource(
+                        Resource.Status.SUCCESS,
+                        list,
+                        true,
+                        message = null
+                    )
+                }
             }
-
         }
     }
 
     fun setSort(sortState: SortState) {
-        when (sortState) {
-            SortState.SHOW_HERO -> { val newValue = !sortStateFlow.value.showHero
-                                    sortStateFlow.update { it.copy(showHero = newValue) }}
-            SortState.SHOW_VILLAIN -> { val newValue = !sortStateFlow.value.showVillain
-                sortStateFlow.update { it.copy(showVillain = newValue) }}
-            else -> { sortStateFlow.update { it.copy(sortState = sortState) }}
-        }
+        viewModelScope.launch { cardRepo.setSortByState(sortState) }
     }
 
     suspend fun createDeck(deck: Deck) = cardRepo.createDeck(deck)

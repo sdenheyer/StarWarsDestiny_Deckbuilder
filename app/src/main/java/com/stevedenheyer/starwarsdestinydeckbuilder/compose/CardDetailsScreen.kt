@@ -25,12 +25,20 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -72,11 +80,13 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DetailViewModel
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.toDetailUi
 import java.net.URL
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailsScreen(
     isCompactScreen: Boolean,
     modifier: Modifier = Modifier,
-    detailViewModel: DetailViewModel = hiltViewModel()
+    detailViewModel: DetailViewModel = hiltViewModel(),
+    navigateBack: () -> Unit
 ) {
 
     val cardState by detailViewModel.uiCard.collectAsStateWithLifecycle(
@@ -104,18 +114,37 @@ fun DetailsScreen(
 
     Log.d("SWD", "Card State: ${cardState.isLoading}")
 
-    when (val state = cardState) {
-        is CardUiState.hasData -> Details(
-            isCompactScreen = isCompactScreen,
-            card = state.data,
-            decks = decks,
-            changeCardQuantity = { deckName, quantity, isElite ->  (detailViewModel::writeDeck)(deckName, quantity, isElite) },
-            owned = owned,
-            changeOwnedQuantity = { _, quantity, _ -> (detailViewModel::writeOwned)(quantity)}
-        )
-            
 
-        is CardUiState.noData -> {}
+    Scaffold(topBar = {
+        TopAppBar(title = { },
+            navigationIcon = {
+                IconButton(onClick = { navigateBack() }) {
+                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                }
+            }
+        )
+    }){ padding ->
+
+        when (val state = cardState) {
+            is CardUiState.hasData -> Details(
+                isCompactScreen = isCompactScreen,
+                modifier = Modifier.padding(padding),
+                card = state.data,
+                decks = decks,
+                changeCardQuantity = { deckName, quantity, isElite ->
+                    (detailViewModel::writeDeck)(
+                        deckName,
+                        quantity,
+                        isElite
+                    )
+                },
+                owned = owned,
+                changeOwnedQuantity = { _, quantity, _ -> (detailViewModel::writeOwned)(quantity) }
+            )
+
+
+            is CardUiState.noData -> {}
+        }
     }
 }
 

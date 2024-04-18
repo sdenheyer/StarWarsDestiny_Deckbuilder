@@ -44,7 +44,6 @@ val dropDownInline = mapOf("dropDownArrow" to InlineTextContent(
     )
 })
 
-@Composable
 fun getUniqueInline(size:TextUnit, color:Color): Map<String, InlineTextContent> {
  return mapOf("unique" to InlineTextContent(
     Placeholder(

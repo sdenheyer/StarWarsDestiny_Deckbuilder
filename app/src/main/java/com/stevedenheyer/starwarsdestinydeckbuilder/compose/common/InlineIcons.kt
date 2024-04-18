@@ -39,4 +39,19 @@ fun getInlines() = mapOf(
             colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
         )
     }
-)
+    ,
+    "banned" to InlineTextContent(
+        Placeholder(
+            width = MaterialTheme.typography.titleLarge.fontSize,
+            height = MaterialTheme.typography.titleLarge.fontSize,
+            placeholderVerticalAlign = PlaceholderVerticalAlign.Center
+        )
+    )
+    {
+            Image(painter = painterResource(id = R.drawable.baseline_cancel_24),
+                contentDescription = "banned",
+                modifier = Modifier.fillMaxSize(),
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.error)
+            )
+        }
+    )

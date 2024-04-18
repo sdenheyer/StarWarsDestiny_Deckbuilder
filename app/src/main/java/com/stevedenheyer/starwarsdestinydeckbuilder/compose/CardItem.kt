@@ -28,6 +28,7 @@ import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -41,6 +42,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.ui.theme.getColorFromString
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.CardUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.toCardUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.asString
+import com.stevedenheyer.starwarsdestinydeckbuilder.utils.getUniqueInline
 
 @Composable
 fun CardItem(modifier: Modifier, isScreenCompact: Boolean, card: CardUi, onItemClick: (String) -> Unit) =
@@ -63,10 +65,14 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
             .padding(top = 0.dp, bottom = 8.dp, start = 8.dp, end = 6.dp)) {
             Text(
                 buildAnnotatedString {
+                    if (card.isUnique && (card.type == "Character" || card.type == "Plot")) appendInlineContent("unique", "unique")
+                    if (card.isUnique && card.uniqueWarning) withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.error,
+                        fontSize = MaterialTheme.typography.headlineSmall.fontSize)) {
+                        append("! ")
+                    }
                     withStyle(style = SpanStyle(color = factionColor)) {
                         append(card.name)
                     }
-                    if (card.uniqueWarning) { withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.error)) { append(" !") } }
                     if (card.subtitle.isNotBlank()) {
                         withStyle(
                             style = SpanStyle(
@@ -79,11 +85,21 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
                 },
                 style = MaterialTheme.typography.headlineMedium,
                 overflow = TextOverflow.Ellipsis,
+                inlineContent = getUniqueInline(size = MaterialTheme.typography.titleLarge.fontSize,
+                    color = factionColor),
                 modifier = Modifier
                     .padding(top = 0.dp, bottom = 8.dp, start = 8.dp, end = 6.dp)
             )
+         /*   if (card.uniqueWarning) {
+                Text(buildAnnotatedString {
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.error, fontSize = MaterialTheme.typography.titleLarge.fontSize)) { append(" U") }
+                })
+            }*/
             if (card.quantity > 0)
                 Text(buildAnnotatedString {
+                    if (card.isBanned) {
+                        appendInlineContent("banned", "banned")
+                    }
                                           append(card.quantity.toString())
                     appendInlineContent("cards", "cards")
                     if (card.diceRef.isNotEmpty()) {

@@ -3,10 +3,13 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.compose.common
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuDefaults
@@ -16,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
@@ -53,11 +57,12 @@ fun MainTopBar(
             IconButton(onClick = {
                 openDrawer()
             }) {
-                Image(
+                Icon(imageVector = Icons.Filled.Menu, contentDescription = null, tint = MaterialTheme.colorScheme.onPrimaryContainer)
+               /* Image(
                     painter = painterResource(id = R.drawable.baseline_menu_24),
                     contentDescription = "Menu",
                     colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimaryContainer)
-                )
+                )*/
             }
         },
         actions = {
@@ -122,9 +127,9 @@ fun MainTopBar(
                 DropdownMenuItem(text = {
                     Text(buildAnnotatedString {
                         if (sortState.hideHero)
-                            append("Hide")
-                        else
                             append("Show")
+                        else
+                            append("Hide")
                         append(" Heroes")
                     })
                 },
@@ -133,9 +138,9 @@ fun MainTopBar(
                 DropdownMenuItem(text = {
                     Text(buildAnnotatedString {
                         if (sortState.hideVillain)
-                            append("Hide")
-                        else
                             append("Show")
+                        else
+                            append("Hide")
                         append(" Villains")
                     })
                 },

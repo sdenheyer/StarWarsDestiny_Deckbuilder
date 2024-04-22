@@ -37,7 +37,7 @@ fun DieGroup(modifier: Modifier, dieCodes: List<String>, isCompactScreen: Boolea
 }
 
 @Composable
-fun Die(modifier: Modifier, dieCode: String, isCompactScreen: Boolean) {
+fun Die(modifier: Modifier = Modifier, dieCode: String, isCompactScreen: Boolean) {
     var value: String
     var dieIcon: Int? = null
     var cost: String
@@ -54,7 +54,10 @@ fun Die(modifier: Modifier, dieCode: String, isCompactScreen: Boolean) {
 
     cost = dieCode.last().digitToIntOrNull().toString()
 
-    BoxWithConstraints(modifier.wrapContentSize(align = Alignment.Center)) {
+    BoxWithConstraints(
+        modifier
+            //.wrapContentSize(align = Alignment.Center)
+    ) {
         val fontSize = this.maxHeight.value.sp
         val style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
 
@@ -127,9 +130,10 @@ fun Die(modifier: Modifier, dieCode: String, isCompactScreen: Boolean) {
 @Composable
 fun diePreview() {
     Die(
-        modifier = Modifier.background(color = Color.Black)
+        modifier = Modifier.background(color = Color.Gray)
             .height(30.dp)
-            .wrapContentSize(align = Alignment.Center), dieCode = "2RD1",
+        ,
+        dieCode = "2RD1",
         true
     )
 }

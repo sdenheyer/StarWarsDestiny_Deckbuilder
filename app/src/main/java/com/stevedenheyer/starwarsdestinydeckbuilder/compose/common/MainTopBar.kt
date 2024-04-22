@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -21,6 +22,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.buildAnnotatedString
@@ -67,18 +69,18 @@ fun MainTopBar(
         },
         actions = {
             IconButton(onClick = { openQuery() }) {
-                Image(
-                    painter = painterResource(id = R.drawable.baseline_search_24),
+                Icon(
+                    imageVector = Icons.Filled.Search,
                     contentDescription = "Query",
-                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
 
             IconButton(onClick = { sortMenuExpanded.value = true }) {
-                Image(
-                    painter = painterResource(id = R.drawable.baseline_sort_24),
+                Icon(
+                    painter = painterResource(R.drawable.baseline_sort_24),
                     contentDescription = "Sort",
-                    colorFilter = ColorFilter.tint(color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
             DropdownMenu(

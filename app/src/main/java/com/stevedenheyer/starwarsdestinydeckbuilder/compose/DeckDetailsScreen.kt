@@ -9,8 +9,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.Card
+import androidx.compose.material.IconButton
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -19,22 +21,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.stevedenheyer.starwarsdestinydeckbuilder.R
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.getInlines
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.DeckUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DeckDetailUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DeckViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DeckDetailsScreen(
     isCompactScreen: Boolean,
     modifier: Modifier,
     deckVM: DeckViewModel = hiltViewModel(),
     onCardClick: (String) -> Unit,
+    toDiceRoller: (String) -> Unit,
 ) {
 
     val deckDetail by deckVM.deckDetail.collectAsStateWithLifecycle(
@@ -45,33 +51,51 @@ fun DeckDetailsScreen(
     )
 
     Log.d("SWD", "Deckdetail: ${deckDetail}")
-
-    when (val state = deckDetail) {
-        is UiState.hasData -> DeckDetails(deck = state.data, isCompactScreen = isCompactScreen, onCardClick = onCardClick)
-
-        is UiState.noData -> {}
-    }
-}
-
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: DeckDetailUi, onCardClick: (String) -> Unit) {
     Scaffold(
         topBar = {
+            val name = when (val state = deckDetail) {
+                is UiState.hasData -> state.data.name
+                is UiState.noData -> ""
+            }
             CenterAlignedTopAppBar(colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
             ),
                 title = {
                     Text(
-                        deck.name,
+                        name,
                         style = MaterialTheme.typography.headlineLarge
                     )
-                })
+                },
+                actions = {
+                    IconButton(onClick = { toDiceRoller(name) },
+                        enabled = name != ""
+                        ) {
+                        Icon(painter = painterResource(id = R.drawable.noun_cube_4025), contentDescription = "Dice Roller", tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                    }
+                }
+            )
         }
 
     ) { padding ->
+
+        when (val state = deckDetail) {
+            is UiState.hasData -> DeckDetails(
+                modifier = modifier.padding(padding),
+                deck = state.data,
+                isCompactScreen = isCompactScreen,
+                onCardClick = onCardClick,
+            )
+
+            is UiState.noData -> {}
+        }
+    }
+}
+
+
+@Composable
+fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: DeckDetailUi, onCardClick: (String) -> Unit) {
+    
 
        /* val characters = deck.chars
         val charCardSize =
@@ -119,7 +143,7 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
             .reduceOrNull { acc, points -> acc + points } ?: 0
 */
 
-        Column(modifier = Modifier.padding(padding)) {
+        Column(modifier = modifier) {
             Card(
                 backgroundColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -310,4 +334,3 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
             }
         }
     }
-}

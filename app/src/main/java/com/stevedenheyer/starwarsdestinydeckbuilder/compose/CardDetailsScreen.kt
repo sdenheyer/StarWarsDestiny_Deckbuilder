@@ -39,6 +39,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -119,16 +120,22 @@ fun DetailsScreen(
         TopAppBar(title = { },
             navigationIcon = {
                 IconButton(onClick = { navigateBack() }) {
-                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer)
                 }
-            }
+            },
+            colors = TopAppBarDefaults.topAppBarColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ),
         )
     }){ padding ->
 
         when (val state = cardState) {
             is CardUiState.hasData -> Details(
                 isCompactScreen = isCompactScreen,
-                modifier = Modifier.padding(padding),
+                modifier = Modifier.padding(padding).background(color = MaterialTheme.colorScheme.primaryContainer),
                 card = state.data,
                 decks = decks,
                 changeCardQuantity = { deckName, quantity, isElite ->

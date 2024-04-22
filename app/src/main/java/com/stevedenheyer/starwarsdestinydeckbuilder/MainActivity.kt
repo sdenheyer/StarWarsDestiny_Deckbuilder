@@ -18,6 +18,7 @@ import androidx.navigation.navArgument
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.CardListScreen
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.DeckDetailsScreen
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.DetailsScreen
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.DiceRollerScreen
 import com.stevedenheyer.starwarsdestinydeckbuilder.ui.theme.StarWarsDestinyDeckbuilderTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -61,7 +62,17 @@ fun DestinyApp(modifier: Modifier = Modifier,
        composable(route = "deck_detail/{name}", arguments = listOf(navArgument("name") {
            type = NavType.StringType
        })) {
-           DeckDetailsScreen(isCompactScreen, modifier, onCardClick = { code -> navController.navigate("card_detail/${code}") })
+           DeckDetailsScreen(
+               isCompactScreen,
+               modifier,
+               onCardClick = { code -> navController.navigate("card_detail/${code}") },
+               toDiceRoller = { name -> navController.navigate("dice_roller/${name}") })
+       }
+
+       composable(route = "dice_roller/{name}", arguments = listOf(navArgument("name") {
+           type = NavType.StringType
+       })) {
+           DiceRollerScreen(isCompactScreen, navigateBack = { navController.navigateUp() })
        }
    }
 }

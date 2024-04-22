@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material3.ButtonColors
@@ -71,7 +72,7 @@ fun DiceRollerScreen(
 fun DiceRoller(modifier: Modifier = Modifier,
                isCompactScreen: Boolean,
                cardsWithDice: List<CardDiceUi>,
-               selectCard: (Int) -> Unit = {},
+               selectCard: (String) -> Unit = {},
                selectDie: (Int) -> Unit = {},
                rollAllDice: () -> Unit = {},
                rerollSelectedDice: () -> Unit = {}) {
@@ -84,9 +85,9 @@ fun DiceRoller(modifier: Modifier = Modifier,
             columns = GridCells.Fixed(count = if (isCompactScreen) 2 else 4),
             userScrollEnabled = false,
         ) {
-            itemsIndexed(items = cardsWithDice, key = { _, item -> item.code }) { index, card ->
+            items(items = cardsWithDice.distinctBy { it.code }) { card ->
                 OutlinedCard(
-                    onClick = { selectCard(index) },
+                    onClick = { selectCard(card.code) },
                     colors = CardDefaults.cardColors(
                         containerColor = if (card.isCardSelected) MaterialTheme.colorScheme.surfaceContainer else Color.Gray,
                         contentColor = MaterialTheme.colorScheme.onSurface
@@ -112,7 +113,7 @@ fun DiceRoller(modifier: Modifier = Modifier,
             columns = GridCells.FixedSize(128.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            itemsIndexed(items = cardsWithDice, key = { _, item -> item.code }) { index, card ->
+            itemsIndexed(items = cardsWithDice) { index, card ->
                 if (card.sideShowing != null)
                     OutlinedCard(
                         onClick = { selectDie(index) },

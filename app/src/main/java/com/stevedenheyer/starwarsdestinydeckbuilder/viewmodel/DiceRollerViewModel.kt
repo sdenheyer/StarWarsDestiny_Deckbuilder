@@ -64,10 +64,18 @@ class DiceRollerViewModel @Inject constructor(
 
                         val cardsWithDice = ArrayList<CardDiceUi>()
 
-                        cardsWithDice.addAll(deck.chars.filter { it.diceRef.isNotEmpty() }
-                            .map { it.toCardDiceUi() })
-                        cardsWithDice.addAll(deck.slots.filter { it.diceRef.isNotEmpty() }
-                            .map { it.toCardDiceUi() })
+                        deck.chars.filter { it.diceRef.isNotEmpty() }
+                            .forEach {
+                                for (i in 1..it.quantity) {
+                                    cardsWithDice.add(it.toCardDiceUi())
+                                }
+                            }
+                        deck.slots.filter { it.diceRef.isNotEmpty() }
+                            .forEach {
+                                for (i in 1..it.quantity) {
+                                    cardsWithDice.add(it.toCardDiceUi())
+                                    }
+                            }
 
                         dice.update { cardsWithDice }
 
@@ -77,10 +85,10 @@ class DiceRollerViewModel @Inject constructor(
         }
     }
 
-    fun selectCard(value: Int) {
+    fun selectCard(value: String) {
         dice.update {
-            it.mapIndexed { index, die ->
-                if (index == value) {
+            it.map { die ->
+                if (die.code == value) {
                     die.copy(isCardSelected = !die.isCardSelected)
                 } else {
                     die

@@ -3,37 +3,27 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.compose
 import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,8 +32,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.Die
 import com.stevedenheyer.starwarsdestinydeckbuilder.ui.theme.getColorFromString
-import com.stevedenheyer.starwarsdestinydeckbuilder.utils.dropDownInline
-import com.stevedenheyer.starwarsdestinydeckbuilder.utils.formatMap
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardDiceUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DiceRollerViewModel
 
@@ -56,10 +44,12 @@ fun DiceRollerScreen(
 ) {
 
     val loadingState by cardDiceVM.loadingState.collectAsStateWithLifecycle()
-    val cardsWithDice by cardDiceVM.dice.collectAsStateWithLifecycle(emptyList())
+    val cards by cardDiceVM.dice.collectAsStateWithLifecycle(emptyList())
+    val dice by cardDiceVM.dice.collectAsStateWithLifecycle(emptyList())
 
     DiceRoller(isCompactScreen = isCompactScreen,
-        cardsWithDice = cardsWithDice,
+        cards = cards,
+        dice = dice,
         selectCard = { index -> (cardDiceVM::selectCard)(index) },
         selectDie = { index -> (cardDiceVM::selectDie)(index) },
         rollAllDice = { (cardDiceVM::rollAllDice)() },
@@ -71,7 +61,8 @@ fun DiceRollerScreen(
 @Composable
 fun DiceRoller(modifier: Modifier = Modifier,
                isCompactScreen: Boolean,
-               cardsWithDice: List<CardDiceUi>,
+               cards: List<CardDiceUi>,
+               dice: List<CardDiceUi>,
                selectCard: (String) -> Unit = {},
                selectDie: (Int) -> Unit = {},
                rollAllDice: () -> Unit = {},
@@ -85,7 +76,13 @@ fun DiceRoller(modifier: Modifier = Modifier,
             columns = GridCells.Fixed(count = if (isCompactScreen) 2 else 4),
             userScrollEnabled = false,
         ) {
-            items(items = cardsWithDice.distinctBy { it.code }) { card ->
+            items(items = cards.mapIndexedNotNull { index, card ->
+                if (card.isElite && cards[index + 1].code == card.code) {
+                    null
+                } else {
+                    card
+                }
+            }) { card ->
                 OutlinedCard(
                     onClick = { selectCard(card.code) },
                     colors = CardDefaults.cardColors(
@@ -113,19 +110,18 @@ fun DiceRoller(modifier: Modifier = Modifier,
             columns = GridCells.FixedSize(128.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            itemsIndexed(items = cardsWithDice) { index, card ->
-                if (card.sideShowing != null)
+            itemsIndexed(items = dice) { index, dice ->
+                if (dice.sideShowing != null)
                     OutlinedCard(
                         onClick = { selectDie(index) },
                         colors = CardDefaults.cardColors(
-                            containerColor = if (card.isDieSelected) MaterialTheme.colorScheme.surfaceContainer else Color.Gray,
+                            containerColor = if (dice.isDieSelected) MaterialTheme.colorScheme.surfaceContainer else Color.Gray,
                             contentColor = MaterialTheme.colorScheme.onSurface
                         ),
-                        border = BorderStroke(2.dp, getColorFromString(s = card.color)),
+                        border = BorderStroke(2.dp, getColorFromString(s = dice.color)),
                         modifier = Modifier.height(128.dp)
                     )
                     {
-                        Log.d("SWD", "Card: ${card.name} Side: ${card.sideShowing}")
 
                         Box(modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center) {
@@ -140,7 +136,7 @@ fun DiceRoller(modifier: Modifier = Modifier,
 
 
                                     ,
-                                dieCode = card.sideShowing,
+                                dieCode = dice.sideShowing,
                                 isCompactScreen = isCompactScreen
                             )
                         }
@@ -188,7 +184,7 @@ fun DiceRoller(modifier: Modifier = Modifier,
 @Preview
 @Composable
 fun DiePreview() {
-    DiceRoller(isCompactScreen = false, cardsWithDice = listOf(CardDiceUi(
+    DiceRoller(isCompactScreen = false, cards = listOf(CardDiceUi(
         code = "",
         name = "Darth",
         color = "Red",
@@ -196,6 +192,17 @@ fun DiePreview() {
         sideShowing = "-",
         isCardSelected = true,
         isDieSelected = false,
-    )))
+        isElite = false
+    )),
+        dice = listOf(CardDiceUi(
+            code = "",
+            name = "Darth",
+            color = "Red",
+            diceRef = listOf("+1MD"),
+            sideShowing = "-",
+            isCardSelected = true,
+            isDieSelected = false,
+            isElite = false,
+        )))
 }
 

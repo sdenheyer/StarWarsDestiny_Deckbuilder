@@ -56,7 +56,9 @@ fun DestinyApp(modifier: Modifier = Modifier,
        composable(route = "card_detail/{code}", arguments = listOf(navArgument("code") {
            type = NavType.StringType
        })) {
-            DetailsScreen(isCompactScreen, modifier = modifier, navigateBack = { navController.navigateUp() })
+            DetailsScreen(isCompactScreen, modifier = modifier,
+                navigateBack = { navController.navigateUp() },
+                navigateToCard = { code -> navController.navigate("card_detail/${code}")})
        }
 
        composable(route = "deck_detail/{name}", arguments = listOf(navArgument("name") {
@@ -66,7 +68,8 @@ fun DestinyApp(modifier: Modifier = Modifier,
                isCompactScreen,
                modifier,
                onCardClick = { code -> navController.navigate("card_detail/${code}") },
-               toDiceRoller = { name -> navController.navigate("dice_roller/${name}") })
+               toDiceRoller = { name -> navController.navigate("dice_roller/${name}") },
+               navigateBack = { navController.navigateUp() })
        }
 
        composable(route = "dice_roller/{name}", arguments = listOf(navArgument("name") {

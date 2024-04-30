@@ -8,6 +8,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,25 +24,33 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,6 +64,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -87,6 +97,7 @@ fun DetailsScreen(
     isCompactScreen: Boolean,
     modifier: Modifier = Modifier,
     detailViewModel: DetailViewModel = hiltViewModel(),
+    navigateToCard: (String) -> Unit,
     navigateBack: () -> Unit
 ) {
 
@@ -96,6 +107,7 @@ fun DetailsScreen(
             errorMessage = null
         )
     )
+
     val decks by detailViewModel.uiDecks.collectAsStateWithLifecycle(initialValue = emptyList())
 
     val owned by detailViewModel.ownedCardsUi.collectAsStateWithLifecycle(initialValue = CardDetailDeckUi(
@@ -113,8 +125,8 @@ fun DetailsScreen(
         deckSize = 0
     ))
 
-    Log.d("SWD", "Card State: ${cardState.isLoading}")
-
+  //  Log.d("SWD", "Card State: ${cardState.isLoading}")
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(topBar = {
         TopAppBar(title = { },
@@ -130,27 +142,55 @@ fun DetailsScreen(
                 titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
             ),
         )
-    }){ padding ->
+    }) { padding ->
+        Box(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .background(color = MaterialTheme.colorScheme.primaryContainer)
+        ) {
 
-        when (val state = cardState) {
-            is CardUiState.hasData -> Details(
-                isCompactScreen = isCompactScreen,
-                modifier = Modifier.padding(padding).background(color = MaterialTheme.colorScheme.primaryContainer),
-                card = state.data,
-                decks = decks,
-                changeCardQuantity = { deckName, quantity, isElite ->
-                    (detailViewModel::writeDeck)(
-                        deckName,
-                        quantity,
-                        isElite
-                    )
-                },
-                owned = owned,
-                changeOwnedQuantity = { _, quantity, _ -> (detailViewModel::writeOwned)(quantity) }
-            )
+            when (val state = cardState) {
+                is CardUiState.hasData -> Details(
+                    isCompactScreen = isCompactScreen,
+                    modifier = Modifier
+                        .background(color = MaterialTheme.colorScheme.primaryContainer),
+                    card = state.data,
+                    decks = decks,
+                    changeCardQuantity = { deckName, quantity, isElite ->
+                        (detailViewModel::writeDeck)(
+                            deckName,
+                            quantity,
+                            isElite
+                        )
+                    },
+                    owned = owned,
+                    changeOwnedQuantity = { _, quantity, _ -> (detailViewModel::writeOwned)(quantity) },
+                    navigateToCard = navigateToCard
+                )
 
 
-            is CardUiState.noData -> {}
+                is CardUiState.noData -> {
+                    if (cardState.errorMessage != null) {
+                        LaunchedEffect(snackbarHostState) {
+                            snackbarHostState.showSnackbar(
+                                cardState.errorMessage!!,
+                                duration = SnackbarDuration.Indefinite
+                            )
+                        }
+                    }
+                }
+            }
+            
+            if (cardState.isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentSize(Alignment.Center)
+                        .width(100.dp),
+                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
         }
     }
 }
@@ -162,7 +202,8 @@ fun Details(isCompactScreen: Boolean,
             owned: CardDetailDeckUi,
             modifier: Modifier = Modifier,
             changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
-            changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit) {
+            changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
+            navigateToCard: (String) -> Unit) {
     when (isCompactScreen) {
         true -> CompactDetails(
             card = card,
@@ -170,6 +211,7 @@ fun Details(isCompactScreen: Boolean,
             owned = owned,
             changeCardQuantity = changeCardQuantity,
             changeOwnedQuantity = changeOwnedQuantity,
+            navigateToCard = navigateToCard,
             modifier = modifier
         )
 
@@ -179,6 +221,7 @@ fun Details(isCompactScreen: Boolean,
             owned = owned,
             changeCardQuantity = changeCardQuantity,
             changeOwnedQuantity = changeOwnedQuantity,
+            navigateToCard = navigateToCard,
             modifier = modifier
         )
     }
@@ -192,10 +235,11 @@ fun CompactDetails(
     modifier: Modifier = Modifier,
     changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
     changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
+    navigateToCard: (String) -> Unit,
 ) {
     LazyColumn(modifier) {
         item {
-            DetailsCard(modifier = Modifier.padding(vertical = 8.dp), card = card)
+            DetailsCard(modifier = Modifier.padding(vertical = 8.dp), card = card, navigateToCard = navigateToCard)
         }
         item {
             OwnedCard(modifier = Modifier.padding(vertical = 8.dp), owned = owned, changeQuantity = changeOwnedQuantity)
@@ -222,6 +266,7 @@ fun LargeDetails(
     modifier: Modifier = Modifier,
     changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
     changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
+    navigateToCard: (String) -> Unit,
 ) {
 
     LazyColumn(
@@ -234,7 +279,7 @@ fun LargeDetails(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                DetailsCard(modifier = Modifier.weight(1f), card = card)
+                DetailsCard(modifier = Modifier.weight(1f), card = card, navigateToCard = navigateToCard)
                 GlideImage(
                     model = card.imagesrc,
                     contentDescription = "Card Picture",
@@ -259,7 +304,7 @@ fun LargeDetails(
 }
 
 @Composable
-fun DetailsCard(modifier: Modifier, card: CardDetailUi) {
+fun DetailsCard(modifier: Modifier, card: CardDetailUi, navigateToCard: (String) -> Unit) {
 
     val cardColor = getColorFromString(card.color)
     val textModifer = Modifier
@@ -373,7 +418,7 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi) {
             inlineContent = dieInlineContent
         )
         Text(
-            card.flavor ?: "",
+            parseHtml(card.flavor ?: ""),
             style = MaterialTheme.typography.bodyMedium,
             modifier = textModifer,
             fontStyle = FontStyle.Italic
@@ -405,12 +450,23 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi) {
                 modifier = textModifer
             )
             card.reprints.forEach {
-                Text(
-                    "${it.setName} #${it.position}",
+                val s = buildAnnotatedString {
+                    pushStringAnnotation(tag = "LINK", annotation = it.code)
+                    withStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)) {
+                        append("${it.setName} #${it.position}")
+                    }
+                }
+                ClickableText(
+                    text = s,
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = textModifer,
-                    color = Color.Blue
-                )
+                ) { offset ->
+                    s.getStringAnnotations("LINK", offset, offset)
+                        .firstOrNull()?.let { annotation ->
+                            navigateToCard(annotation.item)
+                        }
+
+                }
             }
         }
 
@@ -421,11 +477,23 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi) {
                 modifier = textModifer
             )
             card.parellelDice.forEach {
-                Text(
-                    "${it.setName} #${it.position}",
+                val s = buildAnnotatedString {
+                    pushStringAnnotation(tag = "LINK", annotation = it.code)
+                    withStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)) {
+                        append("${it.setName} #${it.position}")
+                    }
+                }
+                ClickableText(
+                    text = s,
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = textModifer
-                )
+                    modifier = textModifer,
+                ) { offset ->
+                    s.getStringAnnotations("LINK", offset, offset)
+                        .firstOrNull()?.let { annotation ->
+                            navigateToCard(annotation.item)
+                        }
+
+                }
             }
         }
 
@@ -951,6 +1019,12 @@ fun parseHtml(s: String): AnnotatedString {
 
                 "/em" -> {}
 
+                "cite" -> withStyle(style = SpanStyle(fontStyle = FontStyle.Italic)) {
+                    append("\n\t\t\t\t\t-${strings.next()}")
+                }
+
+                "/cite" -> {}
+
                 DieIcon.BLANK.inlineTag -> appendInlineContent(
                     DieIcon.BLANK.code,
                     "[" + DieIcon.BLANK.inlineTag + "]"
@@ -1029,7 +1103,8 @@ fun TextCardPreview() {
     DetailsCard(
         modifier = Modifier
             .background(Color.Black)
-            .fillMaxSize(), card = CardDTO.testCard.toDomain().toDetailUi()
+            .fillMaxSize(), card = CardDTO.testCard.toDomain().toDetailUi(),
+        {}
     )
 }
 

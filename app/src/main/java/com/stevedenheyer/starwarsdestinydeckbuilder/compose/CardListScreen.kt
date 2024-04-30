@@ -143,7 +143,6 @@ fun CardListScreen(
                 }
             )
         })
-
     {
 
         when {
@@ -258,7 +257,6 @@ fun CardListScreen(
                                 .wrapContentWidth(align = Alignment.CenterHorizontally))
                     }
 
-
                     when (val state = listUiState) {
                         is UiState.hasData -> CardList(
                             isCompactScreen,
@@ -317,13 +315,7 @@ fun CardListScreen(
                         trackColor = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
-
-                //Log.d("SWD", "Main List Screen: ${listUiState.isLoading}")
-                /* PullRefreshIndicator(refreshing = true, state = refreshState, modifier = Modifier.fillMaxSize().wrapContentSize(
-                     Alignment.Center))*/
             }
-
-
         }
     }
 }

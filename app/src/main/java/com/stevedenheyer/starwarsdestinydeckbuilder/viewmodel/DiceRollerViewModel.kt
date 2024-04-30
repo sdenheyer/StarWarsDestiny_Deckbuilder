@@ -21,7 +21,7 @@ data class CardDiceUi(
     val diceRef: List<String>,
     val sideShowing: String? = null,
     val isCardSelected: Boolean,
-    val isDieSelected:Boolean = true,
+    val isDieSelected: Boolean = true,
 )
 
 fun CardUi.toCardDiceUi(selected: Boolean = false) = CardDiceUi(
@@ -33,7 +33,7 @@ fun CardUi.toCardDiceUi(selected: Boolean = false) = CardDiceUi(
     isCardSelected = selected
 )
 
-data class LoadingState (
+data class LoadingState(
     val isLoading: Boolean = true,
     val errorMsg: String? = null
 )
@@ -44,13 +44,13 @@ class DiceRollerViewModel @Inject constructor(
     getDeckWithCards: GetDeckWithCards
 ) : ViewModel() {
 
-    val deckCode: String = checkNotNull(savedStateHandle.get("name"))
+    private val deckCode: String = checkNotNull(savedStateHandle.get("name"))
 
     val loadingState = MutableStateFlow(LoadingState())
 
     val cards: MutableStateFlow<List<CardDiceUi>> = MutableStateFlow(emptyList())
 
-    val dice: MutableStateFlow<List<CardDiceUi>> = MutableStateFlow(emptyList())
+    val dice: MutableStateFlow<List<List<CardDiceUi>>> = MutableStateFlow(emptyList())
 
     init {
         viewModelScope.launch {
@@ -83,7 +83,7 @@ class DiceRollerViewModel @Inject constructor(
                             .forEach {
                                 for (i in 1..it.quantity) {
                                     list.add(it.toCardDiceUi())
-                                    }
+                                }
                             }
 
                         cards.update { list }
@@ -93,64 +93,68 @@ class DiceRollerViewModel @Inject constructor(
             }
         }
 
-        viewModelScope.launch {
-            cards.collect {cards ->
-                val list = cards.flatMap {
+       /* viewModelScope.launch {
+            cards.collect { cards ->
+                val list = cards.filter { it.isCardSelected }.flatMap {
                     if (it.isElite) {
                         listOf(it, it)
                     } else {
                         listOf(it)
                     }
-                }
+                }.groupBy { it.code }.values.toList()
 
                 dice.update { list }
             }
-        }
+        }*/
     }
 
-    fun selectCard(value: String) {
+    fun getDeckName() = deckCode
+
+    fun selectCard(index: Int) {
         cards.update {
-            it.map { die ->
-                if (die.code == value) {
-                    die.copy(isCardSelected = !die.isCardSelected)
-                } else {
-                    die
-                }
-            }
-        }
-    }
-
-    fun selectDie(value: Int) {
-        dice.update {
-            it.mapIndexed { index, die ->
-                if (index == value) {
-                    die.copy(isDieSelected = !die.isDieSelected)
-                } else {
-                    die
-                }
-            }
+            val newList = it.toMutableList()
+            val newValue = newList.get(index).copy(isCardSelected = !newList.get(index).isCardSelected)
+            newList.removeAt(index)
+            newList.add(index, newValue)
+            newList
         }
     }
 
     fun rollAllDice() {
         dice.update {
-            it.map { die ->
-                if (die.isCardSelected) {
-                    die.copy(sideShowing = die.diceRef[Random.nextInt(0, 5)])
+            val list = cards.value.filter { it.isCardSelected }.flatMap {
+                if (it.isElite) {
+                    listOf(it, it)
                 } else {
-                    die
+                    listOf(it)
+                }
+            }.groupBy { it.code }.values.toList()
+
+            list.map { list ->
+                list.map { die ->
+                    if (die.isCardSelected) {
+                        die.copy(sideShowing = die.diceRef[Random.nextInt(0, 5)])
+                    } else {
+                        die
+                    }
                 }
             }
         }
     }
 
-    fun rerollSelectedDice() {
+    fun setOrReroll(code: String, index: Int, side: String?) {  //Null means re-roll
         dice.update {
-            it.map { die ->
-                if (die.isDieSelected) {
-                    die.copy(sideShowing = die.diceRef[Random.nextInt(0, 5)])
-                } else {
-                    die
+            it.map { list ->
+                list.mapIndexed() { i, die ->
+                    if (die.code == code && i == index) {
+                        if (side == null) {
+                            die.copy(sideShowing = die.diceRef[Random.nextInt(0, 5)])
+                        } else {
+                            die.copy(sideShowing = side)
+                        }
+                    } else {
+                        die
+                    }
                 }
             }
         }

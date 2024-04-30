@@ -50,22 +50,75 @@ data class DeckDetailUi(
             events = DeckSlotsUi.toDeckSlotsUi(deckUi.slots.filter { it.type == "Event" }),
         )
     }
+
+    data class DeckSlotsUi(
+        val cards: List<CardUi>,
+        val size: Int,
+        val dice: Int,
+    ) {
+        companion object {
+            fun toDeckSlotsUi(cardList: List<CardUi>) = DeckSlotsUi(
+                cards = cardList,
+                size = cardList.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0,
+                dice = cardList.map {
+                    if (it.diceRef.isNotEmpty()) it.quantity else {
+                        0
+                    }
+                }.reduceOrNull { acc, dice -> acc + dice } ?: 0
+            )
+        }
+    }
 }
 
-data class DeckSlotsUi(
-    val cards: List<CardUi>,
-    val size: Int,
-    val dice: Int,
+data class WarningsUi(
+    val bannedWarnings: Int,
+    val affiliationWarnings: Int,
+    val uniqueWarnings: Int,
+    val factionWarnings: Int,
+    val exceedingPointsWarning: Boolean,
+    val exceedingDrawDeckWarning: Boolean,
 ) {
-    companion object {
-        fun toDeckSlotsUi(cardList: List<CardUi>) = DeckSlotsUi(
-            cards = cardList,
-            size = cardList.map { it.quantity }.reduceOrNull { acc, points -> acc + points } ?: 0,
-            dice = cardList.map {
-                if (it.diceRef.isNotEmpty()) it.quantity else {
-                    0
-                }
-            }.reduceOrNull { acc, dice -> acc + dice } ?: 0
+    companion object  {
+        val noWarnings = WarningsUi(
+            bannedWarnings = 0,
+            affiliationWarnings = 0,
+            uniqueWarnings = 0,
+            factionWarnings = 0,
+            exceedingPointsWarning = false,
+            exceedingDrawDeckWarning = false,
+        )
+
+        fun toWarningsUi(deck: DeckDetailUi) = WarningsUi(
+            bannedWarnings = (deck.characters.map { if (it.isBanned) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                    (deck.downgrades.cards.map { if (it.isBanned) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                    (deck.upgrades.cards.map { if (it.isBanned) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                    (deck.support.cards.map { if (it.isBanned) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                    (deck.events.cards.map { if (it.isBanned) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                    if (deck.battlefield?.isBanned == true) 1 else 0 +
+                    if (deck.plot?.isBanned == true) 1 else 0,
+                affiliationWarnings = (deck.characters.map { if (it.affiliationMismatchWarning) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                        (deck.downgrades.cards.map { if (it.affiliationMismatchWarning) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                        (deck.upgrades.cards.map { if (it.affiliationMismatchWarning) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                        (deck.support.cards.map { if (it.affiliationMismatchWarning) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                        (deck.events.cards.map { if (it.affiliationMismatchWarning) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                        if (deck.battlefield?.affiliationMismatchWarning == true) 1 else 0 +
+                                if (deck.plot?.affiliationMismatchWarning == true) 1 else 0,
+            uniqueWarnings = (deck.characters.map { if (it.uniqueWarning) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                    (deck.downgrades.cards.map { if (it.uniqueWarning) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                    (deck.upgrades.cards.map { if (it.uniqueWarning) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                    (deck.support.cards.map { if (it.uniqueWarning) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                    (deck.events.cards.map { if (it.uniqueWarning) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                    if (deck.battlefield?.uniqueWarning == true) 1 else 0 +
+                            if (deck.plot?.uniqueWarning == true) 1 else 0,
+            factionWarnings = (deck.characters.map { if (it.factionMismatchWarning) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                    (deck.downgrades.cards.map { if (it.factionMismatchWarning) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                    (deck.upgrades.cards.map { if (it.factionMismatchWarning) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                    (deck.support.cards.map { if (it.factionMismatchWarning) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                    (deck.events.cards.map { if (it.factionMismatchWarning) 1 else 0 }.reduceOrNull { acc, b -> acc + b } ?: 0) +
+                    if (deck.battlefield?.factionMismatchWarning == true) 1 else 0 +
+                            if (deck.plot?.factionMismatchWarning == true) 1 else 0,
+            exceedingPointsWarning = (deck.plotPoints + deck.charPoints > 30),
+            exceedingDrawDeckWarning = (deck.upgrades.size + deck.downgrades.size + deck.support.size + deck.events.size > 30)
         )
     }
 }
@@ -129,4 +182,14 @@ class DeckViewModel @Inject constructor(
 
     }
 
+    val warnings = deckDetail.map { deckState ->
+        when (val state = deckState) {
+            is UiState.noData -> WarningsUi.noWarnings
+
+            is UiState.hasData -> {
+                val deck = state.data
+                WarningsUi.toWarningsUi(deck)
+            }
+        }
+    }
 }

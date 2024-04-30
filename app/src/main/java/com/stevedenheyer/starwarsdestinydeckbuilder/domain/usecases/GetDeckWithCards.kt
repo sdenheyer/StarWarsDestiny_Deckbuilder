@@ -26,7 +26,7 @@ class GetDeckWithCards @Inject constructor(private val cardRepo: CardRepositoryI
                 Resource.Status.LOADING -> { emit(UiState.hasData(isLoading = true, errorMessage = null, data = deck.toDeckUi())) }
 
                 Resource.Status.ERROR -> { emit(
-                    UiState.noData<DeckUi>(
+                    UiState.noData(
                         isLoading = false,
                         errorMessage = response.message
                     )

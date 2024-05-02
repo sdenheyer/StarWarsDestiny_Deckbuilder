@@ -258,22 +258,34 @@ fun CardListScreen(
                     }
 
                     when (val state = listUiState) {
-                        is UiState.hasData -> CardList(
-                            isCompactScreen,
-                            cards = state.data,
-                            modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer),
-                            onItemClick = onCardClick,
-                            onRefreshSwipe = { (cardVM::refreshList)() }
-                        )
+                        is UiState.hasData -> {
+                            if (listType is ListTypeCollection) {
+                                CollectionList(
+                                    isCompactScreen,
+                                    cards = state.data,
+                                    modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer),
+                                    onItemClick = onCardClick,
+                                    onRefreshSwipe = { (cardVM::refreshList)() }
+                                )
+                            } else {
+                                CardList(
+                                    isCompactScreen,
+                                    cards = state.data,
+                                    modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer),
+                                    onItemClick = onCardClick,
+                                    onRefreshSwipe = { (cardVM::refreshList)() }
+                                )
+                            }
+                        }
 
                         is UiState.noData -> {
-                            CardList(
-                                isCompactScreen,
-                                cards = emptyList(),
-                                modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer),
-                                onItemClick = onCardClick,
-                                onRefreshSwipe = { (cardVM::refreshList)() }
-                            )
+                                CardList(
+                                    isCompactScreen,
+                                    cards = emptyList(),
+                                    modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer),
+                                    onItemClick = onCardClick,
+                                    onRefreshSwipe = { (cardVM::refreshList)() }
+                                )
 
                             if (setsUiState.errorMessage != null) {
                                 LaunchedEffect(snackbarHostState) {

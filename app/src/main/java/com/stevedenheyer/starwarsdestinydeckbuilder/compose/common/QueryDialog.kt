@@ -56,7 +56,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.OperatorUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SavedQueriesUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.ui.theme.getColorFromString
-import com.stevedenheyer.starwarsdestinydeckbuilder.utils.dropDownInline
+import com.stevedenheyer.starwarsdestinydeckbuilder.utils.arrowInline
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.formatMap
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.getUniqueInline
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.typeMap
@@ -319,7 +319,7 @@ fun QueryDialog(modifier: Modifier = Modifier,
                                         append(setsMap[setSelected.value] ?: "Set")
                                         appendInlineContent("dropDownArrow", "[dropDownArrow]")
                                     },
-                                    inlineContent = dropDownInline,
+                                    inlineContent = arrowInline,
                                 )
                             }
 
@@ -365,7 +365,7 @@ fun QueryDialog(modifier: Modifier = Modifier,
                                         append(formatMap[formatSelected.value] ?: "Format")
                                         appendInlineContent("dropDownArrow", "[dropDownArrow]")
                                     },
-                                    inlineContent = dropDownInline,
+                                    inlineContent = arrowInline,
                                 )
                             }
 
@@ -412,7 +412,7 @@ fun QueryDialog(modifier: Modifier = Modifier,
                                         append(typeMap[typeSelected.value] ?: "Type")
                                         appendInlineContent("dropDownArrow", "[dropDownArrow]")
                                     },
-                                    inlineContent = dropDownInline,
+                                    inlineContent = arrowInline,
                                 )
                             }
 
@@ -495,7 +495,7 @@ fun QueryDialog(modifier: Modifier = Modifier,
                                             append(setsMap[setSelected.value] ?: "Set")
                                             appendInlineContent("dropDownArrow", "[dropDownArrow]")
                                         },
-                                        inlineContent = dropDownInline,
+                                        inlineContent = arrowInline,
                                         maxLines = 1,
                                     )
                                 }
@@ -540,7 +540,7 @@ fun QueryDialog(modifier: Modifier = Modifier,
                                             append(formatMap[formatSelected.value] ?: "Format")
                                             appendInlineContent("dropDownArrow", "[dropDownArrow]")
                                         },
-                                        inlineContent = dropDownInline,
+                                        inlineContent = arrowInline,
                                         maxLines = 1,
                                     )
                                 }
@@ -587,7 +587,7 @@ fun QueryDialog(modifier: Modifier = Modifier,
                                             append(typeMap[typeSelected.value] ?: "Type")
                                             appendInlineContent("dropDownArrow", "[dropDownArrow]")
                                         },
-                                        inlineContent = dropDownInline,
+                                        inlineContent = arrowInline,
                                         maxLines = 1,
                                     )
                                 }

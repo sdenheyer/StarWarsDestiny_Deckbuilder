@@ -36,7 +36,7 @@ class GetCardFromCode @Inject constructor(val cardRepo: CardRepositoryImpl) {
                     }
                 }
             }
+            if (cards.isNotEmpty()) emit(cards)
         }
-        emit(cards)
     }
 }

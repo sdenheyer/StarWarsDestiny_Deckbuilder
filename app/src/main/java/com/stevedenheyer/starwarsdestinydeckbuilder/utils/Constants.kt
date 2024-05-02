@@ -4,15 +4,14 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
@@ -28,7 +27,7 @@ val setCodeMap = mapOf("01" to "AW", "02" to "SoR", "03" to "EaW", "04" to "TPG"
     "10" to "AoN", "11" to "SoH", "12" to "CM", "13" to "TR", "14" to "FA", "15" to "RM", "16" to "HS", "17" to "EoD", "18" to "UH", "19" to "UH", "20" to "SA",
     "21" to "DoP", "22" to "RES", "23" to "EoD1")
 
-val dropDownInline = mapOf("dropDownArrow" to InlineTextContent(
+val arrowInline = mapOf("dropDownArrow" to InlineTextContent(
     placeholder = Placeholder(
         width = 14.sp,
         height = 24.sp,
@@ -42,7 +41,40 @@ val dropDownInline = mapOf("dropDownArrow" to InlineTextContent(
         contentScale = ContentScale.Crop,
         colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer)
     )
-})
+},
+    "pullUpArrow" to InlineTextContent(
+        placeholder = Placeholder(
+            width = 14.sp,
+            height = 24.sp,
+            placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter
+        )
+    )
+    {
+        Image(
+            painter = painterResource(id = R.drawable.baseline_arrow_drop_down_24),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer),
+            modifier = Modifier.rotate(180f)
+        )
+    },
+    "collapsedArrow" to InlineTextContent(
+        placeholder = Placeholder(
+            width = 14.sp,
+            height = 24.sp,
+            placeholderVerticalAlign = PlaceholderVerticalAlign.TextCenter
+        )
+    )
+    {
+        Image(
+            painter = painterResource(id = R.drawable.baseline_arrow_drop_down_24),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimaryContainer),
+            modifier = Modifier.rotate(270f)
+        )
+    },
+    )
 
 fun getUniqueInline(size:TextUnit, color:Color): Map<String, InlineTextContent> {
  return mapOf("unique" to InlineTextContent(

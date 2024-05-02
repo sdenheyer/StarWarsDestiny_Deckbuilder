@@ -27,7 +27,7 @@ inline fun <DB, REMOTE> networkBoundResource(
     val localData = fetchFromLocal().first()
 
     if (shouldFetchFromRemote(localData)) {
-        Log.d("SWD", "Fetching from remote...")
+     //   Log.d("SWD", "Fetching from remote...")
         emit(Resource.loading(localData))
 
         fetchFromRemote().collect { apiResponse ->
@@ -67,7 +67,7 @@ inline fun <DB, REMOTE> networkBoundResource(
 
         }
     } else {
-        Log.d("SWD", "Fetch from local")
+      //  Log.d("SWD", "Fetch from local")
         emitAll(fetchFromLocal().map {
           //  Log.d("SWD", "Fetch local output, $it")
             Resource.success(isFromDB = true, data = it) })

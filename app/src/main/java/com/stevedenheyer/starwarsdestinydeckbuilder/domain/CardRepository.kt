@@ -1,4 +1,4 @@
-package com.stevedenheyer.starwarsdestinydeckbuilder.domain.repositories
+package com.stevedenheyer.starwarsdestinydeckbuilder.domain
 
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SavedQueriesUi
@@ -7,6 +7,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormatList
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CharacterCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
@@ -16,7 +17,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface CardRepository {
 
-    fun getCardbyCode(code: String, forceRemoteUpdate: Boolean): Flow<Resource<Card?>>
+    fun getCardByCode(code: String, forceRemoteUpdate: Boolean): Flow<Resource<Card?>>
+
+    fun getCardsByCodes(vararg values: CardOrCode): Flow<Resource<List<CardOrCode>>>
 
     fun getCardSets(forceRemoteUpdate: Boolean): Flow<Resource<CardSetList>>
 

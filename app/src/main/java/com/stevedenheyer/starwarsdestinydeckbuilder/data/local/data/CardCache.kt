@@ -11,7 +11,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.mappings.toEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.Balance
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.BalanceCardCrossref
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardCode
-import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardParellelDiceCrossRef
+import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardParallelDiceCrossRef
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardReprintsCrossRef
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardSetTimeEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardSubtypeCrossRef
@@ -24,14 +24,13 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.SubTypeEnti
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.ICardCache
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormatList
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CharacterCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.OwnedCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -44,13 +43,20 @@ class CardCache(
         entity?.toDomain()
     }
 
+    override suspend fun getCardsByCodes(vararg values: CardOrCode): List<CardOrCode> =
+        dao.getCardsByCodes(*values.map {
+            it.fetchCode()
+        }.toTypedArray()).map { entity ->
+            CardOrCode.HasCard(entity.toDomain())
+        }
+
     override fun getCardsBySet(code: String): Flow<List<Card>> =
         dao.getCardsBySet(code).map { it.map { entity -> entity.toDomain() } }
 
     override fun findCards(query: QueryUi): Flow<List<Card>> =
         dao.findCards(getLocalQueryString(query)).map { it.map { entity -> entity.toDomain() } }
 
-    override fun getCardSets(): Flow<CardSetList> = dao.getCardSets().map {
+    override fun getCardSets(): Flow<CardSetList> = dao.getCardSets().map { list ->
         val timestamp = dao.getSetTimestamp() ?: CardSetTimeEntity(
             timestamp = Date().time,
             expiry = 24 * 60 * 60 * 1000
@@ -59,7 +65,7 @@ class CardCache(
         CardSetList(
             timestamp = timestamp.timestamp,
             expiry = timestamp.expiry,
-            cardSets = it.map { it.toDomain() })
+            cardSets = list.map { it.toDomain() })
     }
 
     override fun getFormats(): Flow<CardFormatList> = dao.getFormats().map { list ->
@@ -74,7 +80,7 @@ class CardCache(
 
     override suspend fun storeCards(cards: List<Card>) {
         // Log.d("SWD", "Writing cards: ${cards.size}")
-        cards.forEach() { card ->
+        cards.forEach { card ->
             val cardEntity = card.toEntity()
             //   Log.d("SWD", "Writing card: ${card.code}, ${card.name}")
             try {
@@ -100,8 +106,8 @@ class CardCache(
             card.parallelDiceOf.forEach {
                 val cardCode = it.fetchCode()
                 dao.insertCardCodes(CardCode(cardCode))
-                dao.insertParellelDice(
-                    CardParellelDiceCrossRef(
+                dao.insertParallelDice(
+                    CardParallelDiceCrossRef(
                         code = card.code,
                         cardCode = cardCode
                     )
@@ -111,7 +117,7 @@ class CardCache(
     }
 
     override suspend fun storeCardSets(sets: CardSetList) {
-        sets.cardSets.forEach() {
+        sets.cardSets.forEach {
             val set = it.toEntity()
             try {
                 dao.insertCardSets(set)
@@ -195,10 +201,10 @@ class CardCache(
 
     override suspend fun updateDeck(deck: Deck, slot: Slot) {
         if (slot.quantity == 0) {
-            Log.d("SWD", "Deleting slot: ${slot.quantity}")
+           // Log.d("SWD", "Deleting slot: ${slot.quantity}")
             dao.deleteSlot(slot.toEntity(deck.name))
         } else {
-            Log.d("SWD", "Writing new slot: ${slot.quantity}")
+         //   Log.d("SWD", "Writing new slot: ${slot.quantity}")
             dao.insertSlot(slot.toEntity(deck.name))
         }
         dao.updateDeck(deck.copy(updateDate = Date()).toEntity())
@@ -206,10 +212,10 @@ class CardCache(
 
     override suspend fun updateDeck(deck: Deck, char: CharacterCard) {
         if (char.quantity == 0) {
-            Log.d("SWD", "Deleting character: ${char.quantity}")
+         //   Log.d("SWD", "Deleting character: ${char.quantity}")
             dao.deleteChar(char.toEntity(deck.name))
         } else {
-            Log.d("SWD", "Writing new char: ${char.quantity} ${char.points}")
+        //    Log.d("SWD", "Writing new char: ${char.quantity} ${char.points}")
             dao.insertChar(char.toEntity(deck.name))
         }
         dao.updateDeck(deck.copy(updateDate = Date()).toEntity())
@@ -219,9 +225,9 @@ class CardCache(
 
     override fun getOwnedCards(): Flow<List<OwnedCard>> = flow {
 
-        dao.getOwnedCards().collect {
+        dao.getOwnedCards().collect { entity ->
             emit(try {
-                it.codes
+                entity.codes
             } catch (e: NullPointerException) {
                 dao.createOwnedCards()
                 dao.getOwnedCards().first().codes }.map { it.toDomain() })
@@ -257,7 +263,7 @@ class CardCache(
                         OperatorUi.MORE_THAN -> queryString.append("> ")
                         OperatorUi.EQUALS -> queryString.append("= ")
                     }
-                    queryString.append("${number} AND ")
+                    queryString.append("$number AND ")
                 }
             }
 
@@ -271,7 +277,7 @@ class CardCache(
                         OperatorUi.MORE_THAN -> queryString.append("> ")
                         OperatorUi.EQUALS -> queryString.append("= ")
                     }
-                    queryString.append("${number} AND ")
+                    queryString.append("$number AND ")
                 }
             }
 

@@ -9,7 +9,7 @@ import java.net.URL
 import java.util.Date
 
 fun CardEntity.toDomain() = Card(
-    sides = if (card.side1 == null) { null } else { listOf(card.side1!!, card.side2!!, card.side3!!, card.side4!!, card.side5!!, card.side6!!) },
+    sides = if (card.side1 == null) { null } else { listOf(card.side1, card.side2!!, card.side3!!, card.side4!!, card.side5!!, card.side6!!) },
     setCode = card.setCode,
     setName = card.setName,
     typeCode = card.typeCode,
@@ -41,8 +41,8 @@ fun CardEntity.toDomain() = Card(
     imageSrc = URL(card.imageSrc),
     label = card.label,
     cp = card.cp,
-    reprints = reprints.map { CardOrCode.hasCode(it.cardCode) },
-    parallelDiceOf = parellelDiceOf.map { CardOrCode.hasCode(it.cardCode) },
+    reprints = reprints.map { CardOrCode.HasCode(it.cardCode) },
+    parallelDiceOf = parallelDiceOf.map { CardOrCode.HasCode(it.cardCode) },
 
     timestamp = card.timestamp,
     expiry = card.expiry,

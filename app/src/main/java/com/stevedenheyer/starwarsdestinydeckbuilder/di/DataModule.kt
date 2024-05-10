@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.DataStoreFactory
-import androidx.datastore.dataStore
 import androidx.datastore.dataStoreFile
 import com.stevedenheyer.starwarsdestinydeckbuilder.UserSettings
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.data.CardsDao

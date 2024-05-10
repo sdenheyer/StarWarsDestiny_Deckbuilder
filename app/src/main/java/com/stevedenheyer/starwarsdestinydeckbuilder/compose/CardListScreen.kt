@@ -53,7 +53,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.SelectionDraw
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SavedQueriesUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
-import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardViewModel
+import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.ListViewModel
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.dpToPx
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.ListTypeByQuery
@@ -67,7 +67,7 @@ import java.lang.ClassCastException
 fun CardListScreen(
     isCompactScreen: Boolean,
     modifier: Modifier = Modifier,
-    cardVM: CardViewModel = hiltViewModel(),
+    cardVM: ListViewModel = hiltViewModel(),
     onCardClick: (String) -> Unit,
     onDeckSelect: (String) -> Unit,
 ) {

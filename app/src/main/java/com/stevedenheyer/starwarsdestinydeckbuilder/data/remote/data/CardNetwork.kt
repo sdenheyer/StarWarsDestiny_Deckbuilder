@@ -27,7 +27,9 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
         val response = cardService.getCardByCode(code)
         if (response.body() != null) {
             val expiry = getExpiry(response.headers())
-            ApiResponse.create(response, { it!!.toDomain().copy(timestamp = Date().time, expiry = expiry) })
+            ApiResponse.create(response) {
+                it!!.toDomain().copy(timestamp = Date().time, expiry = expiry)
+            }
         } else {
             ApiResponse.create(error = Throwable(response.message()))
         }
@@ -44,7 +46,11 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
           //  Log.d("SWD", "Response rec'd: ${response.body()?.size}")
             val expiry = getExpiry(response.headers())
             if (response.body() != null) {
-                ApiResponse.create(response, { it!!.map { it.toDomain().copy(timestamp = Date().time, expiry = expiry) } })
+                ApiResponse.create(response) { list ->
+                    list!!.map {
+                        it.toDomain().copy(timestamp = Date().time, expiry = expiry)
+                    }
+                }
             } else {
                 ApiResponse.create(error = Throwable(response.message()))
             }
@@ -58,11 +64,11 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
 
         val apiResponse = try {
             val response = cardService.getCardSets()
-            if (response?.body() != null) {
-                ApiResponse.create(response) {
-                    val list = it!!.map { it.toDomain() }
+            if (response.body() != null) {
+                ApiResponse.create(response) { list ->
+                    val newList = list!!.map { it.toDomain() }
                     val expiry = getExpiry(response.headers())
-                    CardSetList(timestamp = Date().time, expiry = expiry, list)
+                    CardSetList(timestamp = Date().time, expiry = expiry, newList)
                 }
             } else {
                 ApiResponse.create(error = Throwable(response.message()))
@@ -100,7 +106,11 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
             //  Log.d("SWD", "Response rec'd: ${response.body()?.size}")
             val expiry = getExpiry(response.headers())
             if (response.body() != null) {
-                ApiResponse.create(response, { it!!.map { it.toDomain().copy(timestamp = Date().time, expiry = expiry) } })
+                ApiResponse.create(response) { list ->
+                    list!!.map {
+                        it.toDomain().copy(timestamp = Date().time, expiry = expiry)
+                    }
+                }
             } else {
                 ApiResponse.create(error = Throwable(response.message()))
             }
@@ -115,13 +125,13 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
 
         query.run {
             if (byCardName.isNotBlank()) {
-                queryString.append("${byCardName} ")
+                queryString.append("$byCardName ")
             }
 
             if (byColors.size < 4) {
                 queryString.append("f:")
                 byColors.forEachIndexed { i, color ->
-                    queryString.append("${color}")
+                    queryString.append(color)
                     if (i < query.byColors.size - 1)
                         queryString.append("|")
                     else
@@ -137,7 +147,7 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
                         OperatorUi.MORE_THAN -> queryString.append(">")
                         OperatorUi.EQUALS -> queryString.append(":")
                     }
-                    queryString.append("${number} ")
+                    queryString.append("$number ")
                 }
             }
 
@@ -153,7 +163,7 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
                         OperatorUi.MORE_THAN -> queryString.append(">")
                         OperatorUi.EQUALS -> queryString.append(":")
                     }
-                    queryString.append("${number} ")
+                    queryString.append("$number ")
                 }
             }
 
@@ -186,7 +196,7 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
                     // Log.d("SWD", "Cache control header: $it")
                     expiry = it.substringAfter("=").toLong() * 1000
                     // expiry = 60 * 1000 //TEST VALUE
-                    Log.d("SWD", "Expiry: $expiry")
+                   // Log.d("SWD", "Expiry: $expiry")
                 } catch (e: NumberFormatException) {
                     Log.d("SWD", "Couldn't find an integer in the string")
                 }

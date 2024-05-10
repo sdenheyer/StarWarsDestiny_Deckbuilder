@@ -29,7 +29,6 @@ import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,7 +39,6 @@ import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -50,7 +48,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -102,7 +99,7 @@ fun DetailsScreen(
 ) {
 
     val cardState by detailViewModel.uiCard.collectAsStateWithLifecycle(
-        initialValue = CardUiState.noData(
+        initialValue = CardUiState.NoData(
             isLoading = true,
             errorMessage = null
         )
@@ -151,7 +148,7 @@ fun DetailsScreen(
         ) {
 
             when (val state = cardState) {
-                is CardUiState.hasData -> Details(
+                is CardUiState.HasData -> Details(
                     isCompactScreen = isCompactScreen,
                     modifier = Modifier
                         .background(color = MaterialTheme.colorScheme.primaryContainer),
@@ -170,7 +167,7 @@ fun DetailsScreen(
                 )
 
 
-                is CardUiState.noData -> {
+                is CardUiState.NoData -> {
                     if (cardState.errorMessage != null) {
                         LaunchedEffect(snackbarHostState) {
                             snackbarHostState.showSnackbar(
@@ -252,7 +249,7 @@ fun CompactDetails(
             ) { deckName, quantity, isElite -> changeCardQuantity(deckName, quantity, isElite) }
         }
         item {
-            ImageCard(modifier = Modifier, src = card.imagesrc)
+            ImageCard(modifier = Modifier, src = card.imageSrc)
         }
     }
 }
@@ -281,7 +278,7 @@ fun LargeDetails(
             ) {
                 DetailsCard(modifier = Modifier.weight(1f), card = card, navigateToCard = navigateToCard)
                 GlideImage(
-                    model = card.imagesrc,
+                    model = card.imageSrc,
                     contentDescription = "Card Picture",
                     contentScale = ContentScale.FillWidth,
                     modifier = Modifier
@@ -403,7 +400,7 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, navigateToCard: (String)
             )
         }
 
-        if (card.has_errata) {
+        if (card.hasErrata) {
             Text(
                 "This card was errata'd",
                 style = MaterialTheme.typography.bodyMedium,
@@ -470,13 +467,13 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, navigateToCard: (String)
             }
         }
 
-        if (card.parellelDice.isNotEmpty()) {
+        if (card.parallelDice.isNotEmpty()) {
             Text(
                 "Used as parallel die by:",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = textModifer
             )
-            card.parellelDice.forEach {
+            card.parallelDice.forEach {
                 val s = buildAnnotatedString {
                     pushStringAnnotation(tag = "LINK", annotation = it.code)
                     withStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)) {
@@ -1115,7 +1112,7 @@ val testCard = CardDetailUi(
     code = "00000",
     color = "Red",
     cost = "8",
-    parellelDice = emptyList(),
+    parallelDice = emptyList(),
     position = 0,
     deckLimit = 1,
     faction = "",
@@ -1125,10 +1122,10 @@ val testCard = CardDetailUi(
     subtypes = emptyList(),
     points = "8/11",
     flavor = null,
-    has_errata = false,
+    hasErrata = false,
     health = 8,
     illustrator = null,
-    imagesrc = URL("https://db.swdrenewedhope.com/"),
+    imageSrc = URL("https://db.swdrenewedhope.com/"),
     isUnique = true,
     reprints = emptyList(),
     sides = emptyList(),

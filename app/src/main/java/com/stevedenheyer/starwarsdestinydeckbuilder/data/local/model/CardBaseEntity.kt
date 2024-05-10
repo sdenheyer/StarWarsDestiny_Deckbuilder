@@ -69,7 +69,7 @@ data class CardReprintsCrossRef(
 )
 
 @Entity(primaryKeys = ["code", "cardCode"])
-data class CardParellelDiceCrossRef(
+data class CardParallelDiceCrossRef(
     val code: String,
     val cardCode: String
 )
@@ -94,7 +94,7 @@ data class CardEntity(
     @Relation(
         parentColumn = "code",
         entityColumn = "cardCode",
-        associateBy = Junction(CardParellelDiceCrossRef::class)
+        associateBy = Junction(CardParallelDiceCrossRef::class)
     )
-    val parellelDiceOf: List<CardCode>,
+    val parallelDiceOf: List<CardCode>,
 )

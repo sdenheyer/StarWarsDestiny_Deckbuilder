@@ -40,6 +40,8 @@ data class Card(
 
     val formats: List<Format>? = null,
 
+    val quantity: Int = 0,
+
     val timestamp: Long,
     val expiry: Long = 0,
 )

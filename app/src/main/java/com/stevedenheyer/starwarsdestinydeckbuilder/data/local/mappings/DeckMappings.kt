@@ -19,8 +19,8 @@ fun DeckEntity.toDomain() = Deck(
     affiliationCode = deck.affiliationCode,
     affiliationName = deck.affiliationName,
 
-    battlefieldCardCode = if (deck.battlefieldCardCode == null) null else CardOrCode.hasCode(deck.battlefieldCardCode),
-    plotCardCode = if (deck.plotCardCode == null) null else CardOrCode.hasCode(deck.plotCardCode),
+    battlefieldCardCode = if (deck.battlefieldCardCode == null) null else CardOrCode.HasCode(deck.battlefieldCardCode),
+    plotCardCode = if (deck.plotCardCode == null) null else CardOrCode.HasCode(deck.plotCardCode),
     plotPoints = deck.plotPoints,
     isPlotElite = deck.isPlotElite,
     characters = characters.map { it.toDomain() },
@@ -43,7 +43,7 @@ fun Deck.toEntity() = DeckBaseEntity(
 )
 
 fun CharacterEntity.toDomain() = CharacterCard(
-    cardOrCode = CardOrCode.hasCode(cardCode),
+    cardOrCode = CardOrCode.HasCode(cardCode),
     points = points,
     quantity = quantity,
     isElite = isElite,
@@ -62,7 +62,7 @@ fun CharacterCard.toEntity(deckName: String) = CharacterEntity(
 )
 
 fun SlotEntity.toDomain() = Slot(
-    cardOrCode = CardOrCode.hasCode(cardCode),
+    cardOrCode = CardOrCode.HasCode(cardCode),
     quantity = quantity,
     dice = dice,
     dices = dices,

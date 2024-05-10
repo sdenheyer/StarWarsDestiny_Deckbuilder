@@ -1,6 +1,5 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.data
 
-import android.util.Log
 import androidx.datastore.core.DataStore
 import com.stevedenheyer.starwarsdestinydeckbuilder.UserSettings
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
@@ -8,6 +7,9 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SavedQueriesUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.data.CardCache
+import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiEmptyResponse
+import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiErrorResponse
+import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiSuccessResponse
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.CardNetwork
 import com.stevedenheyer.starwarsdestinydeckbuilder.di.IoDispatcher
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
@@ -18,13 +20,14 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CharacterCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.OwnedCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
-import com.stevedenheyer.starwarsdestinydeckbuilder.domain.repositories.CardRepository
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.CardRepository
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.setCodeMap
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import java.util.Date
 import javax.inject.Inject
@@ -33,11 +36,10 @@ class CardRepositoryImpl @Inject constructor(
     private val cardCache: CardCache,
     private val cardNetwork: CardNetwork,
     private val dataStore: DataStore<UserSettings>,
-    private val coroutineScope: CoroutineScope,
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
 ) : CardRepository {
 
-    override fun getCardbyCode(code: String, forceRemoteUpdate: Boolean): Flow<Resource<Card?>> {
+    override fun getCardByCode(code: String, forceRemoteUpdate: Boolean): Flow<Resource<Card?>> {
         return networkBoundResource(
             fetchFromLocal = { cardCache.getCardByCode(code) },
             shouldFetchFromRemote = {
@@ -51,6 +53,35 @@ class CardRepositoryImpl @Inject constructor(
             onFetchFailed = { _, _ -> }
 
         ).flowOn(dispatcher)
+    }
+
+    override fun getCardsByCodes(vararg values: CardOrCode): Flow<Resource<List<CardOrCode>>> = flow {
+        val list = cardCache.getCardsByCodes(*values).toMutableList()
+        if (list.size == values.size) {
+            emit(Resource.success(data = list, isFromDB = true))
+        } else {
+            emit(Resource.loading(data = list))
+            val needFromNetwork = values.filter { card -> card.fetchCode() !in list.map { it.fetchCode() } }.toMutableList()
+            needFromNetwork.addAll(values.filter {
+                val card = (it as CardOrCode.HasCard).card
+                Date().time - (card.timestamp) > (card.expiry)  })
+            needFromNetwork.forEach {
+                when (val apiResource = cardNetwork.getCardByCode(it.fetchCode()).first()) {
+                    is ApiSuccessResponse -> {
+                        list.add(CardOrCode.HasCard(apiResource.body!!))
+                        emit(Resource.loading(list))
+                    }
+                    is ApiErrorResponse -> {
+                        emit(Resource.error(msg = apiResource.errorMessage, data = list))
+                        return@flow
+                    }
+                    is ApiEmptyResponse -> {
+                        emit(Resource.loading(list))
+                    }
+                }
+            }
+            emit(Resource.success(data = list))
+        }
     }
 
     override fun getCardSets(forceRemoteUpdate: Boolean): Flow<Resource<CardSetList>> {
@@ -111,7 +142,7 @@ class CardRepositoryImpl @Inject constructor(
                     if (query.byFormat.isNotBlank()) {
                         val formats =
                             getCardFormats(false).first { it.status != Resource.Status.LOADING }
-                       // Log.d("SWD", "formatsresrouce: ${formats.status}")
+                       // Log.d("SWD", "formats resource: ${formats.status}")
                         if (formats.status == Resource.Status.SUCCESS) {
                             cards.filter { card ->
                               //  Log.d("SWD", "formats: ${formats.data?.cardFormats}")
@@ -128,7 +159,7 @@ class CardRepositoryImpl @Inject constructor(
                                             setCodeMap[code.fetchCode().substring(0, 2)]
                                         }.toTypedArray()
                                     )
-                                    Log.d("SWD", "Checking codes: ${setCodes}")
+                                  //  Log.d("SWD", "Checking codes: ${setCodes}")
                                     if (!(setCodes.any { it in format.includedSets }) || cardCodes.any { it in format.banned })
                                         false
                                     else {
@@ -153,7 +184,7 @@ class CardRepositoryImpl @Inject constructor(
     }
 
     override fun fetchSavedQueries(): Flow<SavedQueriesUi> = dataStore.data.map {userSettings ->
-        Log.d("SWD", "Fucking protocol buffers: ${userSettings.cardNameQueriesList}")
+        //Log.d("SWD", "Fucking protocol buffers: ${userSettings.cardNameQueriesList}")
         SavedQueriesUi(
             nameQueries = userSettings.cardNameQueriesList,
             textQueries = userSettings.cardTextQueriesList
@@ -193,7 +224,7 @@ class CardRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateDeck(deck: Deck, slot: Slot) {
-        Log.d("SWD", "Writing new Deck: ${deck.battlefieldCardCode}")
+      //  Log.d("SWD", "Writing new Deck: ${deck.battlefieldCardCode}")
         cardCache.updateDeck(deck, slot)
     }
 
@@ -213,11 +244,11 @@ class CardRepositoryImpl @Inject constructor(
             hideHero = userSettings.hideHero,
             hideVillain = userSettings.hideVillain,
             sortState = when (userSettings.sortBy) {
-                UserSettings.SortBy.UNRECOGNIZED -> SortState.SET
                 UserSettings.SortBy.SORTBY_NAME -> SortState.NAME
                 UserSettings.SortBy.SORTBY_SET -> SortState.SET
                 UserSettings.SortBy.SORTBY_FACTION -> SortState.FACTION
                 UserSettings.SortBy.SORTBY_POINTS_COST -> SortState.POINTS_COST
+                else -> SortState.SET
             }
         )
     }

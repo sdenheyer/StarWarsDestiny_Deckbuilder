@@ -40,8 +40,8 @@ fun CardDTO.toDomain() = Card(
     imageSrc = URL(imagesrc),
     label = label,
     cp = cp,
-    reprints = reprints?.map { CardOrCode.hasCode(it) } ?: emptyList(),
-    parallelDiceOf = parallel_dice_of?.map { CardOrCode.hasCode(it) } ?: emptyList(),
+    reprints = reprints?.map { CardOrCode.HasCode(it) } ?: emptyList(),
+    parallelDiceOf = parallel_dice_of?.map { CardOrCode.HasCode(it) } ?: emptyList(),
 
     timestamp = Date().time,
 )

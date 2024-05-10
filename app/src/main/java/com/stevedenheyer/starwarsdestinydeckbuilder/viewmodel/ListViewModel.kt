@@ -1,5 +1,6 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,7 +14,6 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.toCardUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
-import com.stevedenheyer.starwarsdestinydeckbuilder.domain.usecases.GetCardFromCode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,7 +23,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
@@ -58,9 +57,9 @@ data class ListTypeByQuery(
 class ListTypeCollection() : ListType()
 
 @HiltViewModel
-class CardViewModel @Inject constructor(
+class ListViewModel @Inject constructor(
     private val cardRepo: CardRepositoryImpl,
-    private val getCardFromCode: GetCardFromCode
+   // private val getCardsFromCodes: GetCardsFromCodes
 ) : ViewModel() {
     val listTypeFlow: MutableStateFlow<ListType> = MutableStateFlow(ListTypeNone())
 
@@ -261,7 +260,39 @@ class CardViewModel @Inject constructor(
             cardListJob?.cancelAndJoin()
             cardListJob = this.coroutineContext.job
             cardRepo.getOwnedCards().collect { cards ->
-                val list = ArrayList<Card>()
+
+                Log.d("SWD", "Codes: ${cards.map {it.card.fetchCode()}}")
+
+                val cardsMap = cards.associateBy {
+                    it.card.fetchCode()
+                }.toMutableMap()
+
+
+
+                cardRepo.getCardsByCodes(*cardsMap.values.map { it.card }.toTypedArray()).collect { resource ->
+                    val cardOrCodeList = resource.data ?: emptyList()
+                    cardOrCodeList.forEach {
+                        cardsMap[it.fetchCode()] = cardsMap[it.fetchCode()]!!.copy(card = it)
+                    }
+                    val newResource = Resource(status = resource.status,
+                        data = cardsMap.filter { it.value.card is CardOrCode.HasCard }
+                        .map { (it.value.card as CardOrCode.HasCard).card.copy(quantity = it.value.quantity) }.toList(),
+                        isFromDB = resource.isFromDB, message = resource.message)
+                    _cardsFlow.update { newResource }
+                }
+
+
+                /*getCardsFromCodes(false, *cards.toTypedArray()).collect { cards ->
+                    _cardsFlow.update {
+                        Resource(
+                            Resource.Status.SUCCESS,
+                            cards.map { (it.card as CardOrCode.hasCard).card },
+                            true,
+                            message = null
+                        )
+                }*/
+               // cardRepo.getCardsByCodes(cards.toTypedArray())
+                /*val list = ArrayList<Card>()
                 cards.forEach {
                     val card = getCardFromCode(false, it.card).first().first()
 
@@ -280,18 +311,11 @@ class CardViewModel @Inject constructor(
 
                         is CardOrCode.hasCard -> list.add(card.card)
                     }
-                }
-                _cardsFlow.update {
-                    Resource(
-                        Resource.Status.SUCCESS,
-                        list,
-                        true,
-                        message = null
-                    )
+                }*/
+
                 }
             }
         }
-    }
 
     fun setSort(sortState: SortState) {
         viewModelScope.launch { cardRepo.setSortByState(sortState) }

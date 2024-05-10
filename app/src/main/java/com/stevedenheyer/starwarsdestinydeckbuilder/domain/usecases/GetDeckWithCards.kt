@@ -1,163 +1,279 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.domain.usecases
 
-import android.util.Log
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.CardUi
-import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.DeckUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.CardRepositoryImpl
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.toCardUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.toDeckUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.di.IoDispatcher
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormat
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.asIntPair
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.last
 import java.lang.IllegalStateException
 import javax.inject.Inject
 
-class GetDeckWithCards @Inject constructor(private val cardRepo: CardRepositoryImpl, val getCards: GetCardFromCode) {
+class GetDeckWithCards @Inject constructor(
+    private val cardRepo: CardRepositoryImpl,
+    private val coroutineScope: CoroutineScope,
+    @IoDispatcher private val dispatcher: CoroutineDispatcher,
+) {
     operator fun invoke(deckName: String, forceRemoteUpdate: Boolean = false) = flow {
-        var deck = cardRepo.getDeck(deckName)
+        val deck = cardRepo.getDeck(deckName)
+        var uiDeck = deck.toDeckUi()
 
         cardRepo.getCardFormats(forceRemoteUpdate).collect { response ->
             when (response.status) {
-                Resource.Status.LOADING -> { emit(UiState.hasData(isLoading = true, errorMessage = null, data = deck.toDeckUi())) }
-
-                Resource.Status.ERROR -> { emit(
-                    UiState.noData(
-                        isLoading = false,
-                        errorMessage = response.message
+                Resource.Status.LOADING -> {
+                    emit(
+                        UiState.hasData(
+                            isLoading = true,
+                            errorMessage = null,
+                            data = deck.toDeckUi()
+                        )
                     )
-                )
-                return@collect
+                }
+
+                Resource.Status.ERROR -> {
+                    emit(
+                        UiState.noData(
+                            isLoading = false,
+                            errorMessage = response.message
+                        )
+                    )
+                    return@collect
                 }
 
                 Resource.Status.SUCCESS -> {
-                        val format: CardFormat = try {
-                            checkNotNull(response.data?.cardFormats?.find { it.gameTypeName == deck.formatName })
+
+                    val format: CardFormat = try {
+                        checkNotNull(response.data?.cardFormats?.find { it.gameTypeName == deck.formatName })
                     } catch (e: IllegalStateException) {
-                        CardFormat(gameTypeCode = deck.formatCode, gameTypeName = deck.formatName, balance = emptyMap(), includedSets = emptyList(), banned = emptyList(), restricted = emptyList(), restrictedPairs = emptyMap())
+                        CardFormat(
+                            gameTypeCode = deck.formatCode,
+                            gameTypeName = deck.formatName,
+                            balance = emptyMap(),
+                            includedSets = emptyList(),
+                            banned = emptyList(),
+                            restricted = emptyList(),
+                            restrictedPairs = emptyMap()
+                        )
                     }
 
-                   // var deckUi = deck.toDeckUi()
-                    val charCodes = deck.characters.map { char -> char.cardOrCode }.toTypedArray()
-                 //   Log.d("SWD", "Charcodes: ${charCodes.size}")
-                    val chars = getCardsUi(*charCodes)
-
-                    when (val state = chars) {
-                        is UiState.noData -> { emit(UiState.hasData(isLoading = false, errorMessage = chars.errorMessage, data = deck.toDeckUi()))
-                                            return@collect }
-                        is UiState.hasData -> { val charCards = deck.characters.mapNotNull { charCard ->
-                                val card = state.data.find { it.fetchCode() == charCard.cardOrCode.fetchCode() }
-                                if (card == null) null else charCard.copy(cardOrCode = card)
-                            }
-                        deck = deck.copy(characters = charCards)
+                    val slotJob = coroutineScope.async(dispatcher) {
+                        val codes = deck.slots.map { slot -> slot.cardOrCode }.toTypedArray()
+                        val resource = cardRepo.getCardsByCodes(*codes).last()
+                        val cards =
+                            resource.data
+                        val slotsMap =
+                            deck.slots.associateBy { it.cardOrCode.fetchCode() }.toMutableMap()
+                        cards?.forEach {
+                            slotsMap[it.fetchCode()] =
+                                slotsMap[it.fetchCode()]!!.copy(cardOrCode = it)
                         }
-                    }
-                 //   Log.d("SWD", "Deck chars: ${deck.characters.size}")
-
-                    val slotCodes = deck.slots.map { slot -> slot.cardOrCode }.toTypedArray()
-                 //   Log.d("SWD", "Slotcodes: ${slotCodes.size}")
-                    val slots = getCardsUi(*slotCodes)
-
-                    when (val state = slots) {
-                        is UiState.noData -> { emit(UiState.hasData(isLoading = false, errorMessage = chars.errorMessage, data = deck.toDeckUi()))
-                                            return@collect}
-                        is UiState.hasData -> { val slotCards = deck.slots.mapNotNull { slotCard ->
-                            val card = state.data.find { it.fetchCode() == slotCard.cardOrCode.fetchCode() }
-                            if (card == null) null else slotCard.copy(cardOrCode = card)
+                        val uiCards = slotsMap.values.map {
+                            (it.cardOrCode as CardOrCode.HasCard).card.toUi(
+                                format,
+                                it.quantity,
+                                false
+                            )
                         }
-                            deck = deck.copy(slots = slotCards)
-                        }
-                    }
-                  //  Log.d("SWD", "Deck slots: ${deck.slots.size}")
-
-                    if (deck.battlefieldCardCode != null) {
-                        val battlefield = getCardsUi(deck.battlefieldCardCode!!)
-                        when (battlefield) {
-                            is UiState.noData -> emit(UiState.hasData(isLoading = false, errorMessage = chars.errorMessage, data = deck.toDeckUi()))
-                            is UiState.hasData -> deck = deck.copy(battlefieldCardCode = battlefield.data.first())
-                        }
+                        Resource(resource.status, uiCards, resource.isFromDB, resource.message)
                     }
 
-                    if (deck.plotCardCode != null) {
-                        val plot = getCardsUi(deck.plotCardCode!!)
-                        when (plot) {
-                            is UiState.noData -> { emit(UiState.hasData(isLoading = false, errorMessage = chars.errorMessage, data = deck.toDeckUi()))
+                    val charJob = coroutineScope.async(dispatcher) {
+                        val codes = deck.characters.map { slot -> slot.cardOrCode }.toTypedArray()
+                        val resource = cardRepo.getCardsByCodes(*codes).last()
+                        val cards =
+                            resource.data
+                        val charsMap =
+                            deck.characters.associateBy { it.cardOrCode.fetchCode() }.toMutableMap()
+                        cards?.forEach {
+                            charsMap[it.fetchCode()] =
+                                charsMap[it.fetchCode()]!!.copy(cardOrCode = it)
+                        }
+                        val uiCards = charsMap.values.map {
+                            (it.cardOrCode as CardOrCode.HasCard).card.toUi(
+                                format,
+                                it.quantity,
+                                it.isElite
+                            )
+                        }
+                        Resource(resource.status, uiCards, resource.isFromDB, resource.message)
+                    }
+
+                    val battlefieldJob = if (deck.battlefieldCardCode == null) {
+                        null
+                    } else
+                        coroutineScope.async(dispatcher) {
+                            val code = deck.battlefieldCardCode
+                            val resource = cardRepo.getCardByCode(code.fetchCode(), false)
+                                .first { it.status != Resource.Status.LOADING }
+                            val uiCard = resource.data?.toCardUi()
+                            Resource(resource.status, uiCard, resource.isFromDB, resource.message)
+                        }
+
+                    val plotJob = if (deck.plotCardCode == null) {
+                        null
+                    } else
+                        coroutineScope.async(dispatcher) {
+                            val code = deck.plotCardCode
+                            val resource = cardRepo.getCardByCode(code.fetchCode(), false)
+                                .first { it.status != Resource.Status.LOADING }
+                            val uiCard = resource.data?.toCardUi()
+                            Resource(resource.status, uiCard, resource.isFromDB, resource.message)
+                        }
+
+                    if (battlefieldJob != null) {
+                        val battlefield = battlefieldJob.await()
+                        when (battlefield.status) {
+                            Resource.Status.ERROR -> {
+                                emit(
+                                    UiState.hasData(
+                                        isLoading = false,
+                                        errorMessage = battlefield.message,
+                                        data = uiDeck
+                                    )
+                                )
                                 return@collect
                             }
-                            is UiState.hasData -> deck = deck.copy(plotCardCode = plot.data.first())
+
+                            else -> {
+                                uiDeck = uiDeck.copy(battlefieldCard = battlefield.data)
+                                emit(
+                                    UiState.hasData(
+                                        isLoading = true,
+                                        errorMessage = battlefield.message,
+                                        data = uiDeck
+                                    )
+                                )
+                            }
                         }
                     }
-                 //   Log.d("SWD", "Emitting...")
 
-                    val charsUi = deck.characters.map {  (it.cardOrCode as CardOrCode.hasCard).card.toCardUi(format, it.quantity, it.isElite) }
-                    val slotsUi = deck.slots.map { (it.cardOrCode as CardOrCode.hasCard).card.toCardUi(format, it.quantity) }
-                    val battlefieldUi = try { (deck.battlefieldCardCode as CardOrCode.hasCard).card.toCardUi(format) } catch (e:NullPointerException) { null }
-                    val plotUi = try { (deck.plotCardCode as CardOrCode.hasCard).card.toCardUi(format, isElite = deck.isPlotElite) } catch (e:NullPointerException) { null }
+                    if (plotJob != null) {
+                        val plot = plotJob.await()
+                        when (plot.status) {
+                            Resource.Status.ERROR -> {
+                                emit(
+                                    UiState.hasData(
+                                        isLoading = false,
+                                        errorMessage = plot.message,
+                                        data = uiDeck
+                                    )
+                                )
+                                return@collect
+                            }
 
-                    val deckUi = deck.toDeckUi().copy(chars = charsUi, slots = slotsUi, battlefieldCard = battlefieldUi, plotCard = plotUi)
+                            else -> {
+                                uiDeck = uiDeck.copy(plotCard = plot.data)
+                                emit(
+                                    UiState.hasData(
+                                        isLoading = true,
+                                        errorMessage = plot.message,
+                                        data = uiDeck
+                                    )
+                                )
+                            }
+                        }
+                    }
 
-                    emit(UiState.hasData(isLoading = false, errorMessage = null, data = deckUi))
+                    val chars = charJob.await()
+                    when (chars.status) {
+                        Resource.Status.ERROR -> {
+                            emit(
+                                UiState.hasData(
+                                    isLoading = false,
+                                    errorMessage = chars.message,
+                                    data = uiDeck
+                                )
+                            )
+                            return@collect
+                        }
+
+                        else -> {
+                            uiDeck = uiDeck.copy(chars = chars.data ?: emptyList())
+                            emit(
+                                UiState.hasData(
+                                    isLoading = true,
+                                    errorMessage = chars.message,
+                                    data = uiDeck
+                                )
+                            )
+                        }
+                    }
+
+                    val slots = slotJob.await()
+                    when (slots.status) {
+                        Resource.Status.ERROR -> {
+                            emit(
+                                UiState.hasData(
+                                    isLoading = false,
+                                    errorMessage = chars.message,
+                                    data = uiDeck
+                                )
+                            )
+                            return@collect
+                        }
+
+                        else -> {
+                            uiDeck = uiDeck.copy(slots = slots.data ?: emptyList())
+                            emit(
+                                UiState.hasData(
+                                    isLoading = false,
+                                    errorMessage = chars.message,
+                                    data = uiDeck
+                                )
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 
-    private suspend inline fun getCardsUi(vararg charCodes:CardOrCode): UiState<List<CardOrCode>> {
-
-        val cards = try {
-            getCards(false, *charCodes).last().map { card ->
-                when (card) {
-                    is CardOrCode.hasCode -> return UiState.noData(isLoading = false, errorMessage = card.msg)
-                    is CardOrCode.hasCard -> card
-                }
-            }
-        } catch (e: NoSuchElementException) {
-            emptyList()
-        }
-        return UiState.hasData(isLoading = false, errorMessage = null, data = cards)
-        }
-
-    private suspend inline fun Card.toCardUi(format: CardFormat, quantity: Int = 1, isElite: Boolean = false):CardUi {
+    private suspend inline fun Card.toUi(
+        format: CardFormat,
+        quantity: Int = 1,
+        isElite: Boolean = false
+    ): CardUi {
         val isBanned = getIsBanned(this, format)
         val balance = getBalance(this, format)
-        return this.toCardUi().copy(isBanned = isBanned, isElite = isElite, points = balance, quantity = quantity)
+        return this.toCardUi()
+            .copy(isBanned = isBanned, isElite = isElite, points = balance, quantity = quantity)
     }
 
     private suspend inline fun getIsBanned(card: Card, format: CardFormat): Boolean {
-        val reprints = try {
-            getCards(false, *card.reprints.toTypedArray()).first().mapNotNull {
-                when (it) {
-                    is CardOrCode.hasCard -> it.card
-                    is CardOrCode.hasCode -> null
+        val resource = cardRepo.getCardsByCodes(*card.reprints.toTypedArray()).last()
+        when (resource.status) {
+            Resource.Status.ERROR -> return false
+            else -> {
+                val reprints = resource.data?.map { (it as CardOrCode.HasCard).card } ?: emptyList()
+                return if (
+                    card.setCode in format.includedSets ||
+                    reprints.any { it.setCode in format.includedSets }
+                ) {
+                    card.setCode in format.banned
+                } else {
+                    true
                 }
             }
-        } catch (e: NoSuchElementException) {
-            emptyList()
         }
-
-
-        if (card.setCode in format.includedSets ||
-            reprints.any { it.setCode in format.includedSets })
-        {
-            if (card.setCode in format.banned)
-                return true
-        } else {
-            return true
-        }
-        return false
     }
 
-    private fun getBalance(card: Card, format: CardFormat):Pair<Int?, Int?> {
-        val balance = format.balance.get(card.setCode).asIntPair()
-        if (balance.first != null) {
-            return balance
+    private fun getBalance(card: Card, format: CardFormat): Pair<Int?, Int?> {
+        val balance = format.balance[card.setCode].asIntPair()
+        return if (balance.first != null) {
+            balance
         } else {
-            return card.points
+            card.points
         }
 
     }

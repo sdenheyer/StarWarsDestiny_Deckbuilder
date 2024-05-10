@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.Balance
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardBaseEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardCode
-import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardParellelDiceCrossRef
+import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardParallelDiceCrossRef
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardReprintsCrossRef
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardSetEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardSubtypeCrossRef
@@ -27,7 +27,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.SlotEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.SubTypeEntity
 
 @Database
-    (entities = [CardBaseEntity::class, CardSetEntity::class, CardSubtypeCrossRef::class, CardReprintsCrossRef::class, CardParellelDiceCrossRef::class,
+    (entities = [CardBaseEntity::class, CardSetEntity::class, CardSubtypeCrossRef::class, CardReprintsCrossRef::class, CardParallelDiceCrossRef::class,
                 SubTypeEntity::class, CardCode::class, FormatBaseEntity::class, SetCode::class, Balance::class, FormatSetCrossref::class,
                 FormatBannedCrossref::class, FormatRestrictedCrossref::class, BalanceCardCrossref::class, CardSetTimeEntity::class, FormatTimeEntity::class,
                 DeckBaseEntity::class, CharacterEntity::class, SlotEntity::class, OwnedCardsBaseEntity::class, CodeQuantity::class,],

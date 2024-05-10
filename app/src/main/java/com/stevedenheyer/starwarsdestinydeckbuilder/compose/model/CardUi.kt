@@ -1,7 +1,6 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.compose.model
 
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
-import com.stevedenheyer.starwarsdestinydeckbuilder.utils.asString
 
 data class CardUi(
     val code: String,
@@ -46,7 +45,8 @@ fun Card.toCardUi() = CardUi(
     rarity = rarityName,
     diceRef = sides ?: emptyList(),
     set = setName,
-    position = position
+    position = position,
+    quantity = quantity
 )
 
 

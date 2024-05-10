@@ -14,7 +14,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.BalanceCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardBaseEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardCode
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardEntity
-import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardParellelDiceCrossRef
+import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardParallelDiceCrossRef
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardReprintsCrossRef
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardSetEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.CardSetTimeEntity
@@ -54,7 +54,7 @@ interface CardsDao {
     fun insertReprints(vararg reprintsCrossRef: CardReprintsCrossRef)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insertParellelDice(vararg parellelDiceCrossRef: CardParellelDiceCrossRef)
+    fun insertParallelDice(vararg parallelDiceCrossRef: CardParallelDiceCrossRef)
 
     @Update
     fun updateCard(vararg card: CardBaseEntity)
@@ -66,6 +66,10 @@ interface CardsDao {
     @Transaction
     @Query("SELECT * FROM cardbaseentity WHERE code = :code")
     fun getCardByCode(code: String): Flow<CardEntity?>
+
+    @Transaction
+    @Query("SELECT * FROM cardbaseentity WHERE code IN (:codes)")
+    suspend fun getCardsByCodes(vararg codes: String): List<CardEntity>
 
     @Transaction
     @RawQuery

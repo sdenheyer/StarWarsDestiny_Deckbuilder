@@ -265,7 +265,7 @@ fun CardListScreen(
                                     cards = state.data,
                                     modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer),
                                     onItemClick = onCardClick,
-                                    onRefreshSwipe = { (cardVM::refreshList)() }
+                                    onRefreshSwipe = { (cardVM::showCollection)() }
                                 )
                             } else {
                                 CardList(

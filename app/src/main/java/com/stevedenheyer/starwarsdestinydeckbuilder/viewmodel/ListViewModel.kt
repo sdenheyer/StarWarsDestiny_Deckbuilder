@@ -145,7 +145,7 @@ class ListViewModel @Inject constructor(
     }
 
     private val _cardSetsFlow: MutableStateFlow<Resource<CardSetList>> =
-        MutableStateFlow(Resource.success(null))
+        MutableStateFlow(Resource.loading())
 
     val cardSetsFlow = _cardSetsFlow.map { response ->
         val setList = ArrayList<UiCardSet>()
@@ -170,11 +170,20 @@ class ListViewModel @Inject constructor(
                 }
             }
 
-            Resource.Status.ERROR -> UiState.hasData(
-                isLoading = false,
-                errorMessage = response.message,
-                data = setList.toList()
-            )
+            Resource.Status.ERROR -> {
+                if (setList.isEmpty()) {
+                    UiState.noData(
+                        isLoading = false,
+                        errorMessage = response.message,
+                    )
+                } else {
+                    UiState.hasData(
+                        isLoading = false,
+                        errorMessage = response.message,
+                        data = setList.toList()
+                    )
+                }
+            }
 
             Resource.Status.SUCCESS -> UiState.hasData(
                 isLoading = false,
@@ -187,11 +196,7 @@ class ListViewModel @Inject constructor(
     private var cardListJob: Job? = null
 
     init {
-        /*viewModelScope.launch {
-            cardSetSelection.collect {
-                refreshCardsBySet(false)
-            }
-        }*/
+
         refreshSets(false)
 
         showCollection()

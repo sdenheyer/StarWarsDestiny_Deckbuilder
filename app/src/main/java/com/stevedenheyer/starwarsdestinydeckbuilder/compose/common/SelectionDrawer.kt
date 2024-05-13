@@ -36,7 +36,6 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.UiCardSet
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.UiDeck
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun SelectionDrawer(decksUiState: List<UiDeck>,
                     setsUiState: UiState<List<UiCardSet>>,
@@ -44,8 +43,6 @@ fun SelectionDrawer(decksUiState: List<UiDeck>,
                     selectDeck:(String) -> Unit,
                     selectSet:(String) -> Unit,
                     selectCollection:() -> Unit,) {
-
-    val refreshState = rememberPullRefreshState(refreshing = setsUiState.isLoading, onRefresh = { /*TODO*/ })
 
     ModalDrawerSheet(
         drawerContainerColor = MaterialTheme.colorScheme.secondary,
@@ -93,7 +90,7 @@ fun SelectionDrawer(decksUiState: List<UiDeck>,
             }
         )
 
-        Box(modifier = Modifier.pullRefresh(state = refreshState, enabled = true)) {
+        Box {
             LazyColumn {
                 if (decksUiState.isNotEmpty()) {
                     item {
@@ -154,6 +151,17 @@ fun SelectionDrawer(decksUiState: List<UiDeck>,
                         trackColor = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                 }
+
+            if (setsUiState is UiState.noData && !setsUiState.errorMessage.isNullOrBlank()) {
+                Log.d("SWD", "Detected ")
+                Text(text = setsUiState.errorMessage!!,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentSize(Alignment.Center)
+                    )
+            }
         }
     }
 }

@@ -63,8 +63,10 @@ class CardRepositoryImpl @Inject constructor(
             emit(Resource.loading(data = list))
             val needFromNetwork = values.filter { card -> card.fetchCode() !in list.map { it.fetchCode() } }.toMutableList()
             needFromNetwork.addAll(values.filter {
+                if (it is CardOrCode.HasCode) true else {
                 val card = (it as CardOrCode.HasCard).card
-                Date().time - (card.timestamp) > (card.expiry)  })
+                Date().time - (card.timestamp) > (card.expiry)  }
+            })
             needFromNetwork.forEach {
                 when (val apiResource = cardNetwork.getCardByCode(it.fetchCode()).first()) {
                     is ApiSuccessResponse -> {

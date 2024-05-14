@@ -60,10 +60,10 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
         emit(apiResponse)
     }.flowOn(dispatcher)
 
-    override fun getCardSets(): Flow<ApiResponse<CardSetList>> = flow {
+    override fun getCardSets(lastModiedDate: String): Flow<ApiResponse<CardSetList>> = flow {
 
         val apiResponse = try {
-            val response = cardService.getCardSets()
+            val response = cardService.getCardSets(lastModiedDate)
             if (response.body() != null) {
                 ApiResponse.create(response) { list ->
                     val newList = list!!.map { it.toDomain() }
@@ -71,7 +71,7 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
                     CardSetList(timestamp = Date().time, expiry = expiry, newList)
                 }
             } else {
-                ApiResponse.create(error = Throwable(response.message()))
+                ApiResponse.create(error = Throwable(response.message()), response.code(), )
             }
         } catch(e: IOException) {
             ApiResponse.create(error = Throwable("Network error"))

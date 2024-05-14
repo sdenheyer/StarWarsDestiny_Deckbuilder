@@ -320,7 +320,6 @@ fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: D
                     Text(
                         buildAnnotatedString {
                             append("Upgrade")
-                            //TODO:  Inline graphics
                             append("(${deck.upgrades.size}")
                             appendInlineContent("cards", "cards")
                             append("${deck.upgrades.dice}")

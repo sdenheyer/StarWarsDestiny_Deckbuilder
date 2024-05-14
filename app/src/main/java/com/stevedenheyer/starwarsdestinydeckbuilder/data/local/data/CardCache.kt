@@ -267,8 +267,6 @@ class CardCache(
                 }
             }
 
-            //TODO: format not included in cardentity - handle in NetworkBoundResource
-
             byCost.run {
                 if (number != 0) {
                     queryString.append("cost ")

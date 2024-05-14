@@ -156,11 +156,14 @@ fun CardListScreen(
                                     (cardVM::createDeck)(deck)
                                     openCreateDeckDialog.value = false
                                 } catch (e: SQLiteConstraintException) {
-                                    openCreateDeckDialog.value = true
+                                    openCreateDeckDialog.value = false
+
+                                    snackbarHostState.showSnackbar("Not created: Deck name must be unique!")
+
                                 }
                             }
                         } else {
-                            openCreateDeckDialog.value = false  //TODO:  User warnings
+                            openCreateDeckDialog.value = false
                         }
 
                     },

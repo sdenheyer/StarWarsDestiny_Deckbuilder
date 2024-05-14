@@ -247,7 +247,6 @@ class DetailViewModel @Inject constructor(
             val card = state.data
             val quantity = owned.find { it.card.fetchCode() == card.code }?.quantity ?: 0
 
-            //TODO:  Make a separate sealed class for this, jesus
             val ownedDetail = CardDetailDeckUi(
                 name = "",
                 formatName = "",

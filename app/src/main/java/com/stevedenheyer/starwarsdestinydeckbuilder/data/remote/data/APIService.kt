@@ -7,6 +7,7 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -25,7 +26,7 @@ interface CardService {
     suspend fun getCardsBySet(@Path("set_code") setCode: String): Response<List<CardDTO>>
 
     @GET("api/public/sets/")
-    suspend fun getCardSets(): Response<List<CardSetDTO>>
+    suspend fun getCardSets(@Header("If-modified-since") lastModifiedData: String): Response<List<CardSetDTO>>
 
     @GET("api/public/formats")
     suspend fun getFormats(): Response<List<FormatDTO>>

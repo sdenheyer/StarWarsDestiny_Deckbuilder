@@ -1,5 +1,6 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.data
 
+import android.util.Log
 import androidx.datastore.core.DataStore
 import com.stevedenheyer.starwarsdestinydeckbuilder.UserSettings
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
@@ -29,6 +30,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Date
 import javax.inject.Inject
 
@@ -38,6 +41,8 @@ class CardRepositoryImpl @Inject constructor(
     private val dataStore: DataStore<UserSettings>,
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
 ) : CardRepository {
+
+    private val dateFormatter = DateTimeFormatter.RFC_1123_DATE_TIME
 
     override fun getCardByCode(code: String, forceRemoteUpdate: Boolean): Flow<Resource<Card?>> {
         return networkBoundResource(
@@ -87,16 +92,18 @@ class CardRepositoryImpl @Inject constructor(
     }
 
     override fun getCardSets(forceRemoteUpdate: Boolean): Flow<Resource<CardSetList>> {
-       // return flow { Resource.loading(CardSetList(0, 100000, emptyList())) }  //TODO: Testing...
+       // return flow { Resource.loading(CardSetList(0, 100000, emptyList())) }  testing...
 
         return networkBoundResource(
             fetchFromLocal = { cardCache.getCardSets() },
             shouldFetchFromRemote = {
                 (it?.cardSets.isNullOrEmpty()) ||
-                        (forceRemoteUpdate) ||
+                        (forceRemoteUpdate)  ||
                         (Date().time - (it?.timestamp ?: 0L) > (it?.expiry ?: 0L))
             },
-            fetchFromRemote = { cardNetwork.getCardSets() },
+            fetchFromRemote = {val date =  Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
+               // Log.d("SWD", "LastModifiedDate: $date")
+                cardNetwork.getCardSets(date) },
             processRemoteResponse = { },
             saveRemoteData = { cardCache.storeCardSets(it) },
             onFetchFailed = { _, _ -> }
@@ -107,7 +114,7 @@ class CardRepositoryImpl @Inject constructor(
         code: String,
         forceRemoteUpdate: Boolean
     ): Flow<Resource<List<Card>>> {
-        // return flow { Resource.loading(listOf<Card>()) }  //TODO: Testing...
+        // return flow { Resource.loading(listOf<Card>()) }  Testing...
 
         return networkBoundResource(
             fetchFromLocal = { cardCache.getCardsBySet(code) },

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
 interface ICardNetwork {
     fun getCardByCode(code: String): Flow<ApiResponse<Card>>
     fun getCardsBySet(code: String): Flow<ApiResponse<List<Card>>>
-    fun getCardSets(): Flow<ApiResponse<CardSetList>>
+    fun getCardSets(lastModifiedDate: String): Flow<ApiResponse<CardSetList>>
     fun getFormats(): Flow<ApiResponse<CardFormatList>>
     fun findCards(query: QueryUi): Flow<ApiResponse<List<Card>>>
 

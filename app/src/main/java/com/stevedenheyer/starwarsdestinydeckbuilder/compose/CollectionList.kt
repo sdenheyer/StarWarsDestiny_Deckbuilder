@@ -38,7 +38,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.utils.arrowInline
 @Composable
 fun CollectionList(
     isCompactScreen: Boolean,
-    cards: List<CardUi>,    //TODO: Change this to state
+    cards: List<CardUi>,
     modifier: Modifier,
     onItemClick: (String) -> Unit,
     onRefreshSwipe: () -> Unit
@@ -264,14 +264,5 @@ fun CollectionList(
                     )
                 }
         }
-      /*  if (colUiState.isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .wrapContentSize(Alignment.Center)
-                    .width(100.dp),
-                trackColor = MaterialTheme.colorScheme.onPrimaryContainer
-            )
-        }*/
     }
 }

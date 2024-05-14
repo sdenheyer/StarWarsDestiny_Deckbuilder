@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -121,7 +122,6 @@ fun DiceRollerScreen(
                 .padding(padding)
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.primaryContainer),
-           // verticalArrangement = Arrangement.SpaceBetween
         ) {
 
             CardsList(
@@ -234,9 +234,19 @@ fun DiceGrids(
                                 )
                             }
                             DropdownMenu(expanded = dropDownExpanded, onDismissRequest = { dropDownExpanded = false }) {
-                                DropdownMenuItem(text = { Text("Reroll") }, onClick = { setOrRollDie(dice.code, index, null) })
+                                DropdownMenuItem(text = { Text("Reroll",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    modifier = Modifier.fillMaxWidth().wrapContentWidth(align = Alignment.CenterHorizontally)) },
+                                    onClick = { setOrRollDie(dice.code, index, null) },
+
+                                )
                                 dice.diceRef.forEach {
-                                    DropdownMenuItem(text = { Text(it) }, onClick = { setOrRollDie(dice.code, index, it) })
+                                    DropdownMenuItem(
+                                        text = { Die(isCompactScreen = isCompactScreen, dieCode = it, modifier = Modifier.size(32.dp)) },
+                                        leadingIcon = {  },
+                                        onClick = { setOrRollDie(dice.code, index, it) }
+                                    )
+                                  //  DropdownMenuItem(text = { Text(it) }, onClick = { setOrRollDie(dice.code, index, it) })
                                 }
                             }
                         }

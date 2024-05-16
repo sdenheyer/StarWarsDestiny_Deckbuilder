@@ -13,7 +13,7 @@ sealed class ApiResponse<Output> {
             return if (response.isSuccessful) {
                 val body = if (response.body() != null) typeConverter(response.body()) else null
                 val headers = response.headers()
-                if (body == null || response.code() == 304) {
+                if (response.code() == 304) {
                     ApiEmptyResponse()
                 } else {
                     ApiSuccessResponse(body, headers)

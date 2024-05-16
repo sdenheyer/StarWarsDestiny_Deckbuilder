@@ -20,16 +20,16 @@ private val retrofit = Retrofit.Builder()
 
 interface CardService {
     @GET("api/public/card/{card_code}")
-    suspend fun getCardByCode(@Path("card_code") cardCode: String): Response<CardDTO>
+    suspend fun getCardByCode(@Header("If-modified-since") lastModifiedData: String, @Path("card_code") cardCode: String): Response<CardDTO>
 
     @GET("api/public/cards/{set_code}")
-    suspend fun getCardsBySet(@Path("set_code") setCode: String): Response<List<CardDTO>>
+    suspend fun getCardsBySet(@Header("If-modified-since") lastModifiedData: String, @Path("set_code") setCode: String): Response<List<CardDTO>>
 
     @GET("api/public/sets/")
     suspend fun getCardSets(@Header("If-modified-since") lastModifiedData: String): Response<List<CardSetDTO>>
 
     @GET("api/public/formats")
-    suspend fun getFormats(): Response<List<FormatDTO>>
+    suspend fun getFormats(@Header("If-modified-since") lastModifiedData: String): Response<List<FormatDTO>>
 
     @GET("api/public/find")
     suspend fun findCards(@Query("q") query: String): Response<List<CardDTO>>

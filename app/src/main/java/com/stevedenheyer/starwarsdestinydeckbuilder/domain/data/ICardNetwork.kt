@@ -8,10 +8,10 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
 import kotlinx.coroutines.flow.Flow
 
 interface ICardNetwork {
-    fun getCardByCode(code: String): Flow<ApiResponse<Card>>
-    fun getCardsBySet(code: String): Flow<ApiResponse<List<Card>>>
+    fun getCardByCode(lastModifiedDate: String, code: String): Flow<ApiResponse<Card>>
+    fun getCardsBySet(lastModifiedDate: String, code: String): Flow<ApiResponse<List<Card>>>
     fun getCardSets(lastModifiedDate: String): Flow<ApiResponse<CardSetList>>
-    fun getFormats(): Flow<ApiResponse<CardFormatList>>
+    fun getFormats(lastModifiedDate: String): Flow<ApiResponse<CardFormatList>>
     fun findCards(query: QueryUi): Flow<ApiResponse<List<Card>>>
 
 }

@@ -34,7 +34,7 @@ inline fun <DB, REMOTE> networkBoundResource(
         fetchFromRemote(localData).collect { apiResponse ->
             when (apiResponse) {
                 is ApiSuccessResponse -> {
-                    Log.d("SWD", "Headers: ${apiResponse.headers}")
+                  //  Log.d("SWD", "Headers: ${apiResponse.headers}")
                     processRemoteResponse(apiResponse)
                     apiResponse.body?.let {
                         //  Log.d("SWD", "Saving to db: $it.size")

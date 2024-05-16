@@ -21,17 +21,17 @@ import javax.inject.Inject
 
 class CardNetwork @Inject constructor(private val cardService: CardService,
                             @IoDispatcher private val dispatcher: CoroutineDispatcher):ICardNetwork {
-    override fun getCardByCode(code: String): Flow<ApiResponse<Card>> = flow {
+    override fun getCardByCode(lastModifiedDate: String, code: String): Flow<ApiResponse<Card>> = flow {
 
         val apiResponse = try {
-        val response = cardService.getCardByCode(code)
+        val response = cardService.getCardByCode(lastModifiedDate, code)
         if (response.body() != null) {
             val expiry = getExpiry(response.headers())
             ApiResponse.create(response) {
                 it!!.toDomain().copy(timestamp = Date().time, expiry = expiry)
             }
         } else {
-            ApiResponse.create(error = Throwable(response.message()))
+            ApiResponse.create(error = Throwable(response.message()), response.code())
         }
         } catch(e: IOException) {
             ApiResponse.create(error = Throwable("Network error"))
@@ -39,10 +39,10 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
         emit(apiResponse)
     }.flowOn(dispatcher)
 
-    override fun getCardsBySet(code: String): Flow<ApiResponse<List<Card>>> = flow {
+    override fun getCardsBySet(lastModifiedDate: String, code: String): Flow<ApiResponse<List<Card>>> = flow {
 
         val apiResponse = try {
-            val response = cardService.getCardsBySet(code)
+            val response = cardService.getCardsBySet(lastModifiedDate, code)
           //  Log.d("SWD", "Response rec'd: ${response.body()?.size}")
             val expiry = getExpiry(response.headers())
             if (response.body() != null) {
@@ -52,7 +52,7 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
                     }
                 }
             } else {
-                ApiResponse.create(error = Throwable(response.message()))
+                ApiResponse.create(error = Throwable(response.message()), response.code())
             }
         } catch(e: IOException) {
             ApiResponse.create(error = Throwable("Network error"))
@@ -80,17 +80,17 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
 
     }.flowOn(dispatcher)
 
-    override fun getFormats(): Flow<ApiResponse<CardFormatList>> = flow {
+    override fun getFormats(lastModiedDate: String): Flow<ApiResponse<CardFormatList>> = flow {
 
         val apiResponse = try {
-            val response = cardService.getFormats()
+            val response = cardService.getFormats(lastModiedDate)
           //  Log.d("SWD", response.body().toString())
             val list = response.body()?.map { it.toDomain() } ?: emptyList()
             val expiry = getExpiry(response.headers())
             if (response.body() != null) {
                 ApiResponse.create(response) { CardFormatList(timestamp = Date().time, expiry = expiry, cardFormats = list) }
             } else {
-                ApiResponse.create(error = Throwable(response.message()))
+                ApiResponse.create(error = Throwable(response.message()), response.code())
             }
         } catch(e: IOException) {
             ApiResponse.create(error = Throwable("Network error"))
@@ -112,7 +112,7 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
                     }
                 }
             } else {
-                ApiResponse.create(error = Throwable(response.message()))
+                ApiResponse.create(error = Throwable(response.message()), response.code())
             }
         } catch(e: IOException) {
             ApiResponse.create(error = Throwable("Network error"))

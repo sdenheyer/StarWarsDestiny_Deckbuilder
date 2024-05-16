@@ -52,7 +52,9 @@ class CardRepositoryImpl @Inject constructor(
                         (forceRemoteUpdate) ||
                         (Date().time - (it.timestamp) > (it.expiry))
             },
-            fetchFromRemote = { cardNetwork.getCardByCode(code) },
+            fetchFromRemote = {
+                val date =  Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
+                cardNetwork.getCardByCode(date, code) },
             processRemoteResponse = { },
             saveRemoteData = { cardCache.storeCards(listOf(it)) },
             onFetchFailed = { _, _ -> }
@@ -73,7 +75,7 @@ class CardRepositoryImpl @Inject constructor(
                 Date().time - (card.timestamp) > (card.expiry)  }
             })
             needFromNetwork.forEach {
-                when (val apiResource = cardNetwork.getCardByCode(it.fetchCode()).first()) {
+                when (val apiResource = cardNetwork.getCardByCode(0L.toString().format(dateFormatter), it.fetchCode()).first()) {  //If not in database, last modified not applied
                     is ApiSuccessResponse -> {
                         list.add(CardOrCode.HasCard(apiResource.body!!))
                         emit(Resource.loading(list))
@@ -122,7 +124,11 @@ class CardRepositoryImpl @Inject constructor(
                 it.isNullOrEmpty() ||
                         (forceRemoteUpdate)
             },
-            fetchFromRemote = { cardNetwork.getCardsBySet(code) },
+            fetchFromRemote = {
+                val date = it.let { cards ->
+                    (cards?.map { card -> card.timestamp }?.minOrNull() ?: 0L).toString().format(dateFormatter)
+                    }
+                cardNetwork.getCardsBySet(date, code) },
             processRemoteResponse = { },
             saveRemoteData = { cardCache.storeCards(it) },
             onFetchFailed = { _, _ -> }
@@ -137,7 +143,8 @@ class CardRepositoryImpl @Inject constructor(
                         (forceRemoteUpdate) ||
                         (Date().time - (it?.timestamp ?: 0L) > (it?.expiry ?: 0L))
             },
-            fetchFromRemote = { cardNetwork.getFormats() },
+            fetchFromRemote = {val date =  Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
+                cardNetwork.getFormats(date) },
             processRemoteResponse = { },
             saveRemoteData = { cardCache.storeFormats(it) },
             onFetchFailed = { _, _ -> }

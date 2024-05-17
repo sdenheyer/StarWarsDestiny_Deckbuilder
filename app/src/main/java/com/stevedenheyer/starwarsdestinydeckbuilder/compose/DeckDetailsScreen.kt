@@ -17,9 +17,11 @@ import androidx.compose.material.Card
 import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -31,6 +33,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.DeleteDeckDialog
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.getInlines
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.DeckUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
@@ -71,7 +75,18 @@ fun DeckDetailsScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    Log.d("SWD", "Deckdetail: ${deckDetail}")
+    val openDeleteDeckDialog = remember { mutableStateOf(false) }
+
+    //Log.d("SWD", "Deckdetail: ${deckDetail}")
+
+    when {
+        openDeleteDeckDialog.value -> DeleteDeckDialog(
+            onDismissRequest = { (deckVM::deleteDeck)() },
+            onConfirmation = { openDeleteDeckDialog.value = false },
+            deckName = deckVM.getDeckName()
+        )
+    }
+
     Scaffold(
         topBar = {
             val name = when (val state = deckDetail) {
@@ -103,8 +118,13 @@ fun DeckDetailsScreen(
                         ) {
                         Icon(painter = painterResource(id = R.drawable.noun_cube_4025), contentDescription = "Dice Roller", tint = MaterialTheme.colorScheme.onPrimaryContainer)
                     }
-                }
+                },
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { openDeleteDeckDialog.value = true }) {
+                Icon(Icons.Default.Delete, "Delete")
+            }
         }
 
     ) { padding ->

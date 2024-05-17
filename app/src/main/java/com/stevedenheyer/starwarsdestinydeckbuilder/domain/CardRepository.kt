@@ -47,6 +47,8 @@ interface CardRepository {
 
     suspend fun getDeck(deckName: String): Deck
 
+    fun deleteDeck(deck:Deck)
+
     fun getOwnedCards():Flow<List<OwnedCard>>
 
     suspend fun insertOwnedCards(vararg cards:OwnedCard)

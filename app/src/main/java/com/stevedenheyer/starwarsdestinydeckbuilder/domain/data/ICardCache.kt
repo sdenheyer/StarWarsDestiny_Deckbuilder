@@ -1,6 +1,7 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.domain.data
 
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.DeckEntity
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormatList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
@@ -25,6 +26,7 @@ interface ICardCache {
     suspend fun updateDeck(deck: Deck)
     suspend fun updateDeck(deck: Deck, slot: Slot)
     suspend fun updateDeck(deck: Deck, char: CharacterCard)
+    fun deleteDeck(deck: Deck)
     suspend fun getDeck(name: String):Deck
     fun getOwnedCards():Flow<List<OwnedCard>>
     suspend fun storeOwnedCards(vararg cards:OwnedCard)

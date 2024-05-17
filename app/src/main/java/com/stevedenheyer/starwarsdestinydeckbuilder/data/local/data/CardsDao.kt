@@ -149,6 +149,9 @@ interface CardsDao {
     @Query("SELECT * FROM deckbaseentity WHERE name = :name")
     suspend fun getDeck(name: String): DeckEntity
 
+    @Delete
+    fun deleteDeck(deck: DeckBaseEntity)
+
     @Transaction
     @Query("SELECT * FROM ownedcardsbaseentity WHERE id = 0")
     fun getOwnedCards(): Flow<OwnedCardsEntity>

@@ -223,6 +223,10 @@ class CardCache(
 
     override suspend fun getDeck(name: String): Deck = dao.getDeck(name).toDomain()
 
+    override fun deleteDeck(deck: Deck) {
+        dao.deleteDeck(deck.toEntity())
+    }
+
     override fun getOwnedCards(): Flow<List<OwnedCard>> = flow {
 
         dao.getOwnedCards().collect { entity ->

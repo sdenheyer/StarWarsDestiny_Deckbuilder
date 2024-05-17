@@ -250,6 +250,10 @@ class CardRepositoryImpl @Inject constructor(
 
     override suspend fun getDeck(deckName: String): Deck = cardCache.getDeck(deckName)
 
+    override fun deleteDeck(deck: Deck) {
+        cardCache.deleteDeck(deck)
+    }
+
     override fun getOwnedCards(): Flow<List<OwnedCard>> = cardCache.getOwnedCards()
 
     override suspend fun insertOwnedCards(vararg cards: OwnedCard) =

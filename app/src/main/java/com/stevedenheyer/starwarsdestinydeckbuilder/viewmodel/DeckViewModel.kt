@@ -2,13 +2,17 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.CardUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.DeckUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.CardRepositoryImpl
+import com.stevedenheyer.starwarsdestinydeckbuilder.di.IoDispatcher
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.usecases.GetDeckWithCards
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class DeckDetailUi(
@@ -127,9 +131,10 @@ data class WarningsUi(
 class DeckViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     getDeckWithCards: GetDeckWithCards,
+    private val repo: CardRepositoryImpl,
 ) : ViewModel() {
 
-    val deckCode: String = checkNotNull(savedStateHandle.get("name"))
+    private val deckCode: String = checkNotNull(savedStateHandle.get("name"))
 
     val deckDetail = getDeckWithCards(deckCode).map { deckState ->
         when (val state = deckState) {
@@ -192,4 +197,11 @@ class DeckViewModel @Inject constructor(
             }
         }
     }
+
+    fun deleteDeck() = viewModelScope.launch(Dispatchers.IO) {
+        val deck = repo.getDeck(deckCode)
+        repo.deleteDeck(deck)
+    }
+
+    fun getDeckName() = deckCode
 }

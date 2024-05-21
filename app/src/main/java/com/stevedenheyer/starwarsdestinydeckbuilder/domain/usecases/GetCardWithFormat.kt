@@ -2,6 +2,7 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.domain.usecases
 
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.CardRepositoryImpl
 import com.stevedenheyer.starwarsdestinydeckbuilder.di.IoDispatcher
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.CardRepository
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
@@ -15,7 +16,7 @@ import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.last
 import javax.inject.Inject
 
-class GetCardWithFormat @Inject constructor(private val cardRepo: CardRepositoryImpl,
+class GetCardWithFormat @Inject constructor(private val cardRepo: CardRepository,
                                             private val coroutineScope: CoroutineScope,
                                             @IoDispatcher private val dispatcher: CoroutineDispatcher,) {
     operator fun invoke(code: String): Flow<Resource<Card?>> = combineTransform(
@@ -23,8 +24,9 @@ class GetCardWithFormat @Inject constructor(private val cardRepo: CardRepository
         cardRepo.getCardByCode(code, false)
     ) { formatsResource, cardResource ->
 
-        if (cardResource.status == Resource.Status.LOADING) {
-            emit(cardResource)
+        when (cardResource.status) {
+            Resource.Status.SUCCESS -> emit(Resource.loading(data = cardResource.data))
+            else -> emit(cardResource)
         }
 
         if (formatsResource.status == Resource.Status.SUCCESS && cardResource.status == Resource.Status.SUCCESS && cardResource.data != null) {

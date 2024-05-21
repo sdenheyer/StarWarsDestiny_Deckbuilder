@@ -22,6 +22,8 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.OwnedCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.CardRepository
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.ICardCache
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.ICardNetwork
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.setCodeMap
 import kotlinx.coroutines.CoroutineDispatcher
@@ -30,14 +32,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import javax.inject.Inject
 
 class CardRepositoryImpl @Inject constructor(
-    private val cardCache: CardCache,
-    private val cardNetwork: CardNetwork,
+    private val cardCache: ICardCache,
+    private val cardNetwork: ICardNetwork,
     private val dataStore: DataStore<UserSettings>,
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
 ) : CardRepository {
@@ -100,11 +101,12 @@ class CardRepositoryImpl @Inject constructor(
             fetchFromLocal = { cardCache.getCardSets() },
             shouldFetchFromRemote = {
                 (it?.cardSets.isNullOrEmpty()) ||
-                        (forceRemoteUpdate)  ||
-                        (Date().time - (it?.timestamp ?: 0L) > (it?.expiry ?: 0L))
+                        (forceRemoteUpdate) ||
+                        (Date().time - (it?.timestamp ?: 0L) > (it?.expiry
+                            ?: (24 * 60 * 60 * 1000L)))
             },
             fetchFromRemote = {val date =  Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
-               // Log.d("SWD", "LastModifiedDate: $date")
+
                 cardNetwork.getCardSets(date) },
             processRemoteResponse = { },
             saveRemoteData = { cardCache.storeCardSets(it) },
@@ -141,9 +143,11 @@ class CardRepositoryImpl @Inject constructor(
             shouldFetchFromRemote = {
                 it?.cardFormats.isNullOrEmpty() ||
                         (forceRemoteUpdate) ||
-                        (Date().time - (it?.timestamp ?: 0L) > (it?.expiry ?: 0L))
+                        (Date().time - (it?.timestamp ?: 0L) > (it?.expiry
+                            ?: (24 * 60 * 60 * 1000L)))
             },
             fetchFromRemote = {val date =  Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
+             //   Log.d("SWD", "Timestamp: ${it?.timestamp} LastModifiedDate: $date")
                 cardNetwork.getFormats(date) },
             processRemoteResponse = { },
             saveRemoteData = { cardCache.storeFormats(it) },

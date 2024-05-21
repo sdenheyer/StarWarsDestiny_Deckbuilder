@@ -7,6 +7,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.toCardUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.toDeckUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.di.IoDispatcher
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.CardRepository
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormat
@@ -21,7 +22,7 @@ import java.lang.IllegalStateException
 import javax.inject.Inject
 
 class GetDeckWithCards @Inject constructor(
-    private val cardRepo: CardRepositoryImpl,
+    private val cardRepo: CardRepository,
     private val coroutineScope: CoroutineScope,
     @IoDispatcher private val dispatcher: CoroutineDispatcher,
 ) {

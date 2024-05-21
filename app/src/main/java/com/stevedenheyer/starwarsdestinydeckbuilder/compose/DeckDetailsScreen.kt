@@ -81,8 +81,11 @@ fun DeckDetailsScreen(
 
     when {
         openDeleteDeckDialog.value -> DeleteDeckDialog(
-            onDismissRequest = { (deckVM::deleteDeck)() },
-            onConfirmation = { openDeleteDeckDialog.value = false },
+            onDismissRequest = { openDeleteDeckDialog.value = false },
+            onConfirmation = {
+                (deckVM::deleteDeck)()
+                navigateBack()
+            },
             deckName = deckVM.getDeckName()
         )
     }
@@ -93,10 +96,11 @@ fun DeckDetailsScreen(
                 is UiState.hasData -> state.data.name
                 is UiState.noData -> ""
             }
-            CenterAlignedTopAppBar(colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-            ),
+            CenterAlignedTopAppBar(
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ),
                 title = {
                     Text(
                         name,
@@ -113,10 +117,15 @@ fun DeckDetailsScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { toDiceRoller(name) },
+                    IconButton(
+                        onClick = { toDiceRoller(name) },
                         enabled = name != ""
-                        ) {
-                        Icon(painter = painterResource(id = R.drawable.noun_cube_4025), contentDescription = "Dice Roller", tint = MaterialTheme.colorScheme.onPrimaryContainer)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.noun_cube_4025),
+                            contentDescription = "Dice Roller",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
                     }
                 },
             )
@@ -155,7 +164,7 @@ fun DeckDetailsScreen(
                     LaunchedEffect(snackbarHostState) {
                         snackbarHostState.showSnackbar(
                             deckDetail.errorMessage!!,
-                          //  actionLabel = "Retry",
+                            //  actionLabel = "Retry",
                             duration = SnackbarDuration.Indefinite
                         )
                     }
@@ -177,260 +186,281 @@ fun DeckDetailsScreen(
 
 
 @Composable
-fun DeckDetails(modifier: Modifier = Modifier, isCompactScreen: Boolean, deck: DeckDetailUi, warnings: WarningsUi, onCardClick: (String) -> Unit) {
+fun DeckDetails(
+    modifier: Modifier = Modifier,
+    isCompactScreen: Boolean,
+    deck: DeckDetailUi,
+    warnings: WarningsUi,
+    onCardClick: (String) -> Unit
+) {
 
-        Column(modifier = modifier,
-            verticalArrangement = Arrangement.Top) {
-            Card(
-                backgroundColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                shape = RectangleShape,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column {
-                    Row {
-                        Text(
-                            deck.affiliation,
-                            style = MaterialTheme.typography.headlineSmall,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.weight(1f)
-                        )
-                        Text(
-                            deck.format,
-                            style = MaterialTheme.typography.headlineSmall,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.Top
+    ) {
+        Card(
+            backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            shape = RectangleShape,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column {
+                Row {
                     Text(
-                        "Characters: ${deck.charPoints} points, ${deck.charDice} dice",
-                        style = MaterialTheme.typography.bodyMedium,
+                        deck.affiliation,
+                        style = MaterialTheme.typography.headlineSmall,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.weight(1f)
                     )
-                    val drawDeckSize =
-                        deck.upgrades.size + deck.downgrades.size + deck.support.size + deck.events.size
-                    val drawDeckDice =
-                        deck.upgrades.dice + deck.downgrades.dice + deck.support.dice + deck.events.dice
                     Text(
-                        "Draw deck: ${drawDeckSize} cards, ${drawDeckDice} dice",
-                        style = MaterialTheme.typography.bodyMedium,
+                        deck.format,
+                        style = MaterialTheme.typography.headlineSmall,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.weight(1f)
                     )
-                    if (warnings != WarningsUi.noWarnings) {
-                        if (warnings.bannedWarnings > 0)
-                            Text(buildAnnotatedString {
+                }
+                Text(
+                    "Characters: ${deck.charPoints} points, ${deck.charDice} dice",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                val drawDeckSize =
+                    deck.upgrades.size + deck.downgrades.size + deck.support.size + deck.events.size
+                val drawDeckDice =
+                    deck.upgrades.dice + deck.downgrades.dice + deck.support.dice + deck.events.dice
+                Text(
+                    "Draw deck: ${drawDeckSize} cards, ${drawDeckDice} dice",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (warnings != WarningsUi.noWarnings) {
+                    if (warnings.bannedWarnings > 0)
+                        Text(
+                            buildAnnotatedString {
                                 append("${warnings.bannedWarnings} banned cards")
                                 appendInlineContent("banned", "banned")
                             },
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.fillMaxWidth(),
-                                inlineContent = getInlines()
-                                )
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.fillMaxWidth(),
+                            inlineContent = getInlines()
+                        )
 
-                        if (warnings.uniqueWarnings > 0) {
-                            Text("${warnings.uniqueWarnings} unique cards have copies",
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.fillMaxWidth(),)
-                        }
+                    if (warnings.uniqueWarnings > 0) {
+                        Text(
+                            "${warnings.uniqueWarnings} unique cards have copies",
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
 
-                        if (warnings.affiliationWarnings > 0) {
-                            Text("${warnings.affiliationWarnings} cards with the wrong affiliation",
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.fillMaxWidth(),)
-                        }
+                    if (warnings.affiliationWarnings > 0) {
+                        Text(
+                            "${warnings.affiliationWarnings} cards with the wrong affiliation",
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
 
-                        if (warnings.factionWarnings > 0) {
-                            Text("${warnings.factionWarnings} cards in draw deck don't have matching character faction",
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.fillMaxWidth(),)
-                        }
+                    if (warnings.factionWarnings > 0) {
+                        Text(
+                            "${warnings.factionWarnings} cards in draw deck don't have matching character faction",
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
 
-                        if (warnings.exceedingPointsWarning) {
-                            Text("You have used too many points",
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.fillMaxWidth(),)
-                        }
+                    if (warnings.exceedingPointsWarning) {
+                        Text(
+                            "You have used too many points",
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
 
-                        if (warnings.exceedingDrawDeckWarning) {
-                            Text("Your draw deck has too many cards",
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.fillMaxWidth(),)
-                        }
+                    if (warnings.exceedingDrawDeckWarning) {
+                        Text(
+                            "Your draw deck has too many cards",
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
                     }
                 }
             }
+        }
 
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(color = MaterialTheme.colorScheme.primaryContainer),
-            ) {
-                item {
-                    Text(
-                        buildAnnotatedString {
-                            append("Character ")
-                            append("(${deck.charCardSize}")
-                            appendInlineContent("cards", "cards")
-                            append("${deck.charDice}")
-                            appendInlineContent("dice", "dice")
-                            append(")")
-                        }, style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        inlineContent = getInlines(MaterialTheme.colorScheme.onPrimaryContainer)
-                    )
-                }
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = MaterialTheme.colorScheme.primaryContainer),
+        ) {
+            item {
+                Text(
+                    buildAnnotatedString {
+                        append("Character ")
+                        append("(${deck.charCardSize}")
+                        appendInlineContent("cards", "cards")
+                        append("${deck.charDice}")
+                        appendInlineContent("dice", "dice")
+                        append(")")
+                    }, style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    inlineContent = getInlines(MaterialTheme.colorScheme.onPrimaryContainer)
+                )
+            }
 
-                items(items = deck.characters, key = { it.code }) { card ->
-                    CardItem(
-                        isScreenCompact = isCompactScreen,
-                        modifier = Modifier,
-                        card = card,
-                        onItemClick = { onCardClick(card.code) }
-                    )
-                }
+            items(items = deck.characters, key = { it.code }) { card ->
+                CardItem(
+                    isScreenCompact = isCompactScreen,
+                    modifier = Modifier,
+                    card = card,
+                    onItemClick = { onCardClick(card.code) }
+                )
+            }
 
-                item {
-                    Text("Battlefield",
+            item {
+                Text(
+                    "Battlefield",
                     style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        )
-                    if (deck.battlefield != null)
-                        CardItem(
-                            isScreenCompact = isCompactScreen,
-                            modifier = Modifier,
-                            card = deck.battlefield,
-                            onItemClick = { onCardClick(deck.battlefield.code) }
-                        )
-                }
-
-
-                item {
-                    Text("Plot(${deck.plotPoints})",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    )
-                    if (deck.plot != null)
-                        CardItem(
-                            isScreenCompact = isCompactScreen,
-                            modifier = Modifier,
-                            card = deck.plot,
-                            onItemClick = { onCardClick(deck.plot.code) }
-                        )
-                }
-
-                item {
-                    Text(
-                        buildAnnotatedString {
-                            append("Upgrade")
-                            append("(${deck.upgrades.size}")
-                            appendInlineContent("cards", "cards")
-                            append("${deck.upgrades.dice}")
-                            appendInlineContent("dice", "dice")
-                            append(")")
-                        }, style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        inlineContent = getInlines(MaterialTheme.colorScheme.onPrimaryContainer)
-                    )
-                }
-
-                items(items = deck.upgrades.cards, key = { it.code }) { card ->
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+                if (deck.battlefield != null)
                     CardItem(
                         isScreenCompact = isCompactScreen,
                         modifier = Modifier,
-                        card = card,
-                        onItemClick = { onCardClick(card.code) }
+                        card = deck.battlefield,
+                        onItemClick = { onCardClick(deck.battlefield.code) }
                     )
-                }
+            }
 
-                item {
-                    Text(
-                        buildAnnotatedString {
-                            append("Downgrade")
-                            append("(${deck.downgrades.size}")
-                            appendInlineContent("cards", "cards")
-                            append("${deck.downgrades.dice}")
-                            appendInlineContent("dice", "dice")
-                            append(")")
-                        }, style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        inlineContent = getInlines(MaterialTheme.colorScheme.onPrimaryContainer)
-                    )
-                }
 
-                items(items = deck.downgrades.cards, key = { it.code }) { card ->
+            item {
+                Text(
+                    "Plot(${deck.plotPoints})",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+                if (deck.plot != null)
                     CardItem(
                         isScreenCompact = isCompactScreen,
                         modifier = Modifier,
-                        card = card,
-                        onItemClick = { onCardClick(card.code) }
+                        card = deck.plot,
+                        onItemClick = { onCardClick(deck.plot.code) }
                     )
-                }
+            }
 
-                item {
-                    Text(
-                        buildAnnotatedString {
-                            append("Support")
-                            append("(${deck.support.size}")
-                            appendInlineContent("cards", "cards")
-                            append("${deck.support.dice}")
-                            appendInlineContent("dice", "dice")
-                            append(")")
-                        }, style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        inlineContent = getInlines(MaterialTheme.colorScheme.onPrimaryContainer)
-                    )
-                }
+            item {
+                Text(
+                    buildAnnotatedString {
+                        append("Upgrade")
+                        append("(${deck.upgrades.size}")
+                        appendInlineContent("cards", "cards")
+                        append("${deck.upgrades.dice}")
+                        appendInlineContent("dice", "dice")
+                        append(")")
+                    }, style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    inlineContent = getInlines(MaterialTheme.colorScheme.onPrimaryContainer)
+                )
+            }
 
-                items(items = deck.support.cards, key = { it.code }) { card ->
-                    CardItem(
-                        isScreenCompact = isCompactScreen,
-                        modifier = Modifier,
-                        card = card,
-                        onItemClick = { onCardClick(card.code) }
-                    )
-                }
+            items(items = deck.upgrades.cards, key = { it.code }) { card ->
+                CardItem(
+                    isScreenCompact = isCompactScreen,
+                    modifier = Modifier,
+                    card = card,
+                    onItemClick = { onCardClick(card.code) }
+                )
+            }
 
-                item {
-                    Text(
-                        buildAnnotatedString {
-                            append("Event")
-                            append("(${deck.events.size}")
-                            appendInlineContent("cards", "cards")
-                            append("${deck.events.dice}")
-                            appendInlineContent("dice", "dice")
-                            append(")")
-                        }, style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        inlineContent = getInlines(MaterialTheme.colorScheme.onPrimaryContainer)
-                    )
-                }
+            item {
+                Text(
+                    buildAnnotatedString {
+                        append("Downgrade")
+                        append("(${deck.downgrades.size}")
+                        appendInlineContent("cards", "cards")
+                        append("${deck.downgrades.dice}")
+                        appendInlineContent("dice", "dice")
+                        append(")")
+                    }, style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    inlineContent = getInlines(MaterialTheme.colorScheme.onPrimaryContainer)
+                )
+            }
 
-                items(items = deck.events.cards, key = { it.code }) { card ->
-                    CardItem(
-                        isScreenCompact = isCompactScreen,
-                        modifier = Modifier,
-                        card = card,
-                        onItemClick = { onCardClick(card.code) }
-                    )
-                }
+            items(items = deck.downgrades.cards, key = { it.code }) { card ->
+                CardItem(
+                    isScreenCompact = isCompactScreen,
+                    modifier = Modifier,
+                    card = card,
+                    onItemClick = { onCardClick(card.code) }
+                )
+            }
+
+            item {
+                Text(
+                    buildAnnotatedString {
+                        append("Support")
+                        append("(${deck.support.size}")
+                        appendInlineContent("cards", "cards")
+                        append("${deck.support.dice}")
+                        appendInlineContent("dice", "dice")
+                        append(")")
+                    }, style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    inlineContent = getInlines(MaterialTheme.colorScheme.onPrimaryContainer)
+                )
+            }
+
+            items(items = deck.support.cards, key = { it.code }) { card ->
+                CardItem(
+                    isScreenCompact = isCompactScreen,
+                    modifier = Modifier,
+                    card = card,
+                    onItemClick = { onCardClick(card.code) }
+                )
+            }
+
+            item {
+                Text(
+                    buildAnnotatedString {
+                        append("Event")
+                        append("(${deck.events.size}")
+                        appendInlineContent("cards", "cards")
+                        append("${deck.events.dice}")
+                        appendInlineContent("dice", "dice")
+                        append(")")
+                    }, style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    inlineContent = getInlines(MaterialTheme.colorScheme.onPrimaryContainer)
+                )
+            }
+
+            items(items = deck.events.cards, key = { it.code }) { card ->
+                CardItem(
+                    isScreenCompact = isCompactScreen,
+                    modifier = Modifier,
+                    card = card,
+                    onItemClick = { onCardClick(card.code) }
+                )
             }
         }
     }
+}

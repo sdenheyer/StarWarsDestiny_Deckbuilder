@@ -58,7 +58,7 @@ class CardCache(
 
     override fun getCardSets(): Flow<CardSetList> = dao.getCardSets().map { list ->
         val timestamp = dao.getSetTimestamp() ?: CardSetTimeEntity(
-            timestamp = Date().time,
+            timestamp = 0L,
             expiry = 24 * 60 * 60 * 1000
         )
 
@@ -69,9 +69,14 @@ class CardCache(
     }
 
     override fun getFormats(): Flow<CardFormatList> = dao.getFormats().map { list ->
+        val timestamp = dao.getFormatTimestamp() ?: FormatTimeEntity(
+            timestamp = 0L,
+            expiry = 24 * 60 * 60 * 1000
+        )
+
         CardFormatList(
-            timestamp = Date().time,
-            expiry = 24 * 60 * 60 * 1000,
+            timestamp = timestamp.timestamp,
+            expiry = timestamp.expiry,
             cardFormats = list.map { it.toDomain() })
     }
 

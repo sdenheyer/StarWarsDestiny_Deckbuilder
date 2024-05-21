@@ -13,6 +13,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.toCardUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.CardRepository
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -58,7 +59,7 @@ class ListTypeCollection() : ListType()
 
 @HiltViewModel
 class ListViewModel @Inject constructor(
-    private val cardRepo: CardRepositoryImpl,
+    private val cardRepo: CardRepository,
    // private val getCardsFromCodes: GetCardsFromCodes
 ) : ViewModel() {
     val listTypeFlow: MutableStateFlow<ListType> = MutableStateFlow(ListTypeNone())

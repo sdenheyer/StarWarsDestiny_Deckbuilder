@@ -32,17 +32,17 @@ inline fun <DB, REMOTE> networkBoundResource(
         emit(Resource.loading(localData))
 
         fetchFromRemote(localData).collect { apiResponse ->
-            when (apiResponse) {
+            when (val state = apiResponse) {
                 is ApiSuccessResponse -> {
                   //  Log.d("SWD", "Headers: ${apiResponse.headers}")
-                    processRemoteResponse(apiResponse)
-                    apiResponse.body?.let {
+                    processRemoteResponse(state)
+                    state.body?.let {
                         //  Log.d("SWD", "Saving to db: $it.size")
                         saveRemoteData(it)
                     }
                     emitAll(fetchFromLocal().map { dbData ->
-                        if (apiResponse.body is Collection<*> && dbData is Collection<*>) {
-                            if (apiResponse.body.size == dbData.size) {
+                        if (state.body is Collection<*> && dbData is Collection<*>) {
+                            if (state.body.size == dbData.size) {
                                 Resource.success(dbData)
                             } else {
                                 Resource.loading(dbData)
@@ -56,10 +56,10 @@ inline fun <DB, REMOTE> networkBoundResource(
 
                 is ApiErrorResponse -> {
                    // Log.d("SWD", "Headers: ${apiResponse.statusCode} ${apiResponse.errorMessage}")
-                        onFetchFailed(apiResponse.errorMessage, apiResponse.statusCode)
+                        onFetchFailed(state.errorMessage, state.statusCode)
                         emitAll(fetchFromLocal().map {
                             Resource.error(
-                                apiResponse.errorMessage,
+                                state.errorMessage,
                                 it
                             )
                         })

@@ -50,7 +50,7 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
     {
         Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 0.dp, bottom = 8.dp, start = 8.dp, end = 6.dp)) {
+            .padding(top = 0.dp, bottom = 2.dp, start = 8.dp, end = 6.dp)) {
             Text(
                 buildAnnotatedString {
                     if (card.isUnique && (card.type == "Character" || card.type == "Plot")) appendInlineContent("unique", "unique")
@@ -160,7 +160,7 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
             Column(modifier = Modifier.weight(2.5f)) {
                 Text("Set", style = MaterialTheme.typography.labelSmall)
                 Text(
-                    card.set,
+                    "${card.set}#${card.position}",
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
@@ -226,8 +226,9 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
 
         Row(
             modifier
+                .fillMaxWidth()
                 .padding(top = 4.dp, bottom = 8.dp, start = 8.dp, end = 6.dp)
-                .fillMaxWidth(),
+                ,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(2f)) {
@@ -276,9 +277,16 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
+            Column(modifier = Modifier.weight(1.5f)) {
+                Text("Set", style = MaterialTheme.typography.labelSmall)
+                Text(
+                    "${card.set}#${card.position}",
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
         }
         DieGroup(modifier = Modifier
-            .padding(bottom = 10.dp)
+            .padding(start = 6.dp, bottom = 10.dp)
             .height(25.dp)
             .fillMaxWidth(), card.diceRef, isCompactScreen = true)
     }

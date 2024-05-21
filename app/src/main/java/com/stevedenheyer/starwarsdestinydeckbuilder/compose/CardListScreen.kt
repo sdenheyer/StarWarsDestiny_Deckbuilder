@@ -138,7 +138,7 @@ fun CardListScreen(
                     scope.launch { drawerState.close() }
                 },
                 selectCollection = {
-                    (cardVM::showCollection)()
+                    (cardVM::refreshCollection)()
                     scope.launch { drawerState.close() }
                 }
             )
@@ -268,7 +268,7 @@ fun CardListScreen(
                                     cards = state.data,
                                     modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer),
                                     onItemClick = onCardClick,
-                                    onRefreshSwipe = { (cardVM::showCollection)() }
+                                    onRefreshSwipe = { (cardVM::refreshCollection)() }
                                 )
                             } else {
                                 CardList(

@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortState
-import com.stevedenheyer.starwarsdestinydeckbuilder.data.CardRepositoryImpl
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
@@ -60,7 +59,7 @@ class ListTypeCollection() : ListType()
 @HiltViewModel
 class ListViewModel @Inject constructor(
     private val cardRepo: CardRepository,
-   // private val getCardsFromCodes: GetCardsFromCodes
+    // private val getCardsFromCodes: GetCardsFromCodes
 ) : ViewModel() {
     val listTypeFlow: MutableStateFlow<ListType> = MutableStateFlow(ListTypeNone())
 
@@ -200,7 +199,7 @@ class ListViewModel @Inject constructor(
 
         refreshSets(false)
 
-        showCollection()
+        refreshCollection()
     }
 
     fun refreshSets(forceRemoteUpdate: Boolean) = viewModelScope.launch(Dispatchers.IO) {
@@ -234,7 +233,7 @@ class ListViewModel @Inject constructor(
         when (val type = listTypeFlow.value) {
             is ListTypeBySet -> refreshCardsBySet(true)
             is ListTypeByQuery -> findCards(type.queryTerms)
-            is ListTypeCollection -> {}
+            is ListTypeCollection -> { refreshCollection() }
             is ListTypeNone -> {}
         }
     }
@@ -260,68 +259,36 @@ class ListViewModel @Inject constructor(
         }
     }
 
-    fun showCollection() {
+    fun refreshCollection() {
         listTypeFlow.update { ListTypeCollection() }
         viewModelScope.launch(Dispatchers.IO) {
             cardListJob?.cancelAndJoin()
             cardListJob = this.coroutineContext.job
             cardRepo.getOwnedCards().collect { cards ->
 
-                Log.d("SWD", "Codes: ${cards.map {it.card.fetchCode()}}")
+                //  Log.d("SWD", "Codes: ${cards.map {it.card.fetchCode()}}")
 
                 val cardsMap = cards.associateBy {
                     it.card.fetchCode()
                 }.toMutableMap()
 
-
-
-                cardRepo.getCardsByCodes(*cardsMap.values.map { it.card }.toTypedArray()).collect { resource ->
-                    val cardOrCodeList = resource.data ?: emptyList()
-                    cardOrCodeList.forEach {
-                        cardsMap[it.fetchCode()] = cardsMap[it.fetchCode()]!!.copy(card = it)
-                    }
-                    val newResource = Resource(status = resource.status,
-                        data = cardsMap.filter { it.value.card is CardOrCode.HasCard }
-                        .map { (it.value.card as CardOrCode.HasCard).card.copy(quantity = it.value.quantity) }.toList(),
-                        isFromDB = resource.isFromDB, message = resource.message)
-                    _cardsFlow.update { newResource }
-                }
-
-
-                /*getCardsFromCodes(false, *cards.toTypedArray()).collect { cards ->
-                    _cardsFlow.update {
-                        Resource(
-                            Resource.Status.SUCCESS,
-                            cards.map { (it.card as CardOrCode.hasCard).card },
-                            true,
-                            message = null
-                        )
-                }*/
-               // cardRepo.getCardsByCodes(cards.toTypedArray())
-                /*val list = ArrayList<Card>()
-                cards.forEach {
-                    val card = getCardFromCode(false, it.card).first().first()
-
-                    when (card) {
-                        is CardOrCode.hasCode -> {
-                            _cardsFlow.update {
-                                Resource(
-                                    Resource.Status.ERROR,
-                                    list,
-                                    true,
-                                    message = card.msg
-                                )
-                            }
-                            return@forEach
+                cardRepo.getCardsByCodes(*cardsMap.values.map { it.card }.toTypedArray())
+                    .collect { resource ->
+                        val cardOrCodeList = resource.data ?: emptyList()
+                        cardOrCodeList.forEach {
+                            cardsMap[it.fetchCode()] = cardsMap[it.fetchCode()]!!.copy(card = it)
                         }
-
-                        is CardOrCode.hasCard -> list.add(card.card)
+                        val newResource = Resource(status = resource.status,
+                            data = cardsMap.filter { it.value.card is CardOrCode.HasCard }
+                                .map { (it.value.card as CardOrCode.HasCard).card.copy(quantity = it.value.quantity) }
+                                .toList(),
+                            isFromDB = resource.isFromDB, message = resource.message
+                        )
+                        _cardsFlow.update { newResource }
                     }
-                }*/
-
-                }
             }
         }
+    }
 
     fun setSort(sortState: SortState) {
         viewModelScope.launch { cardRepo.setSortByState(sortState) }

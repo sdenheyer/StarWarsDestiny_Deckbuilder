@@ -44,7 +44,7 @@ fun Card.toCardUi() = CardUi(
     type = typeName,
     rarity = rarityName,
     diceRef = sides ?: emptyList(),
-    set = setName,
+    set = setCode,
     position = position,
     quantity = quantity
 )

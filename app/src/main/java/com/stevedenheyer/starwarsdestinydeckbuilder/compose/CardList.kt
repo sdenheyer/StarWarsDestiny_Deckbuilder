@@ -2,9 +2,11 @@
 
 package com.stevedenheyer.starwarsdestinydeckbuilder.compose
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
@@ -22,9 +24,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.CardUi
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun CardList(isCompactScreen: Boolean, cards: List<CardUi>, modifier: Modifier, onItemClick: (String) -> Unit, onRefreshSwipe:() -> Unit) {
-
-        val scrollState = rememberLazyListState(0)
+fun CardList(isCompactScreen: Boolean, cards: List<CardUi>, scrollState: LazyListState, modifier: Modifier, onItemClick: (String) -> Unit, onRefreshSwipe:() -> Unit) {
 
         val refreshing by remember { mutableStateOf(false) }
 

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material3.Button
@@ -116,6 +117,8 @@ fun CardListScreen(
     val focusManager = LocalFocusManager.current
 
     val openCreateDeckDialog = remember { mutableStateOf(false) }
+
+    val listScrollState = rememberLazyListState(0)
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -271,9 +274,15 @@ fun CardListScreen(
                                     onRefreshSwipe = { (cardVM::refreshCollection)() }
                                 )
                             } else {
+                                    LaunchedEffect(key1 = state.isLoading) {
+                                        if (!state.isLoading) {
+                                            listScrollState.scrollToItem(0)
+                                        }
+                                    }
                                 CardList(
                                     isCompactScreen,
                                     cards = state.data,
+                                    scrollState = listScrollState,
                                     modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer),
                                     onItemClick = onCardClick,
                                     onRefreshSwipe = { (cardVM::refreshList)() }
@@ -285,6 +294,7 @@ fun CardListScreen(
                                 CardList(
                                     isCompactScreen,
                                     cards = emptyList(),
+                                    scrollState = listScrollState,
                                     modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer),
                                     onItemClick = onCardClick,
                                     onRefreshSwipe = { (cardVM::refreshList)() }

@@ -186,15 +186,6 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
                         append(card.name)
                     }
                     if (card.uniqueWarning) { withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.error)) { append(" !") } }
-                  /*  if (card.subtitle.isNotBlank()) {
-                        withStyle(
-                            style = SpanStyle(
-                                fontSize = MaterialTheme.typography.titleMedium.fontSize
-                            )
-                        ) {
-                            append("  -  ${card.subtitle}")
-                        }
-                    }*/
                 },
                 style = MaterialTheme.typography.headlineMedium,
                 overflow = TextOverflow.Ellipsis,
@@ -218,7 +209,6 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
         if (card.subtitle.isNotBlank()) {
             Text("${card.subtitle}",
                 style = MaterialTheme.typography.bodyLarge,
-               // fontSize = MaterialTheme.typography.titleMedium,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .padding(top = 0.dp, start = 8.dp))
@@ -252,7 +242,7 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (card.factionMismatchWarning) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,)
             }
-            Column(modifier = Modifier.weight(2f)) {
+            Column(modifier = Modifier.weight(1.9f)) {
                 val pointCostLabel = if (card.cost != null) "Cost" else "Points"
                 val pointsOrCost = if (card.cost != null) card.cost.toString() else card.points.asString()
                 if (pointsOrCost != null) {
@@ -277,7 +267,7 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
-            Column(modifier = Modifier.weight(1.5f)) {
+            Column(modifier = Modifier.weight(1.6f)) {
                 Text("Set", style = MaterialTheme.typography.labelSmall)
                 Text(
                     "${card.set}#${card.position}",

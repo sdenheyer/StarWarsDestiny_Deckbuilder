@@ -13,16 +13,20 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combineTransform
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.last
 import javax.inject.Inject
 
 class GetCardWithFormat @Inject constructor(private val cardRepo: CardRepository,
                                             private val coroutineScope: CoroutineScope,
                                             @IoDispatcher private val dispatcher: CoroutineDispatcher,) {
-    operator fun invoke(code: String): Flow<Resource<Card?>> = combineTransform(
+    operator fun invoke(code: String): Flow<Resource<Card?>> =
+     
+        combineTransform(
         cardRepo.getCardFormats(false),
         cardRepo.getCardByCode(code, false)
     ) { formatsResource, cardResource ->
+
 
         when (cardResource.status) {
             Resource.Status.SUCCESS -> emit(Resource.loading(data = cardResource.data))

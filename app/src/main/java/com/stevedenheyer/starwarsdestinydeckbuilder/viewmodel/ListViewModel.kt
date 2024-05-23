@@ -94,6 +94,7 @@ class ListViewModel @Inject constructor(
 
                 Resource.Status.SUCCESS -> UiState.hasData(
                     isLoading = false,
+                    isFromDB = resource.isFromDB,
                     errorMessage = resource.message,
                     data = data
                 )
@@ -162,6 +163,7 @@ class ListViewModel @Inject constructor(
                 if (setList.isNotEmpty()) {
                     UiState.hasData(
                         isLoading = true,
+                        isFromDB = response.isFromDB,
                         errorMessage = response.message,
                         data = setList.toList()
                     )

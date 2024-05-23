@@ -127,9 +127,13 @@ class CardRepositoryImpl @Inject constructor(
                         (forceRemoteUpdate)
             },
             fetchFromRemote = {
-                val date = it.let { cards ->
+                val date = if (forceRemoteUpdate)
+                    0L.toString().format(dateFormatter)
+                else
+                    it.let { cards ->
                     (cards?.map { card -> card.timestamp }?.minOrNull() ?: 0L).toString().format(dateFormatter)
                     }
+
                 cardNetwork.getCardsBySet(date, code) },
             processRemoteResponse = { },
             saveRemoteData = { cardCache.storeCards(it) },

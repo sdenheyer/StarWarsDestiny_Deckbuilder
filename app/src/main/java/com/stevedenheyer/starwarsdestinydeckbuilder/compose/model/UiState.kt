@@ -12,6 +12,7 @@ sealed interface UiState<T>  {
     data class hasData<T> (
         override val isLoading: Boolean,
         override val errorMessage: String?,
+        val isFromDB: Boolean = false,
         val data: T
     ): UiState<T>
 }

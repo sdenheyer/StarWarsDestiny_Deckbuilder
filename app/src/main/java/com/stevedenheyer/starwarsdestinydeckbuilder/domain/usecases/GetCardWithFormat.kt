@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combineTransform
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.last
 import javax.inject.Inject
@@ -20,29 +21,43 @@ import javax.inject.Inject
 class GetCardWithFormat @Inject constructor(private val cardRepo: CardRepository,
                                             private val coroutineScope: CoroutineScope,
                                             @IoDispatcher private val dispatcher: CoroutineDispatcher,) {
-    operator fun invoke(code: String): Flow<Resource<Card?>> =
-     
-        combineTransform(
-        cardRepo.getCardFormats(false),
+    operator fun invoke(code: String): Flow<Resource<Card?>> = flow {
+      /*  combineTransform(
         cardRepo.getCardByCode(code, false)
-    ) { formatsResource, cardResource ->
+    ) { formatsResource, cardResource ->*/
 
+        val cardJob = coroutineScope.async(dispatcher) {
+            cardRepo.getCardByCode(code, false).first { it.status != Resource.Status.LOADING }
+        }
+
+        val formatJob = coroutineScope.async(dispatcher) {
+            cardRepo.getCardFormats(false).first { it.status != Resource.Status.LOADING }
+        }
+
+        val cardResource = cardJob.await()
 
         when (cardResource.status) {
             Resource.Status.SUCCESS -> emit(Resource.loading(data = cardResource.data))
+            Resource.Status.ERROR -> {
+                emit(cardResource)
+                return@flow
+            }
             else -> emit(cardResource)
         }
 
+        var card = cardResource.data!!
+
+        val reprintsJob = coroutineScope.async(dispatcher) {
+            cardRepo.getCardsByCodes(*card.reprints.toTypedArray()).last()
+        }
+
+        val parallelDiceJob = coroutineScope.async(dispatcher) {
+            cardRepo.getCardsByCodes(*card.parallelDiceOf.toTypedArray()).last()
+        }
+
+        val formatsResource = formatJob.await()
+
         if (formatsResource.status == Resource.Status.SUCCESS && cardResource.status == Resource.Status.SUCCESS && cardResource.data != null) {
-            var card = cardResource.data
-
-            val reprintsJob = coroutineScope.async(dispatcher) {
-                cardRepo.getCardsByCodes(*card!!.reprints.toTypedArray()).last()
-            }
-
-            val parallelDiceJob = coroutineScope.async(dispatcher) {
-                cardRepo.getCardsByCodes(*card!!.parallelDiceOf.toTypedArray()).last()
-            }
 
             val reprints = reprintsJob.await().data ?: emptyList()
 

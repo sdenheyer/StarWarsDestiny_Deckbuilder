@@ -27,6 +27,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.ICardNetwork
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.setCodeMap
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -35,6 +36,12 @@ import kotlinx.coroutines.flow.map
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import javax.inject.Inject
+
+
+data class CardSetTimestamp(
+    val timestamp: Long,
+    val expiry: Long,
+)
 
 class CardRepositoryImpl @Inject constructor(
     private val cardCache: ICardCache,
@@ -123,17 +130,28 @@ class CardRepositoryImpl @Inject constructor(
         return networkBoundResource(
             fetchFromLocal = { cardCache.getCardsBySet(code) },
             shouldFetchFromRemote = {
-                it.isNullOrEmpty() ||
-                        (forceRemoteUpdate)
+                val time = dataStore.data.map { userSettings ->
+                    CardSetTimestamp(
+                        timestamp = userSettings.getTimestampsOrDefault(code, 0),
+                        expiry = if (userSettings.expiry == 0L) (24 * 60 * 60 * 1000L) else userSettings.expiry
+                    )
+                }.first()
+                        it.isNullOrEmpty() ||
+                        (forceRemoteUpdate)||
+                                (Date().time - (time.timestamp) > (time.expiry))
+
             },
             fetchFromRemote = {
+                val time = dataStore.data.map { userSettings ->
+                    CardSetTimestamp(
+                        timestamp = userSettings.getTimestampsOrDefault(code, 0),
+                        expiry = if (userSettings.expiry == 0L) (24 * 60 * 60 * 1000L) else userSettings.expiry
+                    )
+                }.first()
                 val date = if (forceRemoteUpdate)
                     0L.toString().format(dateFormatter)
                 else
-                    it.let { cards ->
-                    (cards?.map { card -> card.timestamp }?.minOrNull() ?: 0L).toString().format(dateFormatter)
-                    }
-
+                    time.timestamp.toString().format(dateFormatter)
                 cardNetwork.getCardsBySet(date, code) },
             processRemoteResponse = { },
             saveRemoteData = { cardCache.storeCards(it) },

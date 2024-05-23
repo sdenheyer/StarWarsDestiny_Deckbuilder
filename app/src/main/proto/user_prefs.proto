@@ -17,4 +17,8 @@ message UserSettings {
 
     repeated string cardNameQueries = 4;
     repeated string cardTextQueries = 5;
+
+    int64 expiry = 6;
+
+    map<string, int64> timestamps = 7;
 }

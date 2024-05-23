@@ -124,6 +124,13 @@ fun CardListScreen(
 
     val listScrollState = rememberLazyListState(0)
 
+    LaunchedEffect(key1 = listUiState.isLoading) {
+        if (listUiState is UiState.hasData) {
+            if (!listUiState.isLoading && !(listUiState as UiState.hasData).isFromDB) {
+                listScrollState.scrollToItem(0)
+            }
+        }
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,

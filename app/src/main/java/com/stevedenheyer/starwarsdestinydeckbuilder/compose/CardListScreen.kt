@@ -64,6 +64,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.ListTypeByQuery
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.ListTypeBySet
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.ListTypeCollection
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.ListTypeNone
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlin.ClassCastException
@@ -193,7 +194,11 @@ fun CardListScreen(
                 MainTopBar(
                     sortState = sortState,
                     openDrawer = { scope.launch { drawerState.apply { if (isClosed) open() else close() } } },
-                    changeSortState = { sortState -> (cardVM::setSort)(sortState) },
+                    changeSortState = { sortState -> (cardVM::setSort)(sortState)
+                                        scope.launch {
+                                            delay(100)           //  Give some time to re-sort
+                                            listScrollState.scrollToItem(0) }
+                                         },
                     openQuery = { queryMenuExpaneded.value = true })
             },
 

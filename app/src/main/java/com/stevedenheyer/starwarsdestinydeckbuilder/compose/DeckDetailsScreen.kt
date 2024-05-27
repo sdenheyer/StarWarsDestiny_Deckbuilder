@@ -1,6 +1,5 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.compose
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,21 +12,21 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.material.Card
-import androidx.compose.material.IconButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardColors
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -47,7 +46,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.DeleteDeckDialog
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.getInlines
-import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.DeckUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DeckDetailUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DeckViewModel
@@ -65,7 +63,7 @@ fun DeckDetailsScreen(
 ) {
 
     val deckDetail by deckVM.deckDetail.collectAsStateWithLifecycle(
-        UiState.noData(
+        UiState.NoData(
             isLoading = false,
             errorMessage = null
         )
@@ -93,8 +91,8 @@ fun DeckDetailsScreen(
     Scaffold(
         topBar = {
             val name = when (val state = deckDetail) {
-                is UiState.hasData -> state.data.name
-                is UiState.noData -> ""
+                is UiState.HasData -> state.data.name
+                is UiState.NoData -> ""
             }
             CenterAlignedTopAppBar(
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -139,7 +137,7 @@ fun DeckDetailsScreen(
     ) { padding ->
 
         when (val state = deckDetail) {
-            is UiState.hasData -> {
+            is UiState.HasData -> {
                 if (deckDetail.errorMessage != null) {
                     LaunchedEffect(snackbarHostState) {
                         snackbarHostState.showSnackbar(
@@ -159,7 +157,7 @@ fun DeckDetailsScreen(
                 )
             }
 
-            is UiState.noData -> {
+            is UiState.NoData -> {
                 if (deckDetail.errorMessage != null) {
                     LaunchedEffect(snackbarHostState) {
                         snackbarHostState.showSnackbar(
@@ -199,8 +197,12 @@ fun DeckDetails(
         verticalArrangement = Arrangement.Top
     ) {
         Card(
-            backgroundColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+            colors = CardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                disabledContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                disabledContainerColor = MaterialTheme.colorScheme.primaryContainer,
+            ),
             shape = RectangleShape,
             modifier = Modifier.fillMaxWidth()
         ) {

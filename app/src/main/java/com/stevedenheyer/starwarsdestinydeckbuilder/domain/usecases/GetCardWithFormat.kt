@@ -100,10 +100,6 @@ class GetCardWithFormat @Inject constructor(private val cardRepo: CardRepository
         } else {
             if (formatsResource.status == Resource.Status.ERROR) {
                 emit(Resource.error(msg = formatsResource.message ?: "", data = cardResource.data))
-            } else {
-                if (cardResource.status == Resource.Status.ERROR) {
-                    emit(cardResource)
-                }
             }
         }
     }

@@ -22,6 +22,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -76,23 +77,23 @@ class ListViewModel @Inject constructor(
     val cardsFlow = _cardsFlow.mapLatest { resource ->
         if (resource.data.isNullOrEmpty()) {
             val isLoading = (resource.status == Resource.Status.LOADING)
-            UiState.noData(isLoading = isLoading, errorMessage = resource.message)
+            UiState.NoData(isLoading = isLoading, errorMessage = resource.message)
         } else {
             val data = resource.data.map { it.toCardUi() }
             when (resource.status) {
-                Resource.Status.LOADING -> UiState.hasData(
+                Resource.Status.LOADING -> UiState.HasData(
                     isLoading = true,
                     errorMessage = resource.message,
                     data = data
                 )
 
-                Resource.Status.ERROR -> UiState.hasData(
+                Resource.Status.ERROR -> UiState.HasData(
                     isLoading = false,
                     errorMessage = resource.message,
                     data = data
                 )
 
-                Resource.Status.SUCCESS -> UiState.hasData(
+                Resource.Status.SUCCESS -> UiState.HasData(
                     isLoading = false,
                     isFromDB = resource.isFromDB,
                     errorMessage = resource.message,
@@ -102,20 +103,20 @@ class ListViewModel @Inject constructor(
         }
     }.combine(cardRepo.getOwnedCards()) { uiState, ownedCards ->
         when (val state = uiState) {
-            is UiState.noData -> uiState
-            is UiState.hasData -> {
+            is UiState.NoData -> uiState
+            is UiState.HasData -> {
                 val cards = state.data.map { card ->
                     val quantity =
                         (ownedCards.find { it.card.fetchCode() == card.code }?.quantity) ?: 0
                     card.copy(quantity = quantity)
                 }
-                (uiState as UiState.hasData).copy(data = cards)
+                (uiState as UiState.HasData).copy(data = cards)
             }
         }
     }.combine(sortStateFlow) { uiState, sortState ->
         when (val state = uiState) {
-            is UiState.noData -> uiState
-            is UiState.hasData -> {
+            is UiState.NoData -> uiState
+            is UiState.HasData -> {
                 var cards = state.data
                 if (sortState.hideHero) {
                     cards = cards.filterNot { it.affiliation == "Hero" }
@@ -132,7 +133,7 @@ class ListViewModel @Inject constructor(
 
                     else -> {}
                 }
-                (uiState as UiState.hasData).copy(data = cards)
+                (uiState as UiState.HasData).copy(data = cards)
             }
         }
 
@@ -161,25 +162,25 @@ class ListViewModel @Inject constructor(
 
             Resource.Status.LOADING -> {
                 if (setList.isNotEmpty()) {
-                    UiState.hasData(
+                    UiState.HasData(
                         isLoading = true,
                         isFromDB = response.isFromDB,
                         errorMessage = response.message,
                         data = setList.toList()
                     )
                 } else {
-                    UiState.noData(isLoading = true, errorMessage = response.message)
+                    UiState.NoData(isLoading = true, errorMessage = response.message)
                 }
             }
 
             Resource.Status.ERROR -> {
                 if (setList.isEmpty()) {
-                    UiState.noData(
+                    UiState.NoData(
                         isLoading = false,
                         errorMessage = response.message,
                     )
                 } else {
-                    UiState.hasData(
+                    UiState.HasData(
                         isLoading = false,
                         errorMessage = response.message,
                         data = setList.toList()
@@ -187,7 +188,7 @@ class ListViewModel @Inject constructor(
                 }
             }
 
-            Resource.Status.SUCCESS -> UiState.hasData(
+            Resource.Status.SUCCESS -> UiState.HasData(
                 isLoading = false,
                 errorMessage = response.message,
                 data = setList.toList()
@@ -202,6 +203,10 @@ class ListViewModel @Inject constructor(
         refreshSets(false)
 
         refreshCollection()
+
+        viewModelScope.launch(Dispatchers.IO) { val formats = cardRepo.getCardFormats(false).first { it.status != Resource.Status.LOADING}
+                                            Log.d("SWD", "Format prefetch: ${formats.status}")
+        }  //Pre-fetch formats info
     }
 
     fun refreshSets(forceRemoteUpdate: Boolean) = viewModelScope.launch(Dispatchers.IO) {

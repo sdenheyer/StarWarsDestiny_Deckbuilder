@@ -17,6 +17,7 @@ import androidx.compose.material3.MenuDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -41,7 +42,7 @@ fun MainTopBar(
     changeSortState: (SortState) -> Unit,
 ) {
 
-    val popupXoffset = remember { mutableStateOf(0) }
+    val popupXoffset = remember { mutableIntStateOf(0) }
 
     val sortMenuExpanded = remember { mutableStateOf(false) }
 

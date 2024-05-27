@@ -1,7 +1,6 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.domain.usecases
 
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.CardUi
-import com.stevedenheyer.starwarsdestinydeckbuilder.data.CardRepositoryImpl
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.toCardUi
@@ -34,7 +33,7 @@ class GetDeckWithCards @Inject constructor(
             when (response.status) {
                 Resource.Status.LOADING -> {
                     emit(
-                        UiState.hasData(
+                        UiState.HasData(
                             isLoading = true,
                             errorMessage = null,
                             data = deck.toDeckUi()
@@ -44,7 +43,7 @@ class GetDeckWithCards @Inject constructor(
 
                 Resource.Status.ERROR -> {
                     emit(
-                        UiState.noData(
+                        UiState.NoData(
                             isLoading = false,
                             errorMessage = response.message
                         )
@@ -137,7 +136,7 @@ class GetDeckWithCards @Inject constructor(
                         when (battlefield.status) {
                             Resource.Status.ERROR -> {
                                 emit(
-                                    UiState.hasData(
+                                    UiState.HasData(
                                         isLoading = false,
                                         errorMessage = battlefield.message,
                                         data = uiDeck
@@ -149,7 +148,7 @@ class GetDeckWithCards @Inject constructor(
                             else -> {
                                 uiDeck = uiDeck.copy(battlefieldCard = battlefield.data)
                                 emit(
-                                    UiState.hasData(
+                                    UiState.HasData(
                                         isLoading = true,
                                         errorMessage = battlefield.message,
                                         data = uiDeck
@@ -164,7 +163,7 @@ class GetDeckWithCards @Inject constructor(
                         when (plot.status) {
                             Resource.Status.ERROR -> {
                                 emit(
-                                    UiState.hasData(
+                                    UiState.HasData(
                                         isLoading = false,
                                         errorMessage = plot.message,
                                         data = uiDeck
@@ -176,7 +175,7 @@ class GetDeckWithCards @Inject constructor(
                             else -> {
                                 uiDeck = uiDeck.copy(plotCard = plot.data)
                                 emit(
-                                    UiState.hasData(
+                                    UiState.HasData(
                                         isLoading = true,
                                         errorMessage = plot.message,
                                         data = uiDeck
@@ -190,7 +189,7 @@ class GetDeckWithCards @Inject constructor(
                     when (chars.status) {
                         Resource.Status.ERROR -> {
                             emit(
-                                UiState.hasData(
+                                UiState.HasData(
                                     isLoading = false,
                                     errorMessage = chars.message,
                                     data = uiDeck
@@ -202,7 +201,7 @@ class GetDeckWithCards @Inject constructor(
                         else -> {
                             uiDeck = uiDeck.copy(chars = chars.data ?: emptyList())
                             emit(
-                                UiState.hasData(
+                                UiState.HasData(
                                     isLoading = true,
                                     errorMessage = chars.message,
                                     data = uiDeck
@@ -215,7 +214,7 @@ class GetDeckWithCards @Inject constructor(
                     when (slots.status) {
                         Resource.Status.ERROR -> {
                             emit(
-                                UiState.hasData(
+                                UiState.HasData(
                                     isLoading = false,
                                     errorMessage = chars.message,
                                     data = uiDeck
@@ -227,7 +226,7 @@ class GetDeckWithCards @Inject constructor(
                         else -> {
                             uiDeck = uiDeck.copy(slots = slots.data ?: emptyList())
                             emit(
-                                UiState.hasData(
+                                UiState.HasData(
                                     isLoading = false,
                                     errorMessage = chars.message,
                                     data = uiDeck

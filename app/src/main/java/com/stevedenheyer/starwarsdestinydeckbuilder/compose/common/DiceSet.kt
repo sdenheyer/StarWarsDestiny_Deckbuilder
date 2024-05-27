@@ -128,7 +128,7 @@ fun Die(modifier: Modifier = Modifier, dieCode: String, isCompactScreen: Boolean
 
 @Preview
 @Composable
-fun diePreview() {
+fun DiePreview() {
     Die(
         modifier = Modifier.background(color = Color.Gray)
             .height(30.dp)
@@ -140,7 +140,7 @@ fun diePreview() {
 
 @Preview
 @Composable
-fun dieGroupPreview() {
+fun DieGroupPreview() {
     val dieGroup = listOf("2RD", "+1MD", "2RD1", "1R", "-")
     DieGroup(modifier = Modifier.background(Color.Black)
         .height(30.dp)

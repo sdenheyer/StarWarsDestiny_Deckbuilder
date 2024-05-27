@@ -629,7 +629,7 @@ fun QueryDialog(modifier: Modifier = Modifier,
                                         disabledContentColor = MaterialTheme.colorScheme.onSecondary
                                     ),
                                 shape = RoundedCornerShape(3.dp),
-                                modifier = if (isCompactScreen) Modifier.weight(1f).padding(horizontal = 2.dp) else Modifier.weight(0.7f).padding(horizontal = 2.dp)
+                                modifier = Modifier.weight(1f).padding(horizontal = 2.dp)
                             ) {
                                 Text(
                                     buildAnnotatedString {

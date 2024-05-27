@@ -62,9 +62,9 @@ class DiceRollerViewModel @Inject constructor(
                     )
                 }
                 when (val state = deckState) {
-                    is UiState.noData -> {}
+                    is UiState.NoData -> {}
 
-                    is UiState.hasData -> {
+                    is UiState.HasData -> {
                         val deck = state.data
 
                         val list = ArrayList<CardDiceUi>()

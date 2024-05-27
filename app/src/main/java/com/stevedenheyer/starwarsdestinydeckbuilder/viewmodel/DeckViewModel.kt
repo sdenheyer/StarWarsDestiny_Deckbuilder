@@ -7,7 +7,6 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.CardUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.DeckUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.CardRepositoryImpl
-import com.stevedenheyer.starwarsdestinydeckbuilder.di.IoDispatcher
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.usecases.GetDeckWithCards
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -138,12 +137,12 @@ class DeckViewModel @Inject constructor(
 
     val deckDetail = getDeckWithCards(deckCode).map { deckState ->
         when (val state = deckState) {
-            is UiState.noData -> UiState.noData(
+            is UiState.NoData -> UiState.NoData(
                 isLoading = state.isLoading,
                 errorMessage = state.errorMessage
             )
 
-            is UiState.hasData -> {
+            is UiState.HasData -> {
                 val deck = state.data
                 val factions = deck.chars.map { it.faction }
                 val newDeck = deck.copy(
@@ -177,7 +176,7 @@ class DeckViewModel @Inject constructor(
                         newCard
                     }
                 )
-                UiState.hasData(
+                UiState.HasData(
                     isLoading = state.isLoading,
                     errorMessage = state.errorMessage,
                     data = DeckDetailUi.toDeckDetailUi(newDeck)
@@ -189,9 +188,9 @@ class DeckViewModel @Inject constructor(
 
     val warnings = deckDetail.map { deckState ->
         when (val state = deckState) {
-            is UiState.noData -> WarningsUi.noWarnings
+            is UiState.NoData -> WarningsUi.noWarnings
 
-            is UiState.hasData -> {
+            is UiState.HasData -> {
                 val deck = state.data
                 WarningsUi.toWarningsUi(deck)
             }

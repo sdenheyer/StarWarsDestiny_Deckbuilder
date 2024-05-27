@@ -1,7 +1,6 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.compose
 
 import android.database.sqlite.SQLiteConstraintException
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -33,7 +32,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -53,7 +51,6 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.CreateDeckDia
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.MainTopBar
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.QueryDialog
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.SelectionDrawer
-import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.CardUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SavedQueriesUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
@@ -65,7 +62,6 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.ListTypeBySet
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.ListTypeCollection
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.ListTypeNone
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlin.ClassCastException
 
@@ -79,13 +75,13 @@ fun CardListScreen(
 ) {
 
     val listUiState by cardVM.cardsFlow.collectAsStateWithLifecycle(
-        UiState.noData(
+        UiState.NoData(
             isLoading = false,
             errorMessage = null
         )
     )
     val setsUiState by cardVM.cardSetsFlow.collectAsStateWithLifecycle(
-        initialValue = UiState.noData(
+        initialValue = UiState.NoData(
             isLoading = false,
             errorMessage = null
         )
@@ -126,8 +122,8 @@ fun CardListScreen(
     val listScrollState = rememberLazyListState(0)
 
     LaunchedEffect(key1 = listUiState.isLoading) {
-        if (listUiState is UiState.hasData) {
-            if (!listUiState.isLoading && !(listUiState as UiState.hasData).isFromDB) {
+        if (listUiState is UiState.HasData) {
+            if (!listUiState.isLoading && !(listUiState as UiState.HasData).isFromDB) {
                 listScrollState.scrollToItem(0)
             }
         }
@@ -248,9 +244,7 @@ fun CardListScreen(
                         is ListTypeNone -> {}
 
                     }
-                    if (listType is ListTypeNone) {
-
-                    } else {
+                    if (listType !is ListTypeNone) {
                         if (sortState.hideHero || sortState.hideVillain) {
                             Text(buildAnnotatedString {
                                 if (sortState.hideHero && sortState.hideVillain) {
@@ -270,7 +264,7 @@ fun CardListScreen(
                                     .wrapContentWidth(align = Alignment.CenterHorizontally))
                         }
 
-                        val numCards = try { (listUiState as UiState.hasData).data.size } catch(e: ClassCastException) { 0 }
+                        val numCards = try { (listUiState as UiState.HasData).data.size } catch(e: ClassCastException) { 0 }
 
                         Text("${numCards} cards",
                             style = MaterialTheme.typography.titleLarge,
@@ -281,7 +275,7 @@ fun CardListScreen(
                     }
 
                     when (val state = listUiState) {
-                        is UiState.hasData -> {
+                        is UiState.HasData -> {
                             if (listType is ListTypeCollection) {
                                 CollectionList(
                                     isCompactScreen,
@@ -303,7 +297,7 @@ fun CardListScreen(
                             }
                         }
 
-                        is UiState.noData -> {
+                        is UiState.NoData -> {
                                 CardList(
                                     isCompactScreen,
                                     cards = emptyList(),
@@ -337,7 +331,7 @@ fun CardListScreen(
 
                 if (queryMenuExpaneded.value) {
                     QueryDialog(isCompactScreen = isCompactScreen,
-                        sets = if (setsUiState is UiState.noData) emptyList() else (setsUiState as UiState.hasData).data,
+                        sets = if (setsUiState is UiState.NoData) emptyList() else (setsUiState as UiState.HasData).data,
                         popupYoffset = padding.calculateTopPadding().dpToPx().toInt(),
                         savedQueries = savedQueries,
                         onDismiss = { queryMenuExpaneded.value = false },

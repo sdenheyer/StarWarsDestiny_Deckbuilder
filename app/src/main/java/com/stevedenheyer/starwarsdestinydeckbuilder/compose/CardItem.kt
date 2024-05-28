@@ -207,7 +207,8 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
                     inlineContent = getInlines())
         }
         if (card.subtitle.isNotBlank()) {
-            Text("${card.subtitle}",
+            Text(
+                card.subtitle,
                 style = MaterialTheme.typography.bodyLarge,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier

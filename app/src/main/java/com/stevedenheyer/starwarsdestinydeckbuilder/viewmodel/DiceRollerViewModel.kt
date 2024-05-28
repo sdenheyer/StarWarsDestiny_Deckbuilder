@@ -44,7 +44,7 @@ class DiceRollerViewModel @Inject constructor(
     getDeckWithCards: GetDeckWithCards
 ) : ViewModel() {
 
-    private val deckCode: String = checkNotNull(savedStateHandle.get("name"))
+    private val deckCode: String = checkNotNull(savedStateHandle["name"])
 
     val loadingState = MutableStateFlow(LoadingState())
 
@@ -61,11 +61,11 @@ class DiceRollerViewModel @Inject constructor(
                         errorMsg = deckState.errorMessage
                     )
                 }
-                when (val state = deckState) {
+                when (deckState) {
                     is UiState.NoData -> {}
 
                     is UiState.HasData -> {
-                        val deck = state.data
+                        val deck = deckState.data
 
                         val list = ArrayList<CardDiceUi>()
 
@@ -113,7 +113,7 @@ class DiceRollerViewModel @Inject constructor(
     fun selectCard(index: Int) {
         cards.update {
             val newList = it.toMutableList()
-            val newValue = newList.get(index).copy(isCardSelected = !newList.get(index).isCardSelected)
+            val newValue = newList[index].copy(isCardSelected = !newList[index].isCardSelected)
             newList.removeAt(index)
             newList.add(index, newValue)
             newList
@@ -130,8 +130,8 @@ class DiceRollerViewModel @Inject constructor(
                 }
             }.groupBy { it.code }.values.toList()
 
-            list.map { list ->
-                list.map { die ->
+            list.map { cards ->
+                cards.map { die ->
                     if (die.isCardSelected) {
                         die.copy(sideShowing = die.diceRef[Random.nextInt(0, 5)])
                     } else {
@@ -145,7 +145,7 @@ class DiceRollerViewModel @Inject constructor(
     fun setOrReroll(code: String, index: Int, side: String?) {  //Null means re-roll
         dice.update {
             it.map { list ->
-                list.mapIndexed() { i, die ->
+                list.mapIndexed { i, die ->
                     if (die.code == code && i == index) {
                         if (side == null) {
                             die.copy(sideShowing = die.diceRef[Random.nextInt(0, 5)])

@@ -266,7 +266,7 @@ fun CardListScreen(
 
                         val numCards = try { (listUiState as UiState.HasData).data.size } catch(e: ClassCastException) { 0 }
 
-                        Text("${numCards} cards",
+                        Text("$numCards cards",
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier

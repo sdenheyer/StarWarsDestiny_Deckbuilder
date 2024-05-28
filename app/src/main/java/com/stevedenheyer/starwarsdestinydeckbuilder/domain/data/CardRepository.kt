@@ -1,4 +1,4 @@
-package com.stevedenheyer.starwarsdestinydeckbuilder.domain
+package com.stevedenheyer.starwarsdestinydeckbuilder.domain.data
 
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SavedQueriesUi

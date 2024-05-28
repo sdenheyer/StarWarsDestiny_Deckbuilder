@@ -133,17 +133,17 @@ class DeckViewModel @Inject constructor(
     private val repo: CardRepositoryImpl,
 ) : ViewModel() {
 
-    private val deckCode: String = checkNotNull(savedStateHandle.get("name"))
+    private val deckCode: String = checkNotNull(savedStateHandle["name"])
 
     val deckDetail = getDeckWithCards(deckCode).map { deckState ->
-        when (val state = deckState) {
+        when (deckState) {
             is UiState.NoData -> UiState.NoData(
-                isLoading = state.isLoading,
-                errorMessage = state.errorMessage
+                isLoading = deckState.isLoading,
+                errorMessage = deckState.errorMessage
             )
 
             is UiState.HasData -> {
-                val deck = state.data
+                val deck = deckState.data
                 val factions = deck.chars.map { it.faction }
                 val newDeck = deck.copy(
                     chars = deck.chars.map { card ->
@@ -177,8 +177,8 @@ class DeckViewModel @Inject constructor(
                     }
                 )
                 UiState.HasData(
-                    isLoading = state.isLoading,
-                    errorMessage = state.errorMessage,
+                    isLoading = deckState.isLoading,
+                    errorMessage = deckState.errorMessage,
                     data = DeckDetailUi.toDeckDetailUi(newDeck)
                 )
             }
@@ -187,11 +187,11 @@ class DeckViewModel @Inject constructor(
     }
 
     val warnings = deckDetail.map { deckState ->
-        when (val state = deckState) {
+        when (deckState) {
             is UiState.NoData -> WarningsUi.noWarnings
 
             is UiState.HasData -> {
-                val deck = state.data
+                val deck = deckState.data
                 WarningsUi.toWarningsUi(deck)
             }
         }

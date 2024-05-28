@@ -4,8 +4,7 @@ import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.stevedenheyer.starwarsdestinydeckbuilder.data.CardRepositoryImpl
-import com.stevedenheyer.starwarsdestinydeckbuilder.domain.CardRepository
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.CardRepository
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.usecases.GetCardWithFormat
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card

@@ -1,8 +1,7 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.domain.usecases
 
-import com.stevedenheyer.starwarsdestinydeckbuilder.data.CardRepositoryImpl
 import com.stevedenheyer.starwarsdestinydeckbuilder.di.IoDispatcher
-import com.stevedenheyer.starwarsdestinydeckbuilder.domain.CardRepository
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.CardRepository
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
@@ -12,7 +11,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combineTransform
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.last
@@ -22,9 +20,6 @@ class GetCardWithFormat @Inject constructor(private val cardRepo: CardRepository
                                             private val coroutineScope: CoroutineScope,
                                             @IoDispatcher private val dispatcher: CoroutineDispatcher,) {
     operator fun invoke(code: String): Flow<Resource<Card?>> = flow {
-      /*  combineTransform(
-        cardRepo.getCardByCode(code, false)
-    ) { formatsResource, cardResource ->*/
 
         val cardJob = coroutineScope.async(dispatcher) {
             cardRepo.getCardByCode(code, false).first { it.status != Resource.Status.LOADING }
@@ -57,7 +52,7 @@ class GetCardWithFormat @Inject constructor(private val cardRepo: CardRepository
 
         val formatsResource = formatJob.await()
 
-        if (formatsResource.status == Resource.Status.SUCCESS && cardResource.status == Resource.Status.SUCCESS && cardResource.data != null) {
+        if (formatsResource.status == Resource.Status.SUCCESS && cardResource.status == Resource.Status.SUCCESS) {
 
             val reprints = reprintsJob.await().data ?: emptyList()
 

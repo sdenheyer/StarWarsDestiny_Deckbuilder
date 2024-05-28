@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,11 +37,10 @@ fun DieGroup(modifier: Modifier, dieCodes: List<String>, isCompactScreen: Boolea
 
 @Composable
 fun Die(modifier: Modifier = Modifier, dieCode: String, isCompactScreen: Boolean) {
-    var value: String
     var dieIcon: Int? = null
-    var cost: String
 
-    value = if (dieCode.substring(0, 1) == "+") dieCode.substring(0, 2) else dieCode.substring(0, 1)
+    var value: String =
+        if (dieCode.substring(0, 1) == "+") dieCode.substring(0, 2) else dieCode.substring(0, 1)
     value = if (value.toIntOrNull() == null) "" else value
 
     for (entry in DieIcon.entries) {
@@ -52,7 +50,7 @@ fun Die(modifier: Modifier = Modifier, dieCode: String, isCompactScreen: Boolean
         }
     }
 
-    cost = dieCode.last().digitToIntOrNull().toString()
+    val cost: String = dieCode.last().digitToIntOrNull().toString()
 
     BoxWithConstraints(
         modifier

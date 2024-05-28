@@ -1,6 +1,5 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.compose.common
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -21,9 +20,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.buildAnnotatedString
@@ -52,7 +48,7 @@ fun MainTopBar(
             titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
         ),
         modifier = Modifier.onGloballyPositioned {
-                                                 popupXoffset.value = it.size.height
+                                                 popupXoffset.intValue = it.size.height
         },
         title = {
         },

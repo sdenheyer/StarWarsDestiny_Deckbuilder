@@ -1,17 +1,14 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.data
 
-import android.util.Log
 import androidx.datastore.core.DataStore
 import com.stevedenheyer.starwarsdestinydeckbuilder.UserSettings
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SavedQueriesUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
-import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.data.CardCache
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiEmptyResponse
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiErrorResponse
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiSuccessResponse
-import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.CardNetwork
 import com.stevedenheyer.starwarsdestinydeckbuilder.di.IoDispatcher
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
@@ -21,13 +18,12 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CharacterCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.OwnedCard
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
-import com.stevedenheyer.starwarsdestinydeckbuilder.domain.CardRepository
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.CardRepository
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.ICardCache
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.ICardNetwork
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.setCodeMap
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first

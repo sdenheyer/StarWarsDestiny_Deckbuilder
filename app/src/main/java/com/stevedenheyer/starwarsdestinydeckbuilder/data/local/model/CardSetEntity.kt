@@ -8,7 +8,7 @@ data class CardSetEntity(
     val name: String,
     @PrimaryKey val code: String,
     val position: Int,
-    val available: Long,  //Date - should be string?
+    val available: Long,
     val known: Int,
     val total: Int,
     val url: String,

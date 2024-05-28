@@ -12,7 +12,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardSetList
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.toCardUi
-import com.stevedenheyer.starwarsdestinydeckbuilder.domain.CardRepository
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.CardRepository
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -55,7 +55,7 @@ data class ListTypeByQuery(
     val queryTerms: QueryUi,
 ) : ListType()
 
-class ListTypeCollection() : ListType()
+class ListTypeCollection : ListType()
 
 @HiltViewModel
 class ListViewModel @Inject constructor(
@@ -102,22 +102,22 @@ class ListViewModel @Inject constructor(
             }
         }
     }.combine(cardRepo.getOwnedCards()) { uiState, ownedCards ->
-        when (val state = uiState) {
+        when (uiState) {
             is UiState.NoData -> uiState
             is UiState.HasData -> {
-                val cards = state.data.map { card ->
+                val cards = uiState.data.map { card ->
                     val quantity =
                         (ownedCards.find { it.card.fetchCode() == card.code }?.quantity) ?: 0
                     card.copy(quantity = quantity)
                 }
-                (uiState as UiState.HasData).copy(data = cards)
+                (uiState).copy(data = cards)
             }
         }
     }.combine(sortStateFlow) { uiState, sortState ->
-        when (val state = uiState) {
+        when (uiState) {
             is UiState.NoData -> uiState
             is UiState.HasData -> {
-                var cards = state.data
+                var cards = uiState.data
                 if (sortState.hideHero) {
                     cards = cards.filterNot { it.affiliation == "Hero" }
                 }
@@ -133,7 +133,7 @@ class ListViewModel @Inject constructor(
 
                     else -> {}
                 }
-                (uiState as UiState.HasData).copy(data = cards)
+                (uiState).copy(data = cards)
             }
         }
 
@@ -215,7 +215,7 @@ class ListViewModel @Inject constructor(
         }
     }
 
-    fun refreshCardsBySet(forceRemoteUpdate: Boolean) {
+    private fun refreshCardsBySet(forceRemoteUpdate: Boolean) {
         val code = cardSetSelection.value
         if (code.isNotBlank()) {
             viewModelScope.launch(Dispatchers.IO) {

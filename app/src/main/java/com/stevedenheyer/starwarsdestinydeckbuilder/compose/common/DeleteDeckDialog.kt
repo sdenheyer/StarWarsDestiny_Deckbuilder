@@ -24,7 +24,7 @@ fun DeleteDeckDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = { onDismissRequest }) {
+            TextButton(onClick = { onDismissRequest() }) {
                 Text("No", color = MaterialTheme.colorScheme.onSecondary)
             }
         }

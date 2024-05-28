@@ -2,7 +2,6 @@
 
 package com.stevedenheyer.starwarsdestinydeckbuilder.compose
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -81,9 +80,9 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Format
 import com.stevedenheyer.starwarsdestinydeckbuilder.ui.theme.getColorFromString
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.asIntPair
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.getUniqueInline
+import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardDetailDeckUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardDetailUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardUiState
-import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardDetailDeckUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DetailViewModel
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.toDetailUi
 import java.net.URL
@@ -365,7 +364,7 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, navigateToCard: (String)
                 withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
                     append(card.typeName)
                     card.subtypes?.forEach {
-                        append(" - ${it}")
+                        append(" - $it")
                     }
                     append(". ")
                 }
@@ -375,7 +374,7 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, navigateToCard: (String)
             modifier = textModifer
         )
         val pointCostLabel = if (card.cost != null) "Cost" else "Points"
-        val pointsOrCost = if (card.cost != null) card.cost else card.points
+        val pointsOrCost = card.cost ?: card.points
 
         Text(
             buildAnnotatedString {
@@ -527,7 +526,7 @@ fun ImageCard(modifier: Modifier, src: URL) {
 @Composable
 fun Legality(modifier: Modifier, factionColor: Color, formats: List<Format>) {
     val border = BorderStroke(width = Dp.Hairline, color = MaterialTheme.colorScheme.onSurface)
-    Log.d("SWD", "Legality: ${formats.size} ${formats.toString()}")
+   // Log.d("SWD", "Legality: ${formats.size} ${formats}")
     Column(modifier = modifier) {
         Text(
             "Legality", style = MaterialTheme.typography.titleLarge, modifier = Modifier
@@ -889,18 +888,18 @@ fun AddElitable(
         ),
         modifier = modifier.width(140.dp),
         onClick = {
-            when  {
-                deck.quantity == 0 -> changeQuantity(deck.name, 1, false)
-                deck.quantity == 1 -> changeQuantity(deck.name, 2, true)
-                deck.quantity == 2 -> changeQuantity(deck.name, 0, false)
+            when (deck.quantity) {
+                0 -> changeQuantity(deck.name, 1, false)
+                1 -> changeQuantity(deck.name, 2, true)
+                2 -> changeQuantity(deck.name, 0, false)
             }
         }) {
         Text(
             buildAnnotatedString {
-                when {
-                    deck.quantity == 0 -> append("Add")
-                    deck.quantity == 1 -> append("Make Elite")
-                    deck.quantity == 2 -> append("Remove")
+                when (deck.quantity) {
+                    0 -> append("Add")
+                    1 -> append("Make Elite")
+                    2 -> append("Remove")
                 }
             },
             Modifier
@@ -996,8 +995,7 @@ fun parseHtml(s: String): AnnotatedString {
     val strings = s.split("<", ">", "[", "]").listIterator()
     return buildAnnotatedString {
         while (strings.hasNext()) {
-            val string = strings.next()
-            when (string) {
+            when (val string = strings.next()) {
                 "b" -> withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                     append(strings.next())
                 }
@@ -1100,9 +1098,8 @@ fun TextCardPreview() {
     DetailsCard(
         modifier = Modifier
             .background(Color.Black)
-            .fillMaxSize(), card = CardDTO.testCard.toDomain().toDetailUi(),
-        {}
-    )
+            .fillMaxSize(), card = CardDTO.testCard.toDomain().toDetailUi()
+    ) {}
 }
 
 val testCard = CardDetailUi(

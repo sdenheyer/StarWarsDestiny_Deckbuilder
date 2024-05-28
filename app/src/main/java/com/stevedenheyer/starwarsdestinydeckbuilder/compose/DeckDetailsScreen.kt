@@ -235,7 +235,7 @@ fun DeckDetails(
                 val drawDeckDice =
                     deck.upgrades.dice + deck.downgrades.dice + deck.support.dice + deck.events.dice
                 Text(
-                    "Draw deck: ${drawDeckSize} cards, ${drawDeckDice} dice",
+                    "Draw deck: $drawDeckSize cards, $drawDeckDice dice",
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,

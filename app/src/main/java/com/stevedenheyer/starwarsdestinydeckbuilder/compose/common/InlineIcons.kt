@@ -15,7 +15,7 @@ import androidx.compose.ui.text.PlaceholderVerticalAlign
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
 
 @Composable
-fun getInlines(color: Color = MaterialTheme.colorScheme.onSurface) = mapOf(
+fun getCardInlines(color: Color = MaterialTheme.colorScheme.onSurface) = mapOf(
     "cards" to InlineTextContent(
         Placeholder(
         width = MaterialTheme.typography.titleLarge.fontSize,

@@ -1,6 +1,7 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.compose.common
 
 import android.util.Log
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +11,8 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -20,20 +23,28 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.UiCardSet
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.UiDeck
 
 @Composable
-fun SelectionDrawer(decksUiState: List<UiDeck>,
-                    setsUiState: UiState<List<UiCardSet>>,
-                    createNewDeck:() -> Unit,
-                    selectDeck:(String) -> Unit,
-                    selectSet:(String) -> Unit,
-                    selectCollection:() -> Unit,) {
+fun SelectionDrawer(
+    decksUiState: List<UiDeck>,
+    setsUiState: UiState<List<UiCardSet>>,
+    createNewDeck: () -> Unit,
+    selectDeck: (String) -> Unit,
+    selectSet: (String) -> Unit,
+    selectCollection: () -> Unit,
+) {
 
     ModalDrawerSheet(
         drawerContainerColor = MaterialTheme.colorScheme.secondary,
@@ -44,7 +55,7 @@ fun SelectionDrawer(decksUiState: List<UiDeck>,
             unselectedTextColor = MaterialTheme.colorScheme.onSecondary
         )
 
-      //  Log.d("SWD", "Drawer refresh: ${refreshState}, ${setsUiState.isLoading}")
+        //  Log.d("SWD", "Drawer refresh: ${refreshState}, ${setsUiState.isLoading}")
         NavigationDrawerItem(label = {
             Text(
                 "Create New Deck", modifier = Modifier
@@ -82,8 +93,11 @@ fun SelectionDrawer(decksUiState: List<UiDeck>,
         )
 
         Box {
+
             LazyColumn {
+
                 if (decksUiState.isNotEmpty()) {
+
                     item {
                         HorizontalDivider()
                         Text(
@@ -115,6 +129,24 @@ fun SelectionDrawer(decksUiState: List<UiDeck>,
                     }
 
                     items(items = sets, key = { it.code }) { set ->
+
+                        val setsInlineContent = CardSetIcon.entries.associate { set ->
+                            Pair(set.code, InlineTextContent(
+                                Placeholder(
+                                    width = MaterialTheme.typography.bodyLarge.fontSize,
+                                    height = MaterialTheme.typography.bodyMedium.fontSize,
+                                    placeholderVerticalAlign = PlaceholderVerticalAlign.AboveBaseline
+                                )
+                            ) {
+                                Image(
+                                    painter = painterResource(id = set.resourceId),
+                                    contentDescription = set.name,
+                                    modifier = Modifier.fillMaxSize(),
+                                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSecondary)
+                                )
+                            })
+                        }
+
                         if (set.postition == 101) {
                             HorizontalDivider()
                             Text(
@@ -123,7 +155,16 @@ fun SelectionDrawer(decksUiState: List<UiDeck>,
                                 modifier = Modifier.padding(start = 4.dp, top = 16.dp)
                             )
                         }
-                        NavigationDrawerItem(label = { Text(set.name) },
+                        NavigationDrawerItem(label = {
+                            Text(
+                                buildAnnotatedString {
+                                    appendInlineContent(set.code, "  ")
+                                    append(" ")
+                                    append(set.name)
+                                },
+                                inlineContent = setsInlineContent
+                            )
+                        },
                             selected = false,
                             colors = itemColors,
                             onClick = {
@@ -134,24 +175,25 @@ fun SelectionDrawer(decksUiState: List<UiDeck>,
                 }
             }
             if (setsUiState.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .wrapContentSize(Alignment.Center)
-                            .width(100.dp),
-                        trackColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-                }
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .wrapContentSize(Alignment.Center)
+                        .width(100.dp),
+                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
 
             if (setsUiState is UiState.NoData && !setsUiState.errorMessage.isNullOrBlank()) {
                 Log.d("SWD", "Detected ")
-                Text(text = setsUiState.errorMessage!!,
+                Text(
+                    text = setsUiState.errorMessage!!,
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier
                         .fillMaxSize()
                         .wrapContentSize(Alignment.Center)
-                    )
+                )
             }
         }
     }

@@ -72,6 +72,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.CardSetIcon
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.DieGroup
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.DieIcon
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.mappings.toDomain
@@ -307,7 +308,44 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, navigateToCard: (String)
         .padding(start = 8.dp)
         .padding(vertical = 2.dp)
 
-    val dieInlineContent = DieIcon.entries.associate { die ->
+    val inlineContent = HashMap<String, InlineTextContent>().apply {
+
+        this.putAll(DieIcon.entries.associate { die ->
+            Pair(die.inlineTag, InlineTextContent(
+                Placeholder(
+                    width = MaterialTheme.typography.bodyLarge.fontSize,
+                    height = MaterialTheme.typography.bodyLarge.fontSize,
+                    placeholderVerticalAlign = PlaceholderVerticalAlign.AboveBaseline
+                )
+            ) {
+                Image(
+                    painter = painterResource(id = die.resourceId),
+                    contentDescription = die.inlineTag,
+                    modifier = Modifier.fillMaxSize(),
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
+                )
+            })
+        })
+
+        this.putAll(CardSetIcon.entries.associate { set ->
+            Pair(set.code, InlineTextContent(
+                Placeholder(
+                    width = MaterialTheme.typography.bodyLarge.fontSize,
+                    height = MaterialTheme.typography.bodyLarge.fontSize,
+                    placeholderVerticalAlign = PlaceholderVerticalAlign.AboveBaseline
+                )
+            ) {
+                Image(
+                    painter = painterResource(id = set.resourceId),
+                    contentDescription = set.name,
+                    modifier = Modifier.fillMaxSize(),
+                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
+                )
+            })
+        })
+    }.toMap()
+
+    /*val dieInlineContent = DieIcon.entries.associate { die ->
         Pair(die.code, InlineTextContent(
             Placeholder(
                 width = MaterialTheme.typography.bodyLarge.fontSize,
@@ -322,7 +360,7 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, navigateToCard: (String)
                 colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
             )
         })
-    }
+    }*/
 
     OutlinedCard(
         modifier = modifier,
@@ -408,13 +446,13 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, navigateToCard: (String)
             )
         }
         Text(
-            parseHtml(card.text ?: ""),
+            parseHtml(card.text ?: "", inlineContent),
             style = MaterialTheme.typography.bodyLarge,
             modifier = textModifer,
-            inlineContent = dieInlineContent
+            inlineContent = inlineContent
         )
         Text(
-            parseHtml(card.flavor ?: ""),
+            parseHtml(card.flavor ?: "", inlineContent),
             style = MaterialTheme.typography.bodyMedium,
             modifier = textModifer,
             fontStyle = FontStyle.Italic
@@ -991,7 +1029,7 @@ fun AddMultiple(
     }
 }
 
-fun parseHtml(s: String): AnnotatedString {
+fun parseHtml(s: String, inlines: Map<String, InlineTextContent> = emptyMap()): AnnotatedString {
     val strings = s.split("<", ">", "[", "]").listIterator()
     return buildAnnotatedString {
         while (strings.hasNext()) {
@@ -1020,7 +1058,9 @@ fun parseHtml(s: String): AnnotatedString {
 
                 "/cite" -> {}
 
-                DieIcon.BLANK.inlineTag -> appendInlineContent(
+                in inlines.keys -> appendInlineContent(string, "[" + string + "]")
+
+              /*  DieIcon.BLANK.inlineTag -> appendInlineContent(
                     DieIcon.BLANK.code,
                     "[" + DieIcon.BLANK.inlineTag + "]"
                 )
@@ -1069,7 +1109,7 @@ fun parseHtml(s: String): AnnotatedString {
                     DieIcon.SPECIAL.code,
                     "[" + DieIcon.SPECIAL.inlineTag + "]"
                 )
-
+*/
                 else -> append(string)
             }
         }

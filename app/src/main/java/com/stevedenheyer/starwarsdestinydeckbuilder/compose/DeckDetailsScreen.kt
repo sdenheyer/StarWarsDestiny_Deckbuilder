@@ -45,7 +45,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.DeleteDeckDialog
-import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.getInlines
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.getCardInlines
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DeckDetailUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DeckViewModel
@@ -252,7 +252,7 @@ fun DeckDetails(
                             textAlign = TextAlign.Center,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.fillMaxWidth(),
-                            inlineContent = getInlines()
+                            inlineContent = getCardInlines()
                         )
 
                     if (warnings.uniqueWarnings > 0) {
@@ -324,7 +324,7 @@ fun DeckDetails(
                         append(")")
                     }, style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    inlineContent = getInlines(MaterialTheme.colorScheme.onPrimaryContainer)
+                    inlineContent = getCardInlines(MaterialTheme.colorScheme.onPrimaryContainer)
                 )
             }
 
@@ -379,7 +379,7 @@ fun DeckDetails(
                         append(")")
                     }, style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    inlineContent = getInlines(MaterialTheme.colorScheme.onPrimaryContainer)
+                    inlineContent = getCardInlines(MaterialTheme.colorScheme.onPrimaryContainer)
                 )
             }
 
@@ -403,7 +403,7 @@ fun DeckDetails(
                         append(")")
                     }, style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    inlineContent = getInlines(MaterialTheme.colorScheme.onPrimaryContainer)
+                    inlineContent = getCardInlines(MaterialTheme.colorScheme.onPrimaryContainer)
                 )
             }
 
@@ -427,7 +427,7 @@ fun DeckDetails(
                         append(")")
                     }, style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    inlineContent = getInlines(MaterialTheme.colorScheme.onPrimaryContainer)
+                    inlineContent = getCardInlines(MaterialTheme.colorScheme.onPrimaryContainer)
                 )
             }
 
@@ -451,7 +451,7 @@ fun DeckDetails(
                         append(")")
                     }, style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    inlineContent = getInlines(MaterialTheme.colorScheme.onPrimaryContainer)
+                    inlineContent = getCardInlines(MaterialTheme.colorScheme.onPrimaryContainer)
                 )
             }
 

@@ -23,7 +23,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.DieGroup
-import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.getInlines
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.getCardInlines
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.mappings.toDomain
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.model.CardDTO
 import com.stevedenheyer.starwarsdestinydeckbuilder.ui.theme.getColorFromString
@@ -53,7 +53,7 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
             .padding(top = 0.dp, bottom = 2.dp, start = 8.dp, end = 6.dp)) {
             Text(
                 buildAnnotatedString {
-                    if (card.isUnique && (card.type == "Character" || card.type == "Plot")) appendInlineContent("unique", "unique")
+                    if (card.isUnique && (card.type == "Character" || card.type == "Plot")) appendInlineContent("unique", "[unique]")
                     if (card.isUnique && card.uniqueWarning) withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.error,
                         fontSize = MaterialTheme.typography.headlineSmall.fontSize)) {
                         append("! ")
@@ -86,19 +86,19 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
             if (card.quantity > 0)
                 Text(buildAnnotatedString {
                     if (card.isBanned) {
-                        appendInlineContent("banned", "banned")
+                        appendInlineContent("banned", "[banned]")
                     }
                                           append(card.quantity.toString())
-                    appendInlineContent("cards", "cards")
+                    appendInlineContent("cards", "[cards]")
                     if (card.diceRef.isNotEmpty()) {
                         val diceQuantity = (if (card.isElite) 2 else card.quantity).toString()
                         append(diceQuantity)
-                        appendInlineContent("dice", "dice")
+                        appendInlineContent("dice", "[dice]")
                     }
 
                 },  style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(top = 4.dp, end = 4.dp),
-                    inlineContent = getInlines())
+                    inlineContent = getCardInlines())
 
         }
         Row(
@@ -195,16 +195,16 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
             if (card.quantity > 0)
                 Text(buildAnnotatedString {
                     append(card.quantity.toString())
-                    appendInlineContent("cards", "cards")
+                    appendInlineContent("cards", "[cards]")
                     if (card.diceRef.isNotEmpty()) {
                         val diceQuantity = (if (card.isElite) 2 else card.quantity).toString()
                         append(diceQuantity)
-                        appendInlineContent("dice", "dice")
+                        appendInlineContent("dice", "[dice]")
                     }
 
                 },  style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier.padding(top = 4.dp, end = 4.dp),
-                    inlineContent = getInlines())
+                    inlineContent = getCardInlines())
         }
         if (card.subtitle.isNotBlank()) {
             Text(

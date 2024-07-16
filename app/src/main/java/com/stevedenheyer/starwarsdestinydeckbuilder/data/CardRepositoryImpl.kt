@@ -66,6 +66,19 @@ class CardRepositoryImpl @Inject constructor(
         ).flowOn(dispatcher)
     }
 
+    override fun getCardBySetAndPosition(set: String, position: Int): Flow<Resource<Card?>> {
+        return networkBoundResource(
+            fetchFromLocal = { cardCache.getCardBySetAndPosition(set, position)  },
+            shouldFetchFromRemote = { it == null ||
+                    (Date().time - (it.timestamp) > (it.expiry)) },
+            fetchFromRemote = {  val date =  Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
+                cardNetwork.getCardsBySet(date, set) },
+            saveRemoteData = { cardCache.storeCards(it)},
+            processRemoteResponse = { },
+            onFetchFailed = { _, _ -> }
+        )
+    }
+
     override fun getCardsByCodes(vararg values: CardOrCode): Flow<Resource<List<CardOrCode>>> = flow {
         val list = cardCache.getCardsByCodes(*values).toMutableList()
         if (list.size == values.size) {

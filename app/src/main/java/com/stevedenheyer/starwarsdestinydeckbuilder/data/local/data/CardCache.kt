@@ -50,6 +50,8 @@ class CardCache(
             CardOrCode.HasCard(entity.toDomain())
         }
 
+    override fun getCardBySetAndPosition(set: String, position: Int): Flow<Card?> = dao.getCardBySetAndPosition(set, position).map { it?.toDomain() }
+
     override fun getCardsBySet(code: String): Flow<List<Card>> =
         dao.getCardsBySet(code).map { it.map { entity -> entity.toDomain() } }
 

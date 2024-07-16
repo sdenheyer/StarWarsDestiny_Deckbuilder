@@ -17,6 +17,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.utils.asString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combineTransform
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
@@ -350,6 +351,10 @@ class DetailViewModel @Inject constructor(
             val ownedCard = OwnedCard(card = CardOrCode.HasCode(code), quantity = quantity)
             viewModelScope.launch { repo.insertOwnedCards(ownedCard) }
         }
+    }
+
+    suspend fun getCardBySetAndPosition(set: String, position: Int):Card? {
+        return repo.getCardBySetAndPosition(set, position).first { it.data != null }.data
     }
 
 }

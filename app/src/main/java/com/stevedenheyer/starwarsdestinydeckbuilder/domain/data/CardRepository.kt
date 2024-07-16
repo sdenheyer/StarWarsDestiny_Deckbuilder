@@ -19,6 +19,8 @@ interface CardRepository {
 
     fun getCardByCode(code: String, forceRemoteUpdate: Boolean): Flow<Resource<Card?>>
 
+    fun getCardBySetAndPosition(set: String, position: Int): Flow<Resource<Card?>>
+
     fun getCardsByCodes(vararg values: CardOrCode): Flow<Resource<List<CardOrCode>>>
 
     fun getCardSets(forceRemoteUpdate: Boolean): Flow<Resource<CardSetList>>

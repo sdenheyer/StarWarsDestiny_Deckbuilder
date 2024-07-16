@@ -2,10 +2,12 @@
 
 package com.stevedenheyer.starwarsdestinydeckbuilder.compose
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,17 +48,22 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -86,6 +93,9 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardDetailUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardUiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DetailViewModel
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.toDetailUi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import java.lang.Integer.parseInt
 import java.net.URL
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -125,6 +135,8 @@ fun DetailsScreen(
   //  Log.d("SWD", "Card State: ${cardState.isLoading}")
     val snackbarHostState = remember { SnackbarHostState() }
 
+    val scope = rememberCoroutineScope()
+
     Scaffold(topBar = {
         TopAppBar(title = { },
             navigationIcon = {
@@ -163,6 +175,10 @@ fun DetailsScreen(
                     },
                     owned = owned,
                     changeOwnedQuantity = { _, quantity, _ -> (detailViewModel::writeOwned)(quantity) },
+                    findCardbySetAndPostition = { set, position ->
+                            val card = detailViewModel.getCardBySetAndPosition(set, position)
+                            card?.code
+                    },
                     navigateToCard = navigateToCard
                 )
 
@@ -200,6 +216,7 @@ fun Details(isCompactScreen: Boolean,
             modifier: Modifier = Modifier,
             changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
             changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
+            findCardbySetAndPostition: suspend (String, Int) -> String?,
             navigateToCard: (String) -> Unit) {
     when (isCompactScreen) {
         true -> CompactDetails(
@@ -208,6 +225,7 @@ fun Details(isCompactScreen: Boolean,
             owned = owned,
             changeCardQuantity = changeCardQuantity,
             changeOwnedQuantity = changeOwnedQuantity,
+            findCardbySetAndPostition = findCardbySetAndPostition,
             navigateToCard = navigateToCard,
             modifier = modifier
         )
@@ -219,6 +237,7 @@ fun Details(isCompactScreen: Boolean,
             changeCardQuantity = changeCardQuantity,
             changeOwnedQuantity = changeOwnedQuantity,
             navigateToCard = navigateToCard,
+            findCardbySetAndPostition = findCardbySetAndPostition,
             modifier = modifier
         )
     }
@@ -232,11 +251,15 @@ fun CompactDetails(
     modifier: Modifier = Modifier,
     changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
     changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
+    findCardbySetAndPostition: suspend (String, Int) -> String?,
     navigateToCard: (String) -> Unit,
 ) {
     LazyColumn(modifier) {
         item {
-            DetailsCard(modifier = Modifier.padding(vertical = 8.dp), card = card, navigateToCard = navigateToCard)
+            DetailsCard(modifier = Modifier.padding(vertical = 8.dp),
+                card = card,
+                findCardbySetAndPostition = findCardbySetAndPostition,
+                navigateToCard = navigateToCard)
         }
         item {
             OwnedCard(modifier = Modifier.padding(vertical = 8.dp), owned = owned, changeQuantity = changeOwnedQuantity)
@@ -263,6 +286,7 @@ fun LargeDetails(
     modifier: Modifier = Modifier,
     changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
     changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
+    findCardbySetAndPostition: suspend (String, Int) -> String?,
     navigateToCard: (String) -> Unit,
 ) {
 
@@ -276,7 +300,7 @@ fun LargeDetails(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                DetailsCard(modifier = Modifier.weight(1f), card = card, navigateToCard = navigateToCard)
+                DetailsCard(modifier = Modifier.weight(1f), card = card, findCardbySetAndPostition = findCardbySetAndPostition, navigateToCard = navigateToCard)
                 GlideImage(
                     model = card.imageSrc,
                     contentDescription = "Card Picture",
@@ -301,12 +325,15 @@ fun LargeDetails(
 }
 
 @Composable
-fun DetailsCard(modifier: Modifier, card: CardDetailUi, navigateToCard: (String) -> Unit) {
+fun DetailsCard(modifier: Modifier, card: CardDetailUi, findCardbySetAndPostition: suspend (String, Int) -> String?, navigateToCard: (String) -> Unit) {
 
     val cardColor = getColorFromString(card.color)
+
     val textModifer = Modifier
         .padding(start = 8.dp)
         .padding(vertical = 2.dp)
+
+    val scope = rememberCoroutineScope()
 
     val inlineContent = HashMap<String, InlineTextContent>().apply {
 
@@ -344,23 +371,6 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, navigateToCard: (String)
             })
         })
     }.toMap()
-
-    /*val dieInlineContent = DieIcon.entries.associate { die ->
-        Pair(die.code, InlineTextContent(
-            Placeholder(
-                width = MaterialTheme.typography.bodyLarge.fontSize,
-                height = MaterialTheme.typography.bodyLarge.fontSize,
-                placeholderVerticalAlign = PlaceholderVerticalAlign.AboveBaseline
-            )
-        ) {
-            Image(
-                painter = painterResource(id = die.resourceId),
-                contentDescription = die.inlineTag,
-                modifier = Modifier.fillMaxSize(),
-                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-            )
-        })
-    }*/
 
     OutlinedCard(
         modifier = modifier,
@@ -406,7 +416,6 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, navigateToCard: (String)
                     }
                     append(". ")
                 }
-                //append("Points: ${card.points}.  Health: ${card.health}")
             },
             style = MaterialTheme.typography.bodyLarge,
             modifier = textModifer
@@ -445,18 +454,57 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, navigateToCard: (String)
                 modifier = textModifer
             )
         }
+
+        var layoutResult = remember {
+            mutableStateOf<TextLayoutResult?>(null)
+        }
+        val cardText = parseHtml(card.text ?: "", inlineContent)
         Text(
-            parseHtml(card.text ?: "", inlineContent),
+            text = cardText,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = textModifer,
-            inlineContent = inlineContent
+            inlineContent = inlineContent,
+            onTextLayout = { layoutResult.value = it },
+            modifier = textModifer.pointerInput(Unit) {
+                    detectTapGestures { offset ->
+                        layoutResult.value?.let { layoutResult ->
+                            val position = layoutResult.getOffsetForPosition(offset)
+                            cardText.getStringAnnotations(
+                                start = position - 1,
+                                end = position + 3
+                            ).firstOrNull { annotation ->
+                                annotation.tag == "LINK"
+                            }?.let { annotation ->
+                                //navigate to card
+                                Log.d("SWD", "Link click deteced")
+                               scope.launch {
+                                   val strings = annotation.item.split("_")
+                                   val setCode = strings.first()
+                                   try {
+                                       val cardPosition = parseInt(strings.last())
+                                       Log.d("SWD", "Link click deteced: $setCode, $cardPosition")
+                                       val cardCode = findCardbySetAndPostition(setCode, cardPosition)
+                                       Log.d("SWD", "Card:  $cardCode")
+                                       if (cardCode != null)
+                                            navigateToCard(cardCode)
+                                   } catch (e: NumberFormatException) {
+
+                                   }
+                               }
+
+                            }
+
+                        }
+                    }
+                },
         )
+
         Text(
             parseHtml(card.flavor ?: "", inlineContent),
             style = MaterialTheme.typography.bodyMedium,
             modifier = textModifer,
             fontStyle = FontStyle.Italic
         )
+
         if (!card.illustrator.isNullOrEmpty()) {
             Row(modifier = textModifer) {
                 Image(
@@ -499,7 +547,6 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, navigateToCard: (String)
                         .firstOrNull()?.let { annotation ->
                             navigateToCard(annotation.item)
                         }
-
                 }
             }
         }
@@ -1058,7 +1105,41 @@ fun parseHtml(s: String, inlines: Map<String, InlineTextContent> = emptyMap()): 
 
                 "/cite" -> {}
 
-                in inlines.keys -> appendInlineContent(string, "[" + string + "]")
+                in inlines.keys -> {
+                    if (string in CardSetIcon.entries.map { it.code }) {
+                        val code = string
+                        val nextStrings = strings.next().split(")")
+                        try {
+                            val cardNum = parseInt(nextStrings.first())
+                            pushStringAnnotation(tag = "LINK", annotation = code + "_" + cardNum)
+                            withStyle(
+                                SpanStyle(
+                                    color = Color.Blue,
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            ) {
+                                appendInlineContent(string, "[" + string + "]")
+                                append("$cardNum")
+                            }
+                            append(")")
+                            pop()
+
+                            nextStrings.drop(1).forEachIndexed { index, s ->
+                                append(s)
+                                if (index < nextStrings.drop(1).size - 1) {
+                                    append(")")
+                                }
+                            }
+                        } catch (e: NumberFormatException) {
+                            Log.d("SWD", "Couldn't find an integer for set position")
+                            nextStrings.forEach {
+                                append(it)
+                            }
+                        }
+                    } else {
+                        appendInlineContent(string, "[" + string + "]")
+                    }
+                }
 
               /*  DieIcon.BLANK.inlineTag -> appendInlineContent(
                     DieIcon.BLANK.code,
@@ -1138,7 +1219,8 @@ fun TextCardPreview() {
     DetailsCard(
         modifier = Modifier
             .background(Color.Black)
-            .fillMaxSize(), card = CardDTO.testCard.toDomain().toDetailUi()
+            .fillMaxSize(), card = CardDTO.testCard.toDomain().toDetailUi(),
+        findCardbySetAndPostition = { _, _ -> "" }
     ) {}
 }
 

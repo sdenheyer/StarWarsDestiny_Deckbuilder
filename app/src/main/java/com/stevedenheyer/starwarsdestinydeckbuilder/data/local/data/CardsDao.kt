@@ -68,6 +68,10 @@ interface CardsDao {
     fun getCardByCode(code: String): Flow<CardEntity?>
 
     @Transaction
+    @Query("SELECT * FROM cardbaseentity WHERE setCode = :set AND position = :position")
+    fun getCardBySetAndPosition(set: String, position: Int): Flow<CardEntity?>
+
+    @Transaction
     @Query("SELECT * FROM cardbaseentity WHERE code IN (:codes)")
     suspend fun getCardsByCodes(vararg codes: String): List<CardEntity>
 

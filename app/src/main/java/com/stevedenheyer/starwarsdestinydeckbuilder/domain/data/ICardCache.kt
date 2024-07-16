@@ -13,6 +13,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Slot
 import kotlinx.coroutines.flow.Flow
 interface ICardCache {
     fun getCardByCode(code: String): Flow<Card?>
+    fun getCardBySetAndPosition(set: String, position: Int): Flow<Card?>
     suspend fun getCardsByCodes(vararg values: CardOrCode): List<CardOrCode>
     fun getCardsBySet(code: String): Flow<List<Card>>
     fun findCards(query: QueryUi): Flow<List<Card>>

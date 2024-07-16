@@ -9,7 +9,7 @@ enum class CardSetIcon(val code: String, val resourceId: Int) {
     TWO_PLAYER_GAME("TPG", R.drawable.two_player_game),
     LEGACIES("LEG", R.drawable.legacies),
     RIVALS("RIV", R.drawable.rivals),
-    WAY_OF_THE_FORCE("WoF", R.drawable.way_of_the_force),
+    WAY_OF_THE_FORCE("WotF", R.drawable.way_of_the_force),
     ACROSS_THE_GALAXY("AtG", R.drawable.across_the_galaxy),
     CONVERGENCE("CONV", R.drawable.convergence),
     ALLIES_OF_NECESSITY("AoN", R.drawable.allies_of_necessity),

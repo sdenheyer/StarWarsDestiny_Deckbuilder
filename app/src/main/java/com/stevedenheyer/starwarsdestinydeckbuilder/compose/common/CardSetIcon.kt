@@ -3,11 +3,11 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.compose.common
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
 
 enum class CardSetIcon(val code: String, val resourceId: Int) {
-    //AWAKENINGS("AW"
+    AWAKENINGS("AW", R.drawable.awakenings),
     SPIRIT_OF_REBELLION("SoR", R.drawable.spirit_of_rebellion),
     EMPIRE_AT_WAR("EaW", R.drawable.empire_at_war),
-    //TWO PLAYER GAME("TPG"
-    //LEGACIES("LEG"
+    TWO_PLAYER_GAME("TPG", R.drawable.two_player_game),
+    LEGACIES("LEG", R.drawable.legacies),
     RIVALS("RIV", R.drawable.rivals),
     WAY_OF_THE_FORCE("WoF", R.drawable.way_of_the_force),
     ACROSS_THE_GALAXY("AtG", R.drawable.across_the_galaxy),
@@ -26,5 +26,5 @@ enum class CardSetIcon(val code: String, val resourceId: Int) {
     DISPLAY_OF_POWER("DoP", R.drawable.display_of_power),
     RESURGENCE("RES", R.drawable.resurgence),
     AWAITING_FATE("AF", R.drawable.awaiting_fate),
-    //ECHOS OF DESTINY 1("EoD1",
+    ECHOS_OF_DESTINY_1("EoD1", R.drawable.echos_of_destiny),
 }

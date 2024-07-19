@@ -2,6 +2,7 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.compose.model
 
 data class QueryUi(
     val byCardName: String,
+    val bySubtype: String,
     val byCardText: String,
 
     val byColors: List<String>,

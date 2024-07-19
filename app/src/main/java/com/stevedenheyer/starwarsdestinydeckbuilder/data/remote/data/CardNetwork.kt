@@ -128,6 +128,10 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
                 queryString.append("$byCardName ")
             }
 
+            if (bySubtype.isNotBlank()) {
+                queryString.append("b:$bySubtype")
+            }
+
             if (byColors.size < 4) {
                 queryString.append("f:")
                 byColors.forEachIndexed { i, color ->

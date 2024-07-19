@@ -191,7 +191,7 @@ class DeckViewModel @Inject constructor(
             is UiState.NoData -> WarningsUi.noWarnings
 
             is UiState.HasData -> {
-                val deck = deckState.data
+                val deck = deckState.data   
                 WarningsUi.toWarningsUi(deck)
             }
         }

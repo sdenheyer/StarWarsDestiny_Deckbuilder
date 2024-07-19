@@ -55,8 +55,18 @@ class CardCache(
     override fun getCardsBySet(code: String): Flow<List<Card>> =
         dao.getCardsBySet(code).map { it.map { entity -> entity.toDomain() } }
 
-    override fun findCards(query: QueryUi): Flow<List<Card>> =
-        dao.findCards(getLocalQueryString(query)).map { it.map { entity -> entity.toDomain() } }
+    override fun findCards(query: QueryUi): Flow<List<Card>> {
+        return if (query.bySubtype.isNotBlank()) {                          //Slighty ugly but only way to handle this case
+            dao.findCards(getLocalQueryString(query)).map {
+                it.filter { it.subTypes.any { it.name == query.bySubtype } }
+                    .map { entity -> entity.toDomain() }
+            }
+        } else {
+            dao.findCards(getLocalQueryString(query)).map {
+                it.map { entity -> entity.toDomain() }
+            }
+        }
+    }
 
     override fun getCardSets(): Flow<CardSetList> = dao.getCardSets().map { list ->
         val timestamp = dao.getSetTimestamp() ?: CardSetTimeEntity(

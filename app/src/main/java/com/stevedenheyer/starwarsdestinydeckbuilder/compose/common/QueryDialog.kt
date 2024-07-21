@@ -91,6 +91,10 @@ fun QueryDialog(modifier: Modifier = Modifier,
             mutableStateOf(TextFieldValue(""))
         }
 
+        val (subtypeQuery, setSubtypeQuery) = rememberSaveable(stateSaver = TextFieldValue.Saver) {
+            mutableStateOf(TextFieldValue(""))
+        }
+
         val (textQuery, setTextQuery) = rememberSaveable(stateSaver = TextFieldValue.Saver) {
             mutableStateOf(TextFieldValue(""))
         }
@@ -122,14 +126,14 @@ fun QueryDialog(modifier: Modifier = Modifier,
                     modifier.padding(horizontal = 48.dp, vertical = 6.dp)
                  //   .wrapContentSize(align = Alignment.TopCenter)
             ) {
-                Row(modifier = Modifier.padding(bottom = 8.dp).padding(horizontal = 6.dp)) {
+                val textFieldColors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+                    focusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.outline,
+                    unfocusedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                )
 
-                    val textFieldColors = TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-                        focusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.outline,
-                        unfocusedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                Row(modifier = Modifier.padding(bottom = 8.dp).padding(horizontal = 6.dp)) {
 
                     val nameSavedExpanded = remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
@@ -174,10 +178,10 @@ fun QueryDialog(modifier: Modifier = Modifier,
                         }
                     }
 
-                    val textSavedExpanded = remember { mutableStateOf(false) }
+                    val subtypeSavedExpanded = remember { mutableStateOf(false) }
                     ExposedDropdownMenuBox(
-                        expanded = textSavedExpanded.value,
-                        onExpandedChange = { textSavedExpanded.value = it },
+                        expanded = subtypeSavedExpanded.value,
+                        onExpandedChange = { subtypeSavedExpanded.value = it },
                         modifier = Modifier
                             .wrapContentSize(Alignment.TopStart)
                             .weight(1f)
@@ -185,16 +189,16 @@ fun QueryDialog(modifier: Modifier = Modifier,
                     ) {
 
                         OutlinedTextField(
-                            value = textQuery,
-                            onValueChange = { setTextQuery(it) },
-                            label = { Text("Card Text:") },
+                            value = subtypeQuery,
+                            onValueChange = { setSubtypeQuery(it) },
+                            label = { Text("Subtype:") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(
                                 imeAction = ImeAction.Search,
                                 keyboardType = KeyboardType.Text,
                             ),
                             keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide()
-                                                                     textSavedExpanded.value = false }),
+                                                                     subtypeSavedExpanded.value = false }),
                             colors = textFieldColors,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -204,12 +208,49 @@ fun QueryDialog(modifier: Modifier = Modifier,
 
                         if (savedQueries.textQueries.isNotEmpty()) {
                             ExposedDropdownMenu(
-                                expanded = textSavedExpanded.value,
-                                onDismissRequest = { textSavedExpanded.value = false },
+                                expanded = subtypeSavedExpanded.value,
+                                onDismissRequest = { subtypeSavedExpanded.value = false },
                             ) {
                                 savedQueries.textQueries.forEach {
                                     DropdownMenuItem(text = { Text(it) }, onClick = { setTextQuery(TextFieldValue(it)) })
                                 }
+                            }
+                        }
+                    }
+                }
+
+                val textSavedExpanded = remember { mutableStateOf(false) }
+                ExposedDropdownMenuBox(
+                    expanded = textSavedExpanded.value,
+                    onExpandedChange = { textSavedExpanded.value = it },
+                    modifier = Modifier.padding(bottom = 8.dp).padding(horizontal = 6.dp)
+                ) {
+
+                    OutlinedTextField(
+                        value = textQuery,
+                        onValueChange = { setTextQuery(it) },
+                        label = { Text("Card Text:") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Search,
+                            keyboardType = KeyboardType.Text,
+                        ),
+                        keyboardActions = KeyboardActions(onSearch = { keyboardController?.hide()
+                            textSavedExpanded.value = false }),
+                        colors = textFieldColors,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 2.dp)
+                            .menuAnchor()
+                    )
+
+                    if (savedQueries.textQueries.isNotEmpty()) {
+                        ExposedDropdownMenu(
+                            expanded = textSavedExpanded.value,
+                            onDismissRequest = { textSavedExpanded.value = false },
+                        ) {
+                            savedQueries.textQueries.forEach {
+                                DropdownMenuItem(text = { Text(it) }, onClick = { setTextQuery(TextFieldValue(it)) })
                             }
                         }
                     }
@@ -652,6 +693,7 @@ fun QueryDialog(modifier: Modifier = Modifier,
                         if (
                             nameQuery.text.isBlank() &&
                             textQuery.text.isBlank() &&
+                            subtypeQuery.text.isBlank() &&
                             costNumbericQuery.value.number == 0 &&
                             healthNumbericQuery.value.number == 0 &&
                             colors.size == 4 &&
@@ -664,6 +706,7 @@ fun QueryDialog(modifier: Modifier = Modifier,
                         } else {
                             val query = QueryUi(
                                 byCardName = nameQuery.text,
+                                bySubtype = subtypeQuery.text,
                                 byCardText = textQuery.text,
                                 byColors = colors.toList(),
                                 byCost = costNumbericQuery.value,

@@ -23,6 +23,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.Placeholder
@@ -142,7 +144,7 @@ fun SelectionDrawer(
                                     painter = painterResource(id = set.resourceId),
                                     contentDescription = set.name,
                                     modifier = Modifier.fillMaxSize(),
-                                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSecondary)
+                                    colorFilter = ColorFilter.tint(color = Color.White, blendMode = BlendMode.SrcIn),
                                 )
                             })
                         }

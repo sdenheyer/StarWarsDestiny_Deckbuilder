@@ -2,6 +2,7 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.data.local.data
 
 import android.database.sqlite.SQLiteConstraintException
 import android.util.Log
+import androidx.compose.ui.text.toLowerCase
 import androidx.sqlite.db.SimpleSQLiteQuery
 import androidx.sqlite.db.SupportSQLiteQuery
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.OperatorUi
@@ -58,7 +59,7 @@ class CardCache(
     override fun findCards(query: QueryUi): Flow<List<Card>> {
         return if (query.bySubtype.isNotBlank()) {                          //Slighty ugly but only way to handle this case
             dao.findCards(getLocalQueryString(query)).map {
-                it.filter { it.subTypes.any { it.name == query.bySubtype } }
+                it.filter { it.subTypes.any { it.name.equals(query.bySubtype, ignoreCase = true) } }
                     .map { entity -> entity.toDomain() }
             }
         } else {

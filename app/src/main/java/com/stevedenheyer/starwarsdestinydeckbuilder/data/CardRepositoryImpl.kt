@@ -238,6 +238,7 @@ class CardRepositoryImpl @Inject constructor(
         //Log.d("SWD", "Fucking protocol buffers: ${userSettings.cardNameQueriesList}")
         SavedQueriesUi(
             nameQueries = userSettings.cardNameQueriesList,
+            subtypeQueries = userSettings.cardSubtypeQueriesList,
             textQueries = userSettings.cardTextQueriesList
         )
     }
@@ -250,6 +251,17 @@ class CardRepositoryImpl @Inject constructor(
             if (queries.size > 6)
                 queries.removeFirst()
             userSettings.toBuilder().clearCardNameQueries().addAllCardNameQueries(queries).build()
+        }
+    }
+
+    override suspend fun updateSavedSubtypeQueries(newQuery: String) {
+        dataStore.updateData { userSettings ->
+            val queries = userSettings.cardSubtypeQueriesList.toMutableList()
+            if (newQuery.isNotBlank() && !queries.contains(newQuery))
+                queries.add(newQuery)
+            if (queries.size > 6)
+                queries.removeFirst()
+            userSettings.toBuilder().clearCardSubtypeQueries().addAllCardSubtypeQueries(queries).build()
         }
     }
 

@@ -16,6 +16,7 @@ message UserSettings {
     }
 
     repeated string cardNameQueries = 4;
+    repeated string cardSubtypeQueries = 8;
     repeated string cardTextQueries = 5;
 
     int64 expiry = 6;

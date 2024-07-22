@@ -102,6 +102,7 @@ fun CardListScreen(
     val savedQueries by cardVM.savedQueries.collectAsStateWithLifecycle(
         initialValue = SavedQueriesUi(
             emptyList(),
+            emptyList(),
             emptyList()
         )
     )

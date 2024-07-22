@@ -259,6 +259,7 @@ class ListViewModel @Inject constructor(
             cardListJob?.cancelAndJoin()
             cardListJob = this.coroutineContext.job
             cardRepo.updateSavedNameQueries(query.byCardName)
+            cardRepo.updateSavedSubtypeQueries(query.bySubtype)
             cardRepo.updateSavedTextQueries(query.byCardText)
             cardRepo.findCards(query).collect { resource ->
                 _cardsFlow.update { resource }

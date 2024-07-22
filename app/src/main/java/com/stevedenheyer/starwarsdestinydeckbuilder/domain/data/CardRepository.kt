@@ -33,6 +33,8 @@ interface CardRepository {
 
     suspend fun updateSavedNameQueries(newQuery: String)
 
+    suspend fun updateSavedSubtypeQueries(newQuery: String)
+
     suspend fun updateSavedTextQueries(newQuery: String)
 
     fun findCards(query: QueryUi): Flow<Resource<List<Card>>>

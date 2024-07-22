@@ -206,13 +206,13 @@ fun QueryDialog(modifier: Modifier = Modifier,
                                 .menuAnchor()
                         )
 
-                        if (savedQueries.textQueries.isNotEmpty()) {
+                        if (savedQueries.subtypeQueries.isNotEmpty()) {
                             ExposedDropdownMenu(
                                 expanded = subtypeSavedExpanded.value,
                                 onDismissRequest = { subtypeSavedExpanded.value = false },
                             ) {
-                                savedQueries.textQueries.forEach {
-                                    DropdownMenuItem(text = { Text(it) }, onClick = { setTextQuery(TextFieldValue(it)) })
+                                savedQueries.subtypeQueries.forEach {
+                                    DropdownMenuItem(text = { Text(it) }, onClick = { setSubtypeQuery(TextFieldValue(it)) })
                                 }
                             }
                         }
@@ -806,7 +806,7 @@ fun NumericSelector(modifier: Modifier = Modifier, title: String, onSelect:(Nume
 @Composable
 fun QueryPopupPreview() {
     QueryDialog(sets = emptyList(), modifier = Modifier.fillMaxWidth(), onDismiss = { }, isCompactScreen = true, savedQueries = SavedQueriesUi(
-        emptyList(), emptyList()
+        emptyList(), emptyList(), emptyList()
     )
     ) {
 

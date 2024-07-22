@@ -29,6 +29,7 @@ data class DeckDetailUi(
     val downgrades: DeckSlotsUi,
     val support: DeckSlotsUi,
     val events: DeckSlotsUi,
+    val setAsides: List<CardUi> = emptyList(),
 ) {
     companion object {
         fun toDeckDetailUi(deckUi: DeckUi) = DeckDetailUi(

@@ -12,6 +12,7 @@ data class DeckUi(
 
     val chars: List<CardUi> = emptyList(),
     val slots: List<CardUi> = emptyList(),
+    val setAsides: List<CardUi> = emptyList()
 )
 
 fun Deck.toDeckUi() = DeckUi(

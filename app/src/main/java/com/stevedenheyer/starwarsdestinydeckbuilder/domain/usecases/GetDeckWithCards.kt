@@ -1,5 +1,7 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.domain.usecases
 
+import android.util.Log
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.CardSetIcon
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.CardUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
@@ -17,7 +19,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.lang.IllegalStateException
+import java.lang.Integer.parseInt
 import javax.inject.Inject
 
 class GetDeckWithCards @Inject constructor(
@@ -28,6 +33,8 @@ class GetDeckWithCards @Inject constructor(
     operator fun invoke(deckName: String, forceRemoteUpdate: Boolean = false) = flow {
         val deck = cardRepo.getDeck(deckName)
         var uiDeck = deck.toDeckUi()
+        val mutex = Mutex()
+        val setAsides = ArrayList<CardUi>()
 
         cardRepo.getCardFormats(forceRemoteUpdate).collect { response ->
             when (response.status) {
@@ -71,10 +78,17 @@ class GetDeckWithCards @Inject constructor(
                         val codes = deck.slots.map { slot -> slot.cardOrCode }.toTypedArray()
                         val resource = cardRepo.getCardsByCodes(*codes).last()
                         val cards =
-                            resource.data
+                            resource.data ?: emptyList()
+
+                        val setAsideCards = findSetAsides(*cards.toTypedArray())
+
+                        mutex.withLock {
+                            setAsides.addAll(setAsideCards)
+                        }
+
                         val slotsMap =
                             deck.slots.associateBy { it.cardOrCode.fetchCode() }.toMutableMap()
-                        cards?.forEach {
+                        cards.forEach {
                             slotsMap[it.fetchCode()] =
                                 slotsMap[it.fetchCode()]!!.copy(cardOrCode = it)
                         }
@@ -92,10 +106,18 @@ class GetDeckWithCards @Inject constructor(
                         val codes = deck.characters.map { slot -> slot.cardOrCode }.toTypedArray()
                         val resource = cardRepo.getCardsByCodes(*codes).last()
                         val cards =
-                            resource.data
+                            resource.data ?: emptyList()
+
+                        val setAsideCards = findSetAsides(*cards.toTypedArray())
+
+                        mutex.withLock {
+                            setAsides.addAll(setAsideCards)
+                        }
+
+
                         val charsMap =
                             deck.characters.associateBy { it.cardOrCode.fetchCode() }.toMutableMap()
-                        cards?.forEach {
+                        cards.forEach {
                             charsMap[it.fetchCode()] =
                                 charsMap[it.fetchCode()]!!.copy(cardOrCode = it)
                         }
@@ -116,6 +138,9 @@ class GetDeckWithCards @Inject constructor(
                             val code = deck.battlefieldCardCode
                             val resource = cardRepo.getCardByCode(code.fetchCode(), false)
                                 .first { it.status != Resource.Status.LOADING }
+                            resource.data?.let {
+                                setAsides.addAll(findSetAsides(CardOrCode.HasCard(it)))
+                            }
                             val uiCard = resource.data?.toCardUi()
                             Resource(resource.status, uiCard, resource.isFromDB, resource.message)
                         }
@@ -127,6 +152,11 @@ class GetDeckWithCards @Inject constructor(
                             val code = deck.plotCardCode
                             val resource = cardRepo.getCardByCode(code.fetchCode(), false)
                                 .first { it.status != Resource.Status.LOADING }
+
+                            resource.data?.let {
+                                val setAsideCard = findSetAsides(CardOrCode.HasCard(it))
+                                mutex.withLock { setAsides.addAll(setAsideCard) }
+                            }
                             val uiCard = resource.data?.toCardUi()
                             Resource(resource.status, uiCard, resource.isFromDB, resource.message)
                         }
@@ -224,7 +254,7 @@ class GetDeckWithCards @Inject constructor(
                         }
 
                         else -> {
-                            uiDeck = uiDeck.copy(slots = slots.data ?: emptyList())
+                            uiDeck = uiDeck.copy(slots = slots.data ?: emptyList(), setAsides = setAsides)
                             emit(
                                 UiState.HasData(
                                     isLoading = false,
@@ -234,6 +264,8 @@ class GetDeckWithCards @Inject constructor(
                             )
                         }
                     }
+
+
                 }
             }
         }
@@ -276,5 +308,35 @@ class GetDeckWithCards @Inject constructor(
             card.points
         }
 
+    }
+
+    private suspend inline fun findSetAsides(vararg cards: CardOrCode): List<CardUi> {
+        val setAsides = ArrayList<CardUi>()
+
+        cards.forEach { cardOrCode ->
+            if (cardOrCode is CardOrCode.HasCard) {
+                val text = cardOrCode.card.text ?: ""
+                val strings = text.split("<", ">", "[", "]").listIterator()
+                while (strings.hasNext()) {
+                    val string = strings.next()
+                    if (string in CardSetIcon.entries.map { it.code }) {
+                        val set = string
+                        val nextStrings = strings.next().split(")")
+                        try {
+                            val position = parseInt(nextStrings.first())
+                            val resource = cardRepo.getCardBySetAndPosition(set, position).last()
+                            when (resource.status) {
+                                Resource.Status.ERROR -> {}
+                                else -> if (resource.data != null) setAsides.add(resource.data.toCardUi())
+                            }
+                        } catch (e: NumberFormatException) {
+                            Log.d("SWD", "Couldn't find an integer for set position")
+                        }
+                    }
+
+                }
+            }
+        }
+        return setAsides
     }
 }

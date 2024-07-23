@@ -79,7 +79,15 @@ class DiceRollerViewModel @Inject constructor(
                                     }
                                 }
                             }
+
                         deck.slots.filter { it.diceRef.isNotEmpty() }
+                            .forEach {
+                                for (i in 1..it.quantity) {
+                                    list.add(it.toCardDiceUi())
+                                }
+                            }
+
+                        deck.setAsides.filter { it.diceRef.isNotEmpty() }
                             .forEach {
                                 for (i in 1..it.quantity) {
                                     list.add(it.toCardDiceUi())
@@ -92,20 +100,6 @@ class DiceRollerViewModel @Inject constructor(
                 }
             }
         }
-
-       /* viewModelScope.launch {
-            cards.collect { cards ->
-                val list = cards.filter { it.isCardSelected }.flatMap {
-                    if (it.isElite) {
-                        listOf(it, it)
-                    } else {
-                        listOf(it)
-                    }
-                }.groupBy { it.code }.values.toList()
-
-                dice.update { list }
-            }
-        }*/
     }
 
     fun getDeckName() = deckCode

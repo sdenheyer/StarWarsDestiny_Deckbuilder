@@ -93,8 +93,10 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardDetailUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardUiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DetailViewModel
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.toDetailUi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.lang.Integer.parseInt
 import java.net.URL
 
@@ -476,7 +478,7 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, findCardbySetAndPostitio
                             }?.let { annotation ->
                                 //navigate to card
                                 Log.d("SWD", "Link click deteced")
-                               scope.launch {
+                               scope.launch(Dispatchers.IO) {
                                    val strings = annotation.item.split("_")
                                    val setCode = strings.first()
                                    try {
@@ -484,10 +486,12 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, findCardbySetAndPostitio
                                        Log.d("SWD", "Link click deteced: $setCode, $cardPosition")
                                        val cardCode = findCardbySetAndPostition(setCode, cardPosition)
                                        Log.d("SWD", "Card:  $cardCode")
-                                       if (cardCode != null)
-                                            navigateToCard(cardCode)
+                                       withContext(Dispatchers.Main) {
+                                           if (cardCode != null)
+                                               navigateToCard(cardCode)
+                                       }
                                    } catch (e: NumberFormatException) {
-
+                                       Log.wtf("SWD", "No integer found in Link Annotation")
                                    }
                                }
 
@@ -860,14 +864,14 @@ fun DeckCardCompact(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier) {
+                Text(
+                    deck.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = textModifer,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        deck.name,
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = textModifer,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
                     Text(
                         buildAnnotatedString {
                             if (card.formats.find { it.gameType == deck.formatName }?.legality == "banned") {

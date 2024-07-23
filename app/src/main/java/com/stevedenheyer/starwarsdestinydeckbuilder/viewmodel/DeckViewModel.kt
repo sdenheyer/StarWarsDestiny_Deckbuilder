@@ -151,7 +151,7 @@ class DeckViewModel @Inject constructor(
                     chars = deck.chars.map { card ->
                         val newCard =
                             card.copy(
-                                affiliationMismatchWarning = !(card.affiliation == deck.affiliation || card.affiliation == "Neutral"),
+                                affiliationMismatchWarning = (card.affiliation != deck.affiliation && card.affiliation != "Neutral" && deck.affiliation != "Neutral"),
                                 uniqueWarning = if (!card.isUnique) false else {
                                     deck.chars.filter { it.name == card.name }.size > 1
                                 }
@@ -159,18 +159,18 @@ class DeckViewModel @Inject constructor(
                         newCard
                     },
                     battlefieldCard = deck.battlefieldCard?.copy(
-                        affiliationMismatchWarning = !(deck.battlefieldCard.affiliation == deck.affiliation || deck.battlefieldCard.affiliation == "Neutral"),
-                        factionMismatchWarning = !(deck.battlefieldCard.faction in factions || deck.battlefieldCard.faction == "General")
+                        affiliationMismatchWarning = (deck.battlefieldCard.affiliation != deck.affiliation && deck.battlefieldCard.affiliation != "Neutral" && deck.affiliation != "Neutral"),
+                        factionMismatchWarning = (deck.battlefieldCard.faction !in factions && deck.battlefieldCard.faction != "General")
                     ),
                     plotCard = deck.plotCard?.copy(
-                        affiliationMismatchWarning = !(deck.plotCard.affiliation == deck.affiliation || deck.plotCard.affiliation == "Neutral"),
-                        factionMismatchWarning = !(deck.plotCard.faction in factions || deck.plotCard.faction == "General")
+                        affiliationMismatchWarning = (deck.plotCard.affiliation != deck.affiliation && deck.plotCard.affiliation != "Neutral" && deck.affiliation != "Neutral"),
+                        factionMismatchWarning = (deck.plotCard.faction !in factions && deck.plotCard.faction != "General")
                     ),
                     slots = deck.slots.map { card ->
                         val newCard =
                             card.copy(
-                                affiliationMismatchWarning = !(card.affiliation == deck.affiliation || card.affiliation == "Neutral"),
-                                factionMismatchWarning = !(card.faction in factions || card.faction == "General"),
+                                affiliationMismatchWarning = (card.affiliation != deck.affiliation && card.affiliation != "Neutral" && deck.affiliation != "Neutral"),
+                                factionMismatchWarning = (card.faction !in factions && card.faction != "General"),
                                 uniqueWarning = if (!card.isUnique) false else {
                                     deck.slots.filter { it.name == card.name }.size > 1
                                 }

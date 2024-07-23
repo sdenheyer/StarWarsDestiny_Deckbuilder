@@ -477,7 +477,7 @@ fun DeckDetails(
                 )
             }
 
-            items(items = deck.setAsides, key = { it.code }) { card ->
+            items(items = deck.setAsides) { card ->
                 CardItem(
                     isScreenCompact = isCompactScreen,
                     modifier = Modifier,

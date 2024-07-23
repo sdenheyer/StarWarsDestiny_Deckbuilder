@@ -353,8 +353,8 @@ class DetailViewModel @Inject constructor(
         }
     }
 
-    suspend fun getCardBySetAndPosition(set: String, position: Int):Card? {
-        return repo.getCardBySetAndPosition(set, position).first { it.data != null }.data
+    suspend fun getCardBySetAndPosition(set: String, position: Int):Card {
+        return repo.getCardBySetAndPosition(set, position).first { it.data != null }.data!!
     }
 
 }

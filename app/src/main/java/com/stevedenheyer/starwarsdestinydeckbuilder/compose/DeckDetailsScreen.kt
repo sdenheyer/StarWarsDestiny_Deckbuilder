@@ -463,6 +463,28 @@ fun DeckDetails(
                     onItemClick = { onCardClick(card.code) }
                 )
             }
+
+            item {
+                Text(
+                    buildAnnotatedString {
+                        append("Set-asides")
+                        append("(${deck.setAsides.size}")
+                        appendInlineContent("dice", "dice")
+                        append(")")
+                    }, style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    inlineContent = getCardInlines(MaterialTheme.colorScheme.onPrimaryContainer)
+                )
+            }
+
+            items(items = deck.setAsides, key = { it.code }) { card ->
+                CardItem(
+                    isScreenCompact = isCompactScreen,
+                    modifier = Modifier,
+                    card = card,
+                    onItemClick = { onCardClick(card.code) }
+                )
+            }
         }
     }
 }

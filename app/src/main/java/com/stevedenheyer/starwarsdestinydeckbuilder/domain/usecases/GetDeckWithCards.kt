@@ -324,7 +324,7 @@ class GetDeckWithCards @Inject constructor(
                         val nextStrings = strings.next().split(")")
                         try {
                             val position = parseInt(nextStrings.first())
-                            val resource = cardRepo.getCardBySetAndPosition(set, position).last()
+                            val resource = cardRepo.getCardBySetAndPosition(set, position).first { it.status != Resource.Status.LOADING }
                             when (resource.status) {
                                 Resource.Status.ERROR -> {}
                                 else -> if (resource.data != null) setAsides.add(resource.data.toCardUi())

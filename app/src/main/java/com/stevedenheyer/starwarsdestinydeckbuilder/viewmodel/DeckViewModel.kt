@@ -52,6 +52,7 @@ data class DeckDetailUi(
             downgrades = DeckSlotsUi.toDeckSlotsUi(deckUi.slots.filter { it.type == "Downgrade" }),
             support = DeckSlotsUi.toDeckSlotsUi(deckUi.slots.filter { it.type == "Support" }),
             events = DeckSlotsUi.toDeckSlotsUi(deckUi.slots.filter { it.type == "Event" }),
+            setAsides = deckUi.setAsides
         )
     }
 

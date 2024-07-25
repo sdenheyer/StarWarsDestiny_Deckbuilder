@@ -92,12 +92,23 @@ class GetDeckWithCards @Inject constructor(
                             slotsMap[it.fetchCode()] =
                                 slotsMap[it.fetchCode()]!!.copy(cardOrCode = it)
                         }
-                        val uiCards = slotsMap.values.map {
-                            (it.cardOrCode as CardOrCode.HasCard).card.toUi(
-                                format,
-                                it.quantity,
-                                false
-                            )
+                        val uiCards = slotsMap.values.mapNotNull {
+                            if (it.isSetAside) {
+                                mutex.withLock {
+                                    setAsides.add((it.cardOrCode as CardOrCode.HasCard).card.toUi(
+                                        format,
+                                        it.quantity,
+                                        false,
+                                    ))
+                                }
+                                null
+                            } else {
+                                (it.cardOrCode as CardOrCode.HasCard).card.toUi(
+                                    format,
+                                    it.quantity,
+                                    false,
+                                )
+                            }
                         }
                         Resource(resource.status, uiCards, resource.isFromDB, resource.message)
                     }
@@ -114,20 +125,34 @@ class GetDeckWithCards @Inject constructor(
                             setAsides.addAll(setAsideCards)
                         }
 
-
                         val charsMap =
                             deck.characters.associateBy { it.cardOrCode.fetchCode() }.toMutableMap()
                         cards.forEach {
                             charsMap[it.fetchCode()] =
                                 charsMap[it.fetchCode()]!!.copy(cardOrCode = it)
                         }
-                        val uiCards = charsMap.values.map {
+                        val uiCards = charsMap.values.filter { !it.isSetAside }.map {
+
+                                (it.cardOrCode as CardOrCode.HasCard).card.toUi(
+                                    format,
+                                    it.quantity,
+                                    false,
+                                )
+                            }
+
+                        val asides = charsMap.values.filter { it.isSetAside }.map {
                             (it.cardOrCode as CardOrCode.HasCard).card.toUi(
-                                format,
-                                it.quantity,
-                                it.isElite
-                            )
+                                        format,
+                                        it.quantity,
+                                        false,
+                                    )
                         }
+
+
+                            mutex.withLock {
+                                setAsides.addAll(asides)
+                            }
+
                         Resource(resource.status, uiCards, resource.isFromDB, resource.message)
                     }
 
@@ -229,6 +254,7 @@ class GetDeckWithCards @Inject constructor(
                         }
 
                         else -> {
+
                             uiDeck = uiDeck.copy(chars = chars.data ?: emptyList())
                             emit(
                                 UiState.HasData(
@@ -274,7 +300,7 @@ class GetDeckWithCards @Inject constructor(
     private suspend inline fun Card.toUi(
         format: CardFormat,
         quantity: Int = 1,
-        isElite: Boolean = false
+        isElite: Boolean = false,
     ): CardUi {
         val isBanned = getIsBanned(this, format)
         val balance = getBalance(this, format)

@@ -49,6 +49,7 @@ fun CharacterEntity.toDomain() = CharacterCard(
     isElite = isElite,
     dice = dice,
     dices = dices,
+    isSetAside = setAside,
 )
 
 fun CharacterCard.toEntity(deckName: String) = CharacterEntity(
@@ -59,6 +60,7 @@ fun CharacterCard.toEntity(deckName: String) = CharacterEntity(
     isElite = isElite,
     dice = dice,
     dices = dices,
+    setAside = isSetAside
 )
 
 fun SlotEntity.toDomain() = Slot(
@@ -66,6 +68,7 @@ fun SlotEntity.toDomain() = Slot(
     quantity = quantity,
     dice = dice,
     dices = dices,
+    isSetAside = setAside,
 )
 
 fun Slot.toEntity(deckName: String) = SlotEntity(
@@ -74,4 +77,5 @@ fun Slot.toEntity(deckName: String) = SlotEntity(
     quantity = quantity,
     dice = dice,
     dices = dices,
+    setAside = isSetAside,
 )

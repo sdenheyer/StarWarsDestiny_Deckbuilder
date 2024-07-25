@@ -9,7 +9,10 @@ plugins {
     //kotlin("kapt")
     id("com.google.dagger.hilt.android")
     id("com.google.protobuf") version "0.9.1"
+    id("androidx.room")
 }
+
+
 
 android {
     namespace = "com.stevedenheyer.starwarsdestinydeckbuilder"
@@ -57,6 +60,9 @@ android {
         }
     }
 
+    room {
+        schemaDirectory("$projectDir/schemas")
+    }
     /*protobuf {
         protoc {
             artifact = "com.google.protobuf:protec:21.7"

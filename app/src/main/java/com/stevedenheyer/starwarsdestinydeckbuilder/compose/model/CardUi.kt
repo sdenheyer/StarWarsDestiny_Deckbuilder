@@ -46,7 +46,7 @@ fun Card.toCardUi() = CardUi(
     diceRef = sides ?: emptyList(),
     set = setCode,
     position = position,
-    quantity = quantity
+    quantity = quantity,
 )
 
 

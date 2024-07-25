@@ -1,6 +1,7 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.data.local.data
 
 import android.app.Application
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -31,8 +32,11 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.SubTypeEnti
                 SubTypeEntity::class, CardCode::class, FormatBaseEntity::class, SetCode::class, Balance::class, FormatSetCrossref::class,
                 FormatBannedCrossref::class, FormatRestrictedCrossref::class, BalanceCardCrossref::class, CardSetTimeEntity::class, FormatTimeEntity::class,
                 DeckBaseEntity::class, CharacterEntity::class, SlotEntity::class, OwnedCardsBaseEntity::class, CodeQuantity::class,],
-            version = 1,
-            exportSchema = false
+            version = 2,
+      //      exportSchema = false
+            autoMigrations = [
+                AutoMigration (from = 1, to = 2)
+            ]
             )
 
 abstract class AppDatabase : RoomDatabase() {

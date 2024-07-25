@@ -29,11 +29,13 @@ data class CharacterCard(
     val isElite: Boolean,
     val dice: Int,
     val dices: String?,
+    val isSetAside: Boolean,
 )
 
 data class Slot(
     val cardOrCode: CardOrCode,
     val quantity: Int,
     val dice: Int,
-    val dices: String?
+    val dices: String?,
+    val isSetAside: Boolean,
 )

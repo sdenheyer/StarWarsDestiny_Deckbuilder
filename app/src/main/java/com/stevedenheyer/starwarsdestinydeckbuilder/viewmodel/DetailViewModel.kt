@@ -266,16 +266,16 @@ class DetailViewModel @Inject constructor(
         }
     }
 
-    fun writeDeck(deckName: String, quantity: Int, isElite: Boolean) {
+    fun writeDeck(deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) {
         val card = (uiCard.value as CardUiState.HasData).data
         when (card.typeName) {
             "Battlefield" -> writeDeck(deckName)
             "Plot" -> writeDeck(deckName, isElite)
             "Character" -> {
-                writeDeckWithChar(deckName, quantity, isElite)
+                writeDeckWithChar(deckName, quantity, isElite, isSetAside)
             }
 
-            else -> writeDeckWithSlot(deckName, quantity)
+            else -> writeDeckWithSlot(deckName, quantity, isSetAside)
         }
     }
 
@@ -306,7 +306,7 @@ class DetailViewModel @Inject constructor(
         }
     }
 
-    private fun writeDeckWithChar(deckName: String, quantity: Int, isElite: Boolean) {
+    private fun writeDeckWithChar(deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) {
         val deck = decks.value.find { it.name == deckName }
         val card = try {
             checkNotNull(cardFlow.value.data)
@@ -321,15 +321,16 @@ class DetailViewModel @Inject constructor(
                 quantity = quantity,
                 isElite = isElite,
                 dice = quantity,
-                dices = null
+                dices = null,
+                isSetAside = isSetAside,
             )
             viewModelScope.launch { repo.updateDeck(deck, char) }
         }
     }
 
-    private fun writeDeckWithSlot(deckName: String, quantity: Int) {
+    private fun writeDeckWithSlot(deckName: String, quantity: Int, isSetAside: Boolean = false) {
         val limit = cardFlow.value.data?.deckLimit ?: 2
-        if (quantity <= limit) {
+        if (quantity <= limit + 1) {
        //     Log.d("SWD", "Attempting slot write: ${quantity}, ${limit}")
             val deck = decks.value.find { it.name == deckName }
             if (deck != null) {
@@ -338,7 +339,8 @@ class DetailViewModel @Inject constructor(
                     cardOrCode = CardOrCode.HasCode(code),
                     quantity = quantity,
                     dice = if (cardFlow.value.data?.hasDie == true) quantity else 0,
-                    dices = null
+                    dices = null,
+                    isSetAside = isSetAside,
                 )
                 viewModelScope.launch { repo.updateDeck(deck, slot) }
             }

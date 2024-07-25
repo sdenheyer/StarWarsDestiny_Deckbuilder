@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -53,13 +54,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
@@ -67,6 +68,8 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.BaselineShift
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
@@ -94,7 +97,6 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardUiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DetailViewModel
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.toDetailUi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.lang.Integer.parseInt
@@ -168,15 +170,16 @@ fun DetailsScreen(
                         .background(color = MaterialTheme.colorScheme.primaryContainer),
                     card = state.data,
                     decks = decks,
-                    changeCardQuantity = { deckName, quantity, isElite ->
+                    changeCardQuantity = { deckName, quantity, isElite, isSetAside ->
                         (detailViewModel::writeDeck)(
                             deckName,
                             quantity,
-                            isElite
+                            isElite,
+                            isSetAside
                         )
                     },
                     owned = owned,
-                    changeOwnedQuantity = { _, quantity, _ -> (detailViewModel::writeOwned)(quantity) },
+                    changeOwnedQuantity = { _, quantity, _ , _-> (detailViewModel::writeOwned)(quantity) },
                     findCardbySetAndPostition = { set, position ->
                             val card = detailViewModel.getCardBySetAndPosition(set, position)
                             card?.code
@@ -216,8 +219,8 @@ fun Details(isCompactScreen: Boolean,
             decks: List<CardDetailDeckUi>,
             owned: CardDetailDeckUi,
             modifier: Modifier = Modifier,
-            changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
-            changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
+            changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
+            changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
             findCardbySetAndPostition: suspend (String, Int) -> String?,
             navigateToCard: (String) -> Unit) {
     when (isCompactScreen) {
@@ -251,8 +254,8 @@ fun CompactDetails(
     decks: List<CardDetailDeckUi>,
     owned: CardDetailDeckUi,
     modifier: Modifier = Modifier,
-    changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
-    changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
+    changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
+    changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
     findCardbySetAndPostition: suspend (String, Int) -> String?,
     navigateToCard: (String) -> Unit,
 ) {
@@ -271,7 +274,7 @@ fun CompactDetails(
                 modifier = Modifier.padding(vertical = 8.dp),
                 deck = deck,
                 card = card,
-            ) { deckName, quantity, isElite -> changeCardQuantity(deckName, quantity, isElite) }
+            ) { deckName, quantity, isElite, isSetAside -> changeCardQuantity(deckName, quantity, isElite, isSetAside) }
         }
         item {
             ImageCard(modifier = Modifier, src = card.imageSrc)
@@ -286,8 +289,8 @@ fun LargeDetails(
     decks: List<CardDetailDeckUi>,
     owned: CardDetailDeckUi,
     modifier: Modifier = Modifier,
-    changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
-    changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit,
+    changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
+    changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
     findCardbySetAndPostition: suspend (String, Int) -> String?,
     navigateToCard: (String) -> Unit,
 ) {
@@ -321,7 +324,7 @@ fun LargeDetails(
                 modifier = Modifier.fillMaxWidth(),
                 deck = deck,
                 card = card
-            ) { deckName, quantity, isElite -> changeCardQuantity(deckName, quantity, isElite) }
+            ) { deckName, quantity, isElite, isSetAside -> changeCardQuantity(deckName, quantity, isElite, isSetAside) }
         }
     }
 }
@@ -724,7 +727,7 @@ fun Balance(modifier: Modifier, factionColor: Color, formats: List<Format>) {
 fun OwnedCard(
     modifier: Modifier,
     owned: CardDetailDeckUi,
-    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
+    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit
 ) {
     val textModifer = Modifier
         .padding(vertical = 2.dp, horizontal = 8.dp)
@@ -761,7 +764,7 @@ fun DeckCard(
     modifier: Modifier,
     card: CardDetailUi,
     deck: CardDetailDeckUi,
-    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
+    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit
 ) {
     val textModifer = Modifier
         .padding(vertical = 2.dp, horizontal = 8.dp)
@@ -842,7 +845,7 @@ fun DeckCardCompact(
     modifier: Modifier,
     deck: CardDetailDeckUi,
     card: CardDetailUi,
-    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
+    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit
 ) {
     val textModifer = Modifier
         .padding(vertical = 2.dp, horizontal = 8.dp)
@@ -856,14 +859,20 @@ fun DeckCardCompact(
         ),
         border = BorderStroke(4.dp, color = MaterialTheme.colorScheme.onSurface)
     ) {
-        Row(
+        /*Row(
             modifier = Modifier
                 .padding(horizontal = 12.dp, vertical = 4.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier) {
+        ) */
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 12.dp, vertical = 4.dp)
+                .fillMaxWidth(),
+        )
+        {
+           // Column(verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier) {
                 Text(
                     deck.name,
                     style = MaterialTheme.typography.titleLarge,
@@ -871,60 +880,82 @@ fun DeckCardCompact(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        buildAnnotatedString {
-                            if (card.formats.find { it.gameType == deck.formatName }?.legality == "banned") {
-                                append("Banned. ")
-                            }
-                            when (card.typeName) {
-                                "Character" -> {
-                                    append("${deck.pointsUsed} points used.")
+
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()) {
+                    Column {
+                        Text(
+                            buildAnnotatedString {
+                                if (card.formats.find { it.gameType == deck.formatName }?.legality == "banned") {
+                                    append("Banned. ")
                                 }
-                                "Battlefield" -> if (deck.battlefield != card.code && deck
-                                        .battlefield != null) append("Deck has Battlefield - will replace.")
-                                "Plot" -> { if (deck.plot != card.code && deck
-                                        .plot != null) append("Deck has Plot - will replace.")
-                                        append("${deck.pointsUsed} points used.") }
-                                else -> append("Deck size ${deck.deckSize} cards.")
-                            }
-                        },
-                        style = MaterialTheme.typography.titleSmall,
-                        maxLines = 2,
-                        modifier = textModifer.widthIn(max = 200.dp)
-                    )
-                }
-                Row(horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(
-                        buildAnnotatedString {
-                            append(deck.formatName)
-                            if (card.formats.find { it.gameType == deck.formatName }?.legality == "banned") {
-                                withStyle(SpanStyle(color = MaterialTheme.colorScheme.error)) { append(" !") }
-                            }
-                        },
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = textModifer.width(120.dp)
-                    )
-                    Text(
-                        buildAnnotatedString {
-                        append(deck.affiliationName)
-                        if (card.affiliation != deck.affiliationName && card.affiliation != "Neutral") {
-                            withStyle(SpanStyle(color = MaterialTheme.colorScheme.error)) { append(" !") }
+                                when (card.typeName) {
+                                    "Character" -> {
+                                        append("${deck.pointsUsed} points used.")
+                                    }
+
+                                    "Battlefield" -> if (deck.battlefield != card.code && deck
+                                            .battlefield != null
+                                    ) append("Deck has Battlefield - will replace.")
+
+                                    "Plot" -> {
+                                        if (deck.plot != card.code && deck
+                                                .plot != null
+                                        ) append("Deck has Plot - will replace.")
+                                        append("${deck.pointsUsed} points used.")
+                                    }
+
+                                    else -> append("Deck size ${deck.deckSize} cards.")
+                                }
+                            },
+                            style = MaterialTheme.typography.titleSmall,
+                            maxLines = 2,
+                            modifier = textModifer.widthIn(max = 200.dp)
+                        )
+                        Row(horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(
+                                buildAnnotatedString {
+                                    append(deck.formatName)
+                                    if (card.formats.find { it.gameType == deck.formatName }?.legality == "banned") {
+                                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.error)) {
+                                            append(
+                                                " !"
+                                            )
+                                        }
+                                    }
+                                },
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = textModifer.width(120.dp)
+                            )
+                            Text(
+                                buildAnnotatedString {
+                                    append(deck.affiliationName)
+                                    if (card.affiliation != deck.affiliationName && card.affiliation != "Neutral") {
+                                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.error)) {
+                                            append(
+                                                " !"
+                                            )
+                                        }
+                                    }
+                                },
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = textModifer
+                            )
                         }
-                },
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = textModifer
+                    }
+                    //   }
+                    // }
+                    DeckControls(
+                        modifier = Modifier,
+                        deck = deck,
+                        card = card,
+                        changeQuantity = changeQuantity
                     )
                 }
             }
-            DeckControls(
-                modifier = Modifier,
-                deck = deck,
-                card = card,
-                changeQuantity = changeQuantity
-            )
         }
-    }
+   // }
 }
 
 @Composable
@@ -932,7 +963,7 @@ fun DeckControls(
     modifier: Modifier,
     card: CardDetailUi,
     deck: CardDetailDeckUi,
-    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
+    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit
 ) =
     when (card.typeName) {
         "Battlefield" -> AddSingle(
@@ -962,13 +993,15 @@ fun DeckControls(
         }
 
         else -> AddMultiple(modifier, deck, changeQuantity)
-    }
+
+        }
+
 
 @Composable
 fun AddElitable(
     modifier: Modifier,
     deck: CardDetailDeckUi,
-    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean) -> Unit
+    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit
 ) {
     TextButton(border = BorderStroke(
         2.dp,
@@ -978,17 +1011,21 @@ fun AddElitable(
         modifier = modifier.width(140.dp),
         onClick = {
             when (deck.quantity) {
-                0 -> changeQuantity(deck.name, 1, false)
-                1 -> changeQuantity(deck.name, 2, true)
-                2 -> changeQuantity(deck.name, 0, false)
+                0 -> changeQuantity(deck.name, 1, false, false)
+                1 -> changeQuantity(deck.name, 2, true, false)
+                2 -> changeQuantity(deck.name, 3, false, true)
+                3 -> changeQuantity(deck.name, 0, false, false)
             }
         }) {
         Text(
             buildAnnotatedString {
-                when (deck.quantity) {
-                    0 -> append("Add")
-                    1 -> append("Make Elite")
-                    2 -> append("Remove")
+                withStyle(ParagraphStyle(textAlign = TextAlign.Center)) {
+                    when (deck.quantity) {
+                        0 -> append("Add")
+                        1 -> append("Make Elite")
+                        2 -> append("Make\nSet-Aside")
+                        3 -> append("Remove")
+                    }
                 }
             },
             Modifier
@@ -1004,7 +1041,7 @@ fun AddSingle(
     modifier: Modifier,
     deck: CardDetailDeckUi,
     deckHasCard: Boolean,
-    changeQuantity: (deckName: String, quantity: Int, _: Boolean) -> Unit
+    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit
 ) {
     TextButton(border = BorderStroke(
         2.dp,
@@ -1014,10 +1051,10 @@ fun AddSingle(
         modifier = modifier.width(140.dp),
         onClick = {
             if (!deckHasCard) {
-                changeQuantity(deck.name, 1, false)
+                changeQuantity(deck.name, 1, false, false)
             }
             else {
-                changeQuantity(deck.name, 0, true)
+                changeQuantity(deck.name, 0, true, false)
             }
         }) {
         Text(
@@ -1041,15 +1078,18 @@ fun AddSingle(
 fun AddMultiple(
     modifier: Modifier,
     deck: CardDetailDeckUi,
-    changeQuantity: (deckName: String, quantity: Int, _: Boolean) -> Unit
+    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit
 ) {
     Row(modifier = modifier) {
         TextButton(border = BorderStroke(
             2.dp,
             color = MaterialTheme.colorScheme.primary
         ),
-            enabled = (deck.quantity > 0),
-            onClick = { changeQuantity(deck.name, deck.quantity - 1, false) }) {
+            enabled = (deck.quantity > -1),
+            onClick = { changeQuantity(deck.name,
+                deck.quantity - 1,
+                false,
+                deck.quantity -1 < 0) }) {
             Text(
                 "-",
                 Modifier
@@ -1059,16 +1099,32 @@ fun AddMultiple(
             )
         }
         Text(
-            deck.quantity.toString(),
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(horizontal = 12.dp)
+            buildAnnotatedString {
+                if (deck.quantity in 0..deck.maxQuantity) {
+                    withStyle(style = SpanStyle(fontStyle = MaterialTheme.typography.headlineMedium.fontStyle, fontSize = MaterialTheme.typography.headlineMedium.fontSize)) {
+                        append(deck.quantity.toString())
+                    }
+                } else {
+                    withStyle(style = SpanStyle(fontStyle = MaterialTheme.typography.bodySmall.fontStyle,
+                        baselineShift = BaselineShift.Subscript)) {
+                        withStyle(style = ParagraphStyle(textAlign = TextAlign.Center)) {
+                            append("Set-\nAside")
+                        }
+                    }
+                }
+            },
+
+            modifier = Modifier.padding(horizontal = 12.dp).align(Alignment.CenterVertically)
         )
         TextButton(border = BorderStroke(
             2.dp,
             color = MaterialTheme.colorScheme.primary,
         ),
-            enabled = (deck.quantity < deck.maxQuantity),
-            onClick = { changeQuantity(deck.name, deck.quantity + 1, false) }) {
+            enabled = (deck.quantity < deck.maxQuantity + 1),
+            onClick = { changeQuantity(deck.name,
+                deck.quantity + 1,
+                false,
+                deck.quantity + 1 > deck.maxQuantity) }) {
             Text(
                 "+",
                 Modifier
@@ -1144,57 +1200,6 @@ fun parseHtml(s: String, inlines: Map<String, InlineTextContent> = emptyMap()): 
                         appendInlineContent(string, "[" + string + "]")
                     }
                 }
-
-              /*  DieIcon.BLANK.inlineTag -> appendInlineContent(
-                    DieIcon.BLANK.code,
-                    "[" + DieIcon.BLANK.inlineTag + "]"
-                )
-
-                DieIcon.DISCARD.inlineTag -> appendInlineContent(
-                    DieIcon.DISCARD.code,
-                    "[" + DieIcon.DISCARD.inlineTag + "]"
-                )
-
-                DieIcon.DISRUPT.inlineTag -> appendInlineContent(
-                    DieIcon.DISRUPT.code,
-                    "[" + DieIcon.DISRUPT.inlineTag + "]"
-                )
-
-                DieIcon.FOCUS.inlineTag -> appendInlineContent(
-                    DieIcon.FOCUS.code,
-                    "[" + DieIcon.FOCUS.inlineTag + "]"
-                )
-
-                DieIcon.INDIRECT.inlineTag -> appendInlineContent(
-                    DieIcon.INDIRECT.code,
-                    "[" + DieIcon.INDIRECT.inlineTag + "]"
-                )
-
-                DieIcon.MELEE.inlineTag -> appendInlineContent(
-                    DieIcon.MELEE.code,
-                    "[" + DieIcon.MELEE.inlineTag + "]"
-                )
-
-                DieIcon.RANGED.inlineTag -> appendInlineContent(
-                    DieIcon.RANGED.code,
-                    "[" + DieIcon.RANGED.inlineTag + "]"
-                )
-
-                DieIcon.RESOURCE.inlineTag -> appendInlineContent(
-                    DieIcon.RESOURCE.code,
-                    "[" + DieIcon.RESOURCE.inlineTag + "]"
-                )
-
-                DieIcon.SHIELD.inlineTag -> appendInlineContent(
-                    DieIcon.SHIELD.code,
-                    "[" + DieIcon.SHIELD.inlineTag + "]"
-                )
-
-                DieIcon.SPECIAL.inlineTag -> appendInlineContent(
-                    DieIcon.SPECIAL.code,
-                    "[" + DieIcon.SPECIAL.inlineTag + "]"
-                )
-*/
                 else -> append(string)
             }
         }
@@ -1230,7 +1235,7 @@ fun TextCardPreview() {
 
 val testCard = CardDetailUi(
     name = "test",
-    typeName = "Battlefield",
+    typeName = "Support",
     affiliation = "Hero",
     code = "00000",
     color = "Red",
@@ -1300,7 +1305,7 @@ fun DecksPreview() {
         deckSize = 25,
         isElite = false
     )
-    DeckCard(modifier = Modifier, deck = deck, card = testCard) { name, quan, isElite -> }
+    DeckCard(modifier = Modifier, deck = deck, card = testCard) { name, quan, isElite, isSetAside -> }
 }
 
 @Preview(widthDp = 400)
@@ -1338,7 +1343,7 @@ fun DecksCompactPreview() {
         name = "test",
         affiliationName = "Hero",
         formatName = "Standard",
-        quantity = 0,
+        quantity = -1,
         maxQuantity = 2,
         isUnique = true,
         battlefield = "00001",
@@ -1347,6 +1352,6 @@ fun DecksCompactPreview() {
         deckSize = 25,
         isElite = false
     )
-    DeckCardCompact(modifier = Modifier, deck = deck, card = testCard) { name, quan, isElite -> }
+    DeckCardCompact(modifier = Modifier, deck = deck, card = testCard) { name, quan, isElite, isSetAside -> }
 }
 

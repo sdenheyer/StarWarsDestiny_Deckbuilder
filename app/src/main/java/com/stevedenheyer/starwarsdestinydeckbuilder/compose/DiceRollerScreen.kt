@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -235,13 +236,15 @@ fun DiceGrids(
                                     style = MaterialTheme.typography.headlineMedium,
                                     modifier = Modifier.fillMaxWidth().wrapContentWidth(align = Alignment.CenterHorizontally)) },
                                     onClick = { setOrRollDie(dice.code, index, null) },
-
                                 )
                                 dice.diceRef.forEach {
                                     DropdownMenuItem(
-                                        text = { Die(isCompactScreen = isCompactScreen, dieCode = it, modifier = Modifier.size(32.dp)) },
+                                        text = { Die(isCompactScreen = isCompactScreen, dieCode = it, modifier = Modifier
+                                            .height(32.dp)
+                                            .width(48.dp)   //TODO:  Figure out how to center this
+                                        ) },
                                         leadingIcon = {  },
-                                        onClick = { setOrRollDie(dice.code, index, it) }
+                                        onClick = { setOrRollDie(dice.code, index, it) },
                                     )
                                   //  DropdownMenuItem(text = { Text(it) }, onClick = { setOrRollDie(dice.code, index, it) })
                                 }
@@ -277,7 +280,7 @@ fun CardsPreview() {
 @Composable
 fun DicePreview() {
     DiceGrids(
-        isCompactScreen = false,
+        isCompactScreen = true,
         diceList = listOf(
             listOf(
                 CardDiceUi(
@@ -285,7 +288,7 @@ fun DicePreview() {
                     name = "Darth",
                     color = "Red",
                     diceRef = listOf("+1MD"),
-                    sideShowing = "-",
+                    sideShowing = "+1MD",
                     isCardSelected = true,
                     isDieSelected = false,
                     isElite = false,

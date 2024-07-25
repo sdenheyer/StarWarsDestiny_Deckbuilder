@@ -1,5 +1,6 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Embedded
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -30,6 +31,8 @@ data class CharacterEntity(
     val quantity: Int,
     val dice: Int,
     val dices: String?,
+
+    @ColumnInfo(defaultValue = "0")val setAside: Boolean,
 )
 
 @Entity(primaryKeys = ["deckName", "cardCode"])
@@ -39,6 +42,8 @@ data class SlotEntity(
     val quantity: Int,
     val dice: Int,
     val dices: String?,
+
+    @ColumnInfo(defaultValue = "0")val setAside: Boolean,
 )
 
 data class DeckEntity(

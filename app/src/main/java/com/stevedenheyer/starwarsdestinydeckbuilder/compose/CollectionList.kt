@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.buildAnnotatedString
@@ -41,19 +42,19 @@ fun CollectionList(
         refreshThreshold = 60.dp
     )
 
-    var characterExpanded by remember { mutableStateOf(true) }
+    var characterExpanded by rememberSaveable { mutableStateOf(true) }
 
-    var battlefieldExpanded by remember { mutableStateOf(true) }
+    var battlefieldExpanded by rememberSaveable { mutableStateOf(true) }
 
-    var plotExpanded by remember { mutableStateOf(true) }
+    var plotExpanded by rememberSaveable { mutableStateOf(true) }
 
-    var upgradeExpanded by remember { mutableStateOf(true) }
+    var upgradeExpanded by rememberSaveable { mutableStateOf(true) }
 
-    var downgradeExpanded by remember { mutableStateOf(true) }
+    var downgradeExpanded by rememberSaveable { mutableStateOf(true) }
 
-    var supportExpanded by remember { mutableStateOf(true) }
+    var supportExpanded by rememberSaveable { mutableStateOf(true) }
 
-    var eventExpanded by remember { mutableStateOf(true) }
+    var eventExpanded by rememberSaveable { mutableStateOf(true) }
 
     Box {
         LazyColumn(

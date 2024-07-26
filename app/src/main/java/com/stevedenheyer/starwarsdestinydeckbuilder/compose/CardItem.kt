@@ -1,13 +1,16 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.compose
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -16,12 +19,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.CardSetIcon
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.DieGroup
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.getCardInlines
 import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.mappings.toDomain
@@ -40,6 +48,23 @@ fun CardItem(modifier: Modifier, isScreenCompact: Boolean, card: CardUi, onItemC
 @Composable
 fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Unit) {
     val factionColor = getColorFromString(card.color)
+    val setInlines = CardSetIcon.entries.associate { set ->
+        Pair(set.code, InlineTextContent(
+            Placeholder(
+                width = MaterialTheme.typography.bodyLarge.fontSize,
+                height = MaterialTheme.typography.bodyLarge.fontSize,
+                placeholderVerticalAlign = PlaceholderVerticalAlign.AboveBaseline
+            )
+        ) {
+            Image(
+                painter = painterResource(id = set.resourceId),
+                contentDescription = set.name,
+                modifier = Modifier.fillMaxSize(),
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
+            )
+        })
+    }
+
     OutlinedCard(modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -78,11 +103,7 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
                 modifier = Modifier
                     .padding(top = 0.dp, bottom = 8.dp, start = 8.dp, end = 6.dp)
             )
-         /*   if (card.uniqueWarning) {
-                Text(buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.error, fontSize = MaterialTheme.typography.titleLarge.fontSize)) { append(" U") }
-                })
-            }*/
+
             if (card.quantity > 0)
                 Text(buildAnnotatedString {
                     if (card.isBanned) {
@@ -160,8 +181,12 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
             Column(modifier = Modifier.weight(2.5f)) {
                 Text("Set", style = MaterialTheme.typography.labelSmall)
                 Text(
-                    "${card.set}#${card.position}",
+                    buildAnnotatedString {
+                        appendInlineContent(card.set, card.set)
+                        append("#${card.position}")
+                    },
                     style = MaterialTheme.typography.bodyMedium,
+                    inlineContent = setInlines
                 )
             }
         }
@@ -171,6 +196,23 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
 @Composable
 fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> Unit) {
     val factionColor = getColorFromString(card.color)
+    val setInlines = CardSetIcon.entries.associate { set ->
+        Pair(set.code, InlineTextContent(
+            Placeholder(
+                width = MaterialTheme.typography.bodyLarge.fontSize,
+                height = MaterialTheme.typography.bodyLarge.fontSize,
+                placeholderVerticalAlign = PlaceholderVerticalAlign.AboveBaseline
+            )
+        ) {
+            Image(
+                painter = painterResource(id = set.resourceId),
+                contentDescription = set.name,
+                modifier = Modifier.fillMaxSize(),
+                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
+            )
+        })
+    }
+
     OutlinedCard(modifier = modifier.background(MaterialTheme.colorScheme.primaryContainer),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -271,8 +313,12 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
             Column(modifier = Modifier.weight(1.6f)) {
                 Text("Set", style = MaterialTheme.typography.labelSmall)
                 Text(
-                    "${card.set}#${card.position}",
+                    buildAnnotatedString {
+                        appendInlineContent(card.set, card.set)
+                        append("#${card.position}")
+                    },
                     style = MaterialTheme.typography.bodyMedium,
+                    inlineContent = setInlines
                 )
             }
         }

@@ -1,11 +1,14 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.compose.common
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
@@ -25,20 +28,42 @@ import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.room.util.newStringBuilder
+import com.stevedenheyer.starwarsdestinydeckbuilder.R
 
 
 @Composable
-fun DieGroup(modifier: Modifier, dieCodes: List<String>, isCompactScreen: Boolean = true) {
+fun DieGroup(modifier: Modifier = Modifier, dieCodes: List<String>, isCompactScreen: Boolean = true) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         dieCodes.forEach {
-            Die(modifier = Modifier.weight(1F, fill = true), dieCode = it, isCompactScreen)
+            Die(modifier = modifier.weight(1F, fill = true), dieCode = it, isCompactScreen)
         }
     }
 }
 
 @Composable
 fun Die(modifier: Modifier = Modifier, dieCode: String, isCompactScreen: Boolean) {
-    var dieIcon: Int? = null
+
+    val dieResourceMap = DieIcon.entries.associate {
+       Pair(it.code, it.resourceId)
+    }
+
+    val dieRegexString = buildString {
+        append("(\\+\\d+)|\\d+|i")
+        DieIcon.entries.forEach {
+            append("|(" + it.code + ")")
+            }
+        }
+
+    val dieRegex = Regex(dieRegexString)
+
+    val dieStrings = dieRegex.findAll(dieCode).map { it.groupValues.first() }.toList()
+
+    Log.d("SWD", "die strings: ${dieStrings}")
+
+
+
+  /*  var dieIcon: Int? = null
 
     var value: String =
         if (dieCode.substring(0, 1) == "+") dieCode.substring(0, 2) else dieCode.substring(0, 1)
@@ -52,7 +77,7 @@ fun Die(modifier: Modifier = Modifier, dieCode: String, isCompactScreen: Boolean
     }
 
     val cost: String = dieCode.last().digitToIntOrNull().toString()
-
+*/
     BoxWithConstraints(
         modifier
            // .wrapContentSize(align = Alignment.Center)
@@ -60,69 +85,93 @@ fun Die(modifier: Modifier = Modifier, dieCode: String, isCompactScreen: Boolean
         val fontSize = this.maxHeight.value.sp
         val style = TextStyle(platformStyle = PlatformTextStyle(includeFontPadding = false))
 
-    if (cost.isNotBlank() && cost != "null") {
-        if (isCompactScreen) {
+        var color = MaterialTheme.colorScheme.onSurface
+
+        if (dieStrings.last().isNumber()) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Row(Modifier.weight(1F), verticalAlignment = Alignment.CenterVertically) {
-                    if (value.isNotBlank() && value != "-")
-                        Text(text = value, fontSize = fontSize / 2, style = style)
-                    if (dieIcon != null)
-                        Image(
-                            painter = painterResource(id = dieIcon),
-                            contentDescription = "Die Reference",
-                            contentScale = ContentScale.FillHeight,
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
-                            modifier = Modifier.fillMaxHeight()
-                        )
+
+                    if (dieStrings.first().startsWith("+")) color = Color.Blue
+
+                    if (dieStrings.first().isNumber())
+                        Text(text = dieStrings.first(), fontSize = fontSize / 2, style = style)
+
+                    val dieResource = dieResourceMap[dieStrings[2]] ?: R.drawable.swd01_blank_symbol_w
+
+                    Image(
+                        painter = painterResource(id = dieResource),
+                        contentDescription = "Die Reference",
+                        contentScale = ContentScale.FillHeight,
+                        colorFilter = ColorFilter.tint(color),
+                        modifier = Modifier.fillMaxHeight()
+                    )
+                }
+
+                val dieResource = if (dieStrings[2] == "i") R.drawable.swd01_indirect_damage_symbol_w
+                                    else R.drawable.swd01_resource_symbol_o
+
+                if (dieStrings[2] == "i") color = Color.Red
+
+                val cost = try { if (dieStrings[2].isNumber()) dieStrings[2] else (dieStrings[3]) }
+                catch (e: IndexOutOfBoundsException) {
+                    Log.wtf("SWD", "Unexpected missing Number")
+                    ""
                 }
 
                 Row(Modifier.weight(1F), verticalAlignment = Alignment.CenterVertically) {
                     Text(text = cost, fontSize = fontSize / 2, style = style)
                     Image(
-                        painter = painterResource(id = DieIcon.RESOURCE.resourceId),
+                        painter = painterResource(id = dieResource),
                         contentDescription = "Die Reference",
                         contentScale = ContentScale.FillHeight,
-                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
+                        colorFilter = ColorFilter.tint(Color.Yellow),
                         modifier = Modifier.fillMaxHeight()
                     )
                 }
             }
         } else {
             Row {
-                if (value.isNotBlank() && value != "-")
-                    Text(text = value, fontSize = fontSize, style = style)
-                if (dieIcon != null)
-                    Image(
-                        painter = painterResource(id = dieIcon),
-                        contentDescription = "Die Reference",
-                        contentScale = ContentScale.FillHeight,
-                        colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface) ,
-                        modifier = Modifier.fillMaxHeight()
-                    )
-                Text(text = "/$cost", fontSize = fontSize * 0.7, style = style.merge(TextStyle(baselineShift = BaselineShift(-0.3F))))
+
+                val dieResource = (if (dieStrings.first().isNumber()) dieResourceMap[dieStrings[1]]
+                        else dieResourceMap[dieStrings.first()]) ?: R.drawable.swd01_blank_symbol_w
+
+                if (dieStrings.first().isNumber())
+                    Text(text = dieStrings.first(), fontSize = fontSize, style = style)
+                Image(
+                    painter = painterResource(id =
+                            dieResource),
+                    contentDescription = "Die Reference",
+                    contentScale = ContentScale.FillHeight,
+                    colorFilter = ColorFilter.tint(color) ,
+                    modifier = Modifier.fillMaxHeight()
+                )
+                //Text(text = "/$cost", fontSize = fontSize * 0.7, style = style.merge(TextStyle(baselineShift = BaselineShift(-0.3F))))
             }
         }
-    } else {
+    }
+    /*else {
         Row {
+
             if (value.isNotBlank() && value != "-")
                 Text(
                     text = value,
                     fontSize = fontSize,
-                    style = style
+                    style = style,
+                    color = color
                 )
             if (dieIcon != null)
                 Image(
                     painter = painterResource(id = dieIcon),
                     contentDescription = "Die Reference",
                     contentScale = ContentScale.FillHeight,
-                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
+                    colorFilter = ColorFilter.tint(color),
                     modifier = Modifier.fillMaxHeight()
                 )
         }
     }
-    }
+    }*/
 }
 
 @Preview
@@ -132,8 +181,8 @@ fun DiePreview() {
         modifier = Modifier.background(color = Color.Gray)
             .height(30.dp)
         ,
-        dieCode = "2RD1",
-        true
+        dieCode = "1R",
+        false
     )
 }
 
@@ -146,4 +195,33 @@ fun DieGroupPreview() {
         .fillMaxWidth()
         .width(1200.dp)
         , dieCodes = dieGroup, isCompactScreen = false)
+}
+
+@Preview
+@Composable
+fun Regex() {
+
+    val dieCode = "+1Dc3"
+
+    val dieRegexString = buildString {
+        append("(\\+\\d+)|\\d+|i")
+        DieIcon.entries.forEach {
+            append("|(" + it.code + ")")
+        }
+    }
+    val dieRegex = Regex(dieRegexString)
+
+    val dieStrings = dieRegex.findAll(dieCode).map { it.groupValues.first() }.toList()
+    Box(Modifier.fillMaxSize())
+    Text(dieRegexString)
+    Text(
+        dieStrings.toString(),
+        modifier = Modifier.fillMaxSize(),
+        color = Color.White
+
+    )
+}
+
+fun String.isNumber(): Boolean {
+    return this.matches(Regex("""(\+\d+)|\d+"""))
 }

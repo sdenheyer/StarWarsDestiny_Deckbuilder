@@ -139,8 +139,6 @@ fun DetailsScreen(
   //  Log.d("SWD", "Card State: ${cardState.isLoading}")
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val scope = rememberCoroutineScope()
-
     Scaffold(topBar = {
         TopAppBar(title = { },
             navigationIcon = {
@@ -182,7 +180,7 @@ fun DetailsScreen(
                     changeOwnedQuantity = { _, quantity, _ , _-> (detailViewModel::writeOwned)(quantity) },
                     findCardbySetAndPostition = { set, position ->
                             val card = detailViewModel.getCardBySetAndPosition(set, position)
-                            card?.code
+                            card.code
                     },
                     navigateToCard = navigateToCard
                 )
@@ -425,6 +423,9 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, findCardbySetAndPostitio
             style = MaterialTheme.typography.bodyLarge,
             modifier = textModifer
         )
+
+        Spacer(modifier = Modifier.size(10.dp))
+
         val pointCostLabel = if (card.cost != null) "Cost" else "Points"
         val pointsOrCost = card.cost ?: card.points
 
@@ -441,6 +442,8 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, findCardbySetAndPostitio
             modifier = textModifer
         )
 
+        Spacer(modifier = Modifier.size(10.dp))
+
         if (card.sides != null) {
             DieGroup(
                 modifier = textModifer
@@ -451,6 +454,8 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, findCardbySetAndPostitio
             )
         }
 
+        Spacer(modifier = Modifier.size(20.dp))
+
         if (card.hasErrata) {
             Text(
                 "This card was errata'd",
@@ -460,9 +465,10 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, findCardbySetAndPostitio
             )
         }
 
-        var layoutResult = remember {
+        val layoutResult = remember {
             mutableStateOf<TextLayoutResult?>(null)
         }
+
         val cardText = parseHtml(card.text ?: "", inlineContent)
         Text(
             text = cardText,
@@ -505,12 +511,16 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, findCardbySetAndPostitio
                 },
         )
 
+        Spacer(modifier = Modifier.size(5.dp))
+
         Text(
             parseHtml(card.flavor ?: "", inlineContent),
             style = MaterialTheme.typography.bodyMedium,
             modifier = textModifer,
             fontStyle = FontStyle.Italic
         )
+
+        Spacer(modifier = Modifier.size(10.dp))
 
         if (!card.illustrator.isNullOrEmpty()) {
             Row(modifier = textModifer) {
@@ -520,16 +530,21 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, findCardbySetAndPostitio
                     modifier = Modifier.size(20.dp),
                     colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
                 )
-                Text(card.illustrator, style = MaterialTheme.typography.bodyLarge)
+                Text(" " + card.illustrator, style = MaterialTheme.typography.bodyLarge)
             }
         }
 
-        Spacer(modifier = Modifier.size(20.dp))
+        Spacer(modifier = Modifier.size(10.dp))
 
         Text(
-            "${card.setName} #${card.position}",
+            buildAnnotatedString {
+              appendInlineContent(card.setCode, " ")
+              append(" ${card.setName} #${card.position}")
+            },
+           // "${card.setName} #${card.position}",
             style = MaterialTheme.typography.bodyLarge,
-            modifier = textModifer
+            modifier = textModifer,
+            inlineContent = inlineContent
         )
 
         if (card.reprints.isNotEmpty()) {
@@ -1258,7 +1273,8 @@ val testCard = CardDetailUi(
     reprints = emptyList(),
     sides = emptyList(),
     text = null,
-    setName = ""
+    setName = "",
+    setCode = "AW"
 )
 
 @Preview(widthDp = 700)

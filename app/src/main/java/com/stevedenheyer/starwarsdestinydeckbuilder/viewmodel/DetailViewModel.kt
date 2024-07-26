@@ -43,6 +43,7 @@ data class CardDetailUi(
     val flavor: String?,
     val illustrator: String?,
     val setName: String,
+    val setCode: String,
     val position: Int,
     val reprints: List<MiniCard>,
     val parallelDice: List<MiniCard>,
@@ -78,6 +79,7 @@ fun Card.toDetailUi() = CardDetailUi(
     flavor = flavor,
     illustrator = illustrator,
     setName = setName,
+    setCode = setCode,
     position = position,
     reprints = reprints.mapNotNull {
         when (it) {

@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.room.util.newStringBuilder
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
+import com.stevedenheyer.starwarsdestinydeckbuilder.ui.theme.LocalFactionColorScheme
 
 
 @Composable
@@ -96,9 +97,9 @@ fun Die(modifier: Modifier = Modifier, dieCode: String, isCompactScreen: Boolean
                     if (dieStrings.first().startsWith("+")) color = Color.Blue
 
                     if (dieStrings.first().isNumber())
-                        Text(text = dieStrings.first(), fontSize = fontSize / 2, style = style)
+                        Text(text = dieStrings.first(), fontSize = fontSize / 2, style = style, color = MaterialTheme.colorScheme.onSurface)
 
-                    val dieResource = dieResourceMap[dieStrings[2]] ?: R.drawable.swd01_blank_symbol_w
+                    val dieResource = dieResourceMap[dieStrings[1]] ?: R.drawable.swd01_blank_symbol_w
 
                     Image(
                         painter = painterResource(id = dieResource),
@@ -112,7 +113,7 @@ fun Die(modifier: Modifier = Modifier, dieCode: String, isCompactScreen: Boolean
                 val dieResource = if (dieStrings[2] == "i") R.drawable.swd01_indirect_damage_symbol_w
                                     else R.drawable.swd01_resource_symbol_o
 
-                if (dieStrings[2] == "i") color = Color.Red
+                color = if (dieStrings[2] == "i") Color.Red else LocalFactionColorScheme.current.factionYellow
 
                 val cost = try { if (dieStrings[2].isNumber()) dieStrings[2] else (dieStrings[3]) }
                 catch (e: IndexOutOfBoundsException) {
@@ -121,12 +122,12 @@ fun Die(modifier: Modifier = Modifier, dieCode: String, isCompactScreen: Boolean
                 }
 
                 Row(Modifier.weight(1F), verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = cost, fontSize = fontSize / 2, style = style)
+                    Text(text = cost, fontSize = fontSize / 2, style = style, color = MaterialTheme.colorScheme.onSurface)
                     Image(
                         painter = painterResource(id = dieResource),
                         contentDescription = "Die Reference",
                         contentScale = ContentScale.FillHeight,
-                        colorFilter = ColorFilter.tint(Color.Yellow),
+                        colorFilter = ColorFilter.tint(color),
                         modifier = Modifier.fillMaxHeight()
                     )
                 }
@@ -137,8 +138,13 @@ fun Die(modifier: Modifier = Modifier, dieCode: String, isCompactScreen: Boolean
                 val dieResource = (if (dieStrings.first().isNumber()) dieResourceMap[dieStrings[1]]
                         else dieResourceMap[dieStrings.first()]) ?: R.drawable.swd01_blank_symbol_w
 
+                when (val s = dieStrings.first()) {
+                    "-" -> color = Color.Red
+                    else -> if (s.startsWith("+")) color = Color.Blue
+                }
+
                 if (dieStrings.first().isNumber())
-                    Text(text = dieStrings.first(), fontSize = fontSize, style = style)
+                    Text(text = dieStrings.first(), fontSize = fontSize, style = style, color = color)
                 Image(
                     painter = painterResource(id =
                             dieResource),
@@ -151,27 +157,6 @@ fun Die(modifier: Modifier = Modifier, dieCode: String, isCompactScreen: Boolean
             }
         }
     }
-    /*else {
-        Row {
-
-            if (value.isNotBlank() && value != "-")
-                Text(
-                    text = value,
-                    fontSize = fontSize,
-                    style = style,
-                    color = color
-                )
-            if (dieIcon != null)
-                Image(
-                    painter = painterResource(id = dieIcon),
-                    contentDescription = "Die Reference",
-                    contentScale = ContentScale.FillHeight,
-                    colorFilter = ColorFilter.tint(color),
-                    modifier = Modifier.fillMaxHeight()
-                )
-        }
-    }
-    }*/
 }
 
 @Preview
@@ -189,7 +174,7 @@ fun DiePreview() {
 @Preview
 @Composable
 fun DieGroupPreview() {
-    val dieGroup = listOf("2RD", "+1MD", "2RD1", "1R", "-")
+    val dieGroup = listOf("2RD", "+1MD", "2RD1", "1MDi1", "-")
     DieGroup(modifier = Modifier.background(Color.Black)
         .height(30.dp)
         .fillMaxWidth()

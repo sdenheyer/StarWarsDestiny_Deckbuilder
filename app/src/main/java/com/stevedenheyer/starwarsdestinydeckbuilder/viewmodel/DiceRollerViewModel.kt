@@ -1,5 +1,6 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel
 
+import androidx.compose.runtime.internal.composableLambdaN
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +13,38 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.random.Random
+
+data class CardInPlayUi(
+    val code: String,
+    val name: String,
+    val color: String,
+    val baseQuantity: Int,
+    val maxQuantity: Int,
+    val quantity: Int,
+    val isSelected: Boolean = false,
+)
+
+data class DieUi(
+    val color: String,
+    val diceRef: List<String>,
+    val sideShowing: String? = null,
+    val isCopyable: Boolean = true,
+)
+
+fun CardUi.toCardInPlayUi() = CardInPlayUi(
+    code = code,
+    name = name,
+    color = color,
+    baseQuantity = if (isElite) 2 else 1,
+    quantity = if (isElite) 2 else 1,
+    maxQuantity = quantity
+)
+
+fun CardUi.toDieUi(isCopyable: Boolean) = DieUi(
+    color = color,
+    diceRef = diceRef,
+    isCopyable = isCopyable
+)
 
 data class CardDiceUi(
     val code: String,
@@ -48,11 +81,16 @@ class DiceRollerViewModel @Inject constructor(
 
     val loadingState = MutableStateFlow(LoadingState())
 
+    val cardList: MutableStateFlow<List<CardInPlayUi>> = MutableStateFlow(emptyList())
+
+    val diceMap: MutableStateFlow<Map<String, List<DieUi>>> = MutableStateFlow(emptyMap())
+
     val cards: MutableStateFlow<List<CardDiceUi>> = MutableStateFlow(emptyList())
 
     val dice: MutableStateFlow<List<List<CardDiceUi>>> = MutableStateFlow(emptyList())
 
     init {
+
         viewModelScope.launch {
             getDeckWithCards(deckCode).collect { deckState ->
                 loadingState.update {
@@ -65,37 +103,51 @@ class DiceRollerViewModel @Inject constructor(
                     is UiState.NoData -> {}
 
                     is UiState.HasData -> {
-                        val deck = deckState.data
+                        if (!deckState.isLoading) {
+                            val deck = deckState.data
 
-                        val list = ArrayList<CardDiceUi>()
+                            diceMap.update {
+                                val map = it.toMutableMap()
 
-                        deck.chars.filter { it.diceRef.isNotEmpty() }
-                            .forEach {
-                                if (it.isElite) {
-                                    list.add(it.toCardDiceUi(true))
-                                } else {
-                                    for (i in 1..it.quantity) {
-                                        list.add(it.toCardDiceUi(true))
+                                deck.chars.filter { it.diceRef.isNotEmpty() }
+                                    .forEach { cardInPlay ->
+                                        map[cardInPlay.code] = listOf(cardInPlay.toDieUi(true))
                                     }
-                                }
+
+                                deck.slots.filter { it.diceRef.isNotEmpty() }
+                                    .forEach { cardInPlay ->
+                                        map[cardInPlay.code] = listOf(cardInPlay.toDieUi(true))
+                                    }
+
+                                deck.setAsides.filter { it.diceRef.isNotEmpty() }
+                                    .forEach { cardInPlay ->
+                                        map[cardInPlay.code] = listOf(cardInPlay.toDieUi(true))
+                                    }
+
+                                map
                             }
 
-                        deck.slots.filter { it.diceRef.isNotEmpty() }
-                            .forEach {
-                                for (i in 1..it.quantity) {
-                                    list.add(it.toCardDiceUi())
-                                }
+                            cardList.update {
+                                val list = it.toMutableList()
+
+                                deck.chars.filter { it.diceRef.isNotEmpty() }
+                                    .forEach {
+                                        list.add(it.toCardInPlayUi())
+                                    }
+
+                                deck.slots.filter { it.diceRef.isNotEmpty() }
+                                    .forEach {
+                                        list.add(it.toCardInPlayUi())
+                                    }
+
+                                deck.setAsides.filter { it.diceRef.isNotEmpty() }
+                                    .forEach {
+                                        list.add(it.toCardInPlayUi())
+                                    }
+
+                                list
                             }
-
-                        deck.setAsides.filter { it.diceRef.isNotEmpty() }
-                            .forEach {
-                                for (i in 1..it.quantity) {
-                                    list.add(it.toCardDiceUi())
-                                }
-                            }
-
-                        cards.update { list }
-
+                        }
                     }
                 }
             }

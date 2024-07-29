@@ -52,6 +52,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.Die
 import com.stevedenheyer.starwarsdestinydeckbuilder.ui.theme.getColorFromString
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardDiceUi
+import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardInPlayUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DiceRollerViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,8 +64,8 @@ fun DiceRollerScreen(
     navigateBack: () -> Unit
 ) {
 
-    val loadingState by cardDiceVM.loadingState.collectAsStateWithLifecycle()    //TODO:  What was I thinking here?
-    val cards by cardDiceVM.cards.collectAsStateWithLifecycle(emptyList())
+    val loadingState by cardDiceVM.loadingState.collectAsStateWithLifecycle()    //TODO:  Implement the usual indetermine progress
+    val cards by cardDiceVM.cardList.collectAsStateWithLifecycle(emptyList())
     val dice by cardDiceVM.dice.collectAsStateWithLifecycle(emptyList())
 
     Scaffold(
@@ -141,7 +142,7 @@ fun DiceRollerScreen(
 fun CardsList(
     modifier: Modifier = Modifier,
     isCompactScreen: Boolean,
-    cards: List<CardDiceUi>,
+    cards: List<CardInPlayUi>,
     selectCard: (Int) -> Unit = {},
 ) {
 
@@ -154,7 +155,7 @@ fun CardsList(
             OutlinedCard(
                 onClick = { selectCard(index) },
                 colors = CardDefaults.cardColors(
-                    containerColor = if (card.isCardSelected) MaterialTheme.colorScheme.surfaceContainer else Color.Gray,
+                    containerColor = if (card.isSelected) MaterialTheme.colorScheme.surfaceContainer else Color.Gray,
                     contentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 border = BorderStroke(2.dp, getColorFromString(s = card.color)),
@@ -262,15 +263,14 @@ fun DiceGrids(
 fun CardsPreview() {
     CardsList(
         isCompactScreen = false, cards = listOf(
-            CardDiceUi(
+            CardInPlayUi(
                 code = "",
                 name = "Darth",
                 color = "Red",
-                diceRef = listOf("+1MD"),
-                sideShowing = "-",
-                isCardSelected = true,
-                isDieSelected = false,
-                isElite = false
+                isSelected = true,
+                quantity = 1,
+                maxQuantity = 4,
+                baseQuantity = 2,
             )
         )
     )

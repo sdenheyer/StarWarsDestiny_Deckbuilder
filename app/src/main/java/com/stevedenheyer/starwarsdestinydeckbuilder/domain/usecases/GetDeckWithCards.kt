@@ -136,7 +136,7 @@ class GetDeckWithCards @Inject constructor(
                                 (it.cardOrCode as CardOrCode.HasCard).card.toUi(
                                     format,
                                     it.quantity,
-                                    false,
+                                    it.isElite,
                                 )
                             }
 

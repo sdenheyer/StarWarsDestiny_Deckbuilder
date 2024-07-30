@@ -1,5 +1,6 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.internal.composableLambdaN
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -9,6 +10,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.usecases.GetDeckWithCards
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -71,6 +73,13 @@ data class LoadingState(
     val errorMsg: String? = null
 )
 
+enum class DieRequest() {
+    REROLL,
+    CHANGE,
+    RESOLVE,
+    COPY
+}
+
 @HiltViewModel
 class DiceRollerViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -92,6 +101,25 @@ class DiceRollerViewModel @Inject constructor(
     init {
 
         viewModelScope.launch {
+            cardList.collect { list ->
+                diceMap.update {
+                    val map = it.toMutableMap()
+                    list.forEach { card ->
+                        Log.d("SWD", "Updating dice for card ${card.name} to ${card.quantity}")
+
+                        val dice = map[card.code]!!.toMutableList()
+                        while (dice.size < card.quantity) {
+                            dice.add(dice.first())
+                            Log.d("SWD", "Adding dice... ${dice.size}")
+                        }
+                        map[card.code] = dice
+                    }
+                    map
+                }
+            }
+        }
+
+        viewModelScope.launch {
             getDeckWithCards(deckCode).collect { deckState ->
                 loadingState.update {
                     it.copy(
@@ -110,18 +138,18 @@ class DiceRollerViewModel @Inject constructor(
                                 val map = it.toMutableMap()
 
                                 deck.chars.filter { it.diceRef.isNotEmpty() }
-                                    .forEach { cardInPlay ->
-                                        map[cardInPlay.code] = listOf(cardInPlay.toDieUi(true))
+                                    .forEach { card ->
+                                        map[card.code] = listOf(card.toDieUi(true))
                                     }
 
                                 deck.slots.filter { it.diceRef.isNotEmpty() }
-                                    .forEach { cardInPlay ->
-                                        map[cardInPlay.code] = listOf(cardInPlay.toDieUi(true))
+                                    .forEach { card ->
+                                        map[card.code] = listOf(card.toDieUi(true))
                                     }
 
                                 deck.setAsides.filter { it.diceRef.isNotEmpty() }
-                                    .forEach { cardInPlay ->
-                                        map[cardInPlay.code] = listOf(cardInPlay.toDieUi(true))
+                                    .forEach { card ->
+                                        map[card.code] = listOf(card.toDieUi(true))
                                     }
 
                                 map
@@ -132,6 +160,7 @@ class DiceRollerViewModel @Inject constructor(
 
                                 deck.chars.filter { it.diceRef.isNotEmpty() }
                                     .forEach {
+                                        Log.d("SWD", "Adding card: ${it.name} elite: ${it.isElite}")
                                         list.add(it.toCardInPlayUi())
                                     }
 
@@ -152,18 +181,41 @@ class DiceRollerViewModel @Inject constructor(
                 }
             }
         }
+
+
     }
 
     fun getDeckName() = deckCode
 
     fun selectCard(index: Int) {
-        cards.update {
-            val newList = it.toMutableList()
-            val newValue = newList[index].copy(isCardSelected = !newList[index].isCardSelected)
-            newList.removeAt(index)
-            newList.add(index, newValue)
-            newList
+        cardList.update {
+            val list = it.toMutableList()
+            val newValue = list[index].copy(isSelected = !list[index].isSelected)
+            list.removeAt(index)
+            list.add(index, newValue)
+            list
         }
+
+        diceMap.update {
+            val map = it.toMutableMap()
+            val code = cardList.value[index].code
+
+            val newValue = map[code]!!.map {
+                val sideShowing =
+                    if (cardList.value[index].isSelected) it.diceRef[Random.nextInt(0, 5)] else null
+                it.copy(sideShowing = sideShowing)
+            }
+            map[code] = newValue
+            map
+        }
+
+        /*  cards.update {
+              val newList = it.toMutableList()
+              val newValue = newList[index].copy(isCardSelected = !newList[index].isCardSelected)
+              newList.removeAt(index)
+              newList.add(index, newValue)
+              newList
+          }*/
     }
 
     fun rollAllDice() {
@@ -183,6 +235,55 @@ class DiceRollerViewModel @Inject constructor(
                     } else {
                         die
                     }
+                }
+            }
+        }
+    }
+
+    fun changeDie(code: String, index: Int, req: DieRequest, side: String? = null) {
+        val die = diceMap.value[code]!!.get(index)
+        when (req) {
+            DieRequest.REROLL -> {
+                diceMap.update {
+                    val map = it.toMutableMap()
+                    val list = map[code]!!.toMutableList()
+                    list.add(index, list[index].copy(sideShowing = die.diceRef[Random.nextInt(0, 5)]))
+                    list.removeAt(index + 1)
+                    map[code] = list
+                    map
+                }
+            }
+            DieRequest.CHANGE -> {
+                diceMap.update {
+                    val map = it.toMutableMap()
+                    val list = map[code]!!.toMutableList()
+                    list.add(index, list[index].copy(sideShowing = side))
+                    list.removeAt(index + 1)
+                    map[code] = list
+                    map
+                }
+            }
+            DieRequest.RESOLVE -> {
+                diceMap.update {
+                    val map = it.toMutableMap()
+                    val list = map[code]!!.toMutableList()
+                    list.add(index, list[index].copy(sideShowing = null))
+                    list.removeAt(index + 1)
+                    map[code] = list
+                    map
+                }
+            }
+            DieRequest.COPY -> {
+                try {
+                    val card = cardList.value.find { it.code == code }!!
+                    if (card.quantity < card.maxQuantity)
+                        cardList.update {
+                            val list = it.toMutableList()
+                            list.add(card.copy(quantity = card.quantity + 1))
+                            list
+                        }
+                } catch(e: NullPointerException) {
+                    return
                 }
             }
         }

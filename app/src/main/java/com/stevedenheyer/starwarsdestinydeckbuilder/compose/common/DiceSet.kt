@@ -50,7 +50,7 @@ fun Die(modifier: Modifier = Modifier, dieCode: String, isCompactScreen: Boolean
     }
 
     val dieRegexString = buildString {
-        append("(\\+\\d+)|\\d+|i")
+        append("(\\+\\d+)|\\d+|i|X")
         DieIcon.entries.forEach {
             append("|(" + it.code + ")")
             }
@@ -88,72 +88,93 @@ fun Die(modifier: Modifier = Modifier, dieCode: String, isCompactScreen: Boolean
 
         var color = MaterialTheme.colorScheme.onSurface
 
-        if (dieStrings.last().isNumber()) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                Row(Modifier.weight(1F), verticalAlignment = Alignment.CenterVertically) {
-
-                    if (dieStrings.first().startsWith("+")) color = Color.Blue
-
-                    if (dieStrings.first().isNumber())
-                        Text(text = dieStrings.first(), fontSize = fontSize / 2, style = style, color = MaterialTheme.colorScheme.onSurface)
-
-                    val dieResource = dieResourceMap[dieStrings[1]] ?: R.drawable.swd01_blank_symbol_w
-
-                    Image(
-                        painter = painterResource(id = dieResource),
-                        contentDescription = "Die Reference",
-                        contentScale = ContentScale.FillHeight,
-                        colorFilter = ColorFilter.tint(color),
-                        modifier = Modifier.fillMaxHeight()
-                    )
-                }
-
-                val dieResource = if (dieStrings[2] == "i") R.drawable.swd01_indirect_damage_symbol_w
-                                    else R.drawable.swd01_resource_symbol_o
-
-                color = if (dieStrings[2] == "i") Color.Red else LocalFactionColorScheme.current.factionYellow
-
-                val cost = try { if (dieStrings[2].isNumber()) dieStrings[2] else (dieStrings[3]) }
-                catch (e: IndexOutOfBoundsException) {
-                    Log.wtf("SWD", "Unexpected missing Number")
-                    ""
-                }
-
-                Row(Modifier.weight(1F), verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = cost, fontSize = fontSize / 2, style = style, color = MaterialTheme.colorScheme.onSurface)
-                    Image(
-                        painter = painterResource(id = dieResource),
-                        contentDescription = "Die Reference",
-                        contentScale = ContentScale.FillHeight,
-                        colorFilter = ColorFilter.tint(color),
-                        modifier = Modifier.fillMaxHeight()
-                    )
-                }
-            }
+        if (dieStrings.isEmpty()) {
+            Box(Modifier.fillMaxSize())
         } else {
-            Row {
+            if (dieStrings.last().isNumber()) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Row(Modifier.weight(1F), verticalAlignment = Alignment.CenterVertically) {
 
-                val dieResource = (if (dieStrings.first().isNumber()) dieResourceMap[dieStrings[1]]
+                        if (dieStrings.first().startsWith("+")) color = Color.Blue
+
+                        if (dieStrings.first().isNumber())
+                            Text(
+                                text = dieStrings.first(),
+                                fontSize = fontSize / 2,
+                                style = style,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                        val dieResource =
+                            dieResourceMap[dieStrings[1]] ?: R.drawable.swd01_blank_symbol_w
+
+                        Image(
+                            painter = painterResource(id = dieResource),
+                            contentDescription = "Die Reference",
+                            contentScale = ContentScale.FillHeight,
+                            colorFilter = ColorFilter.tint(color),
+                            modifier = Modifier.fillMaxHeight()
+                        )
+                    }
+
+                    val dieResource =
+                        if (dieStrings.contains("i")) R.drawable.swd01_indirect_damage_symbol_w
+                        else R.drawable.swd01_resource_symbol_o
+
+                    color =
+                        if (dieStrings.contains("i")) Color.Red else LocalFactionColorScheme.current.factionYellow
+
+                    val cost = dieStrings.last { it.isNumber() }
+
+                    Row(Modifier.weight(1F), verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = cost,
+                            fontSize = fontSize / 2,
+                            style = style,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Image(
+                            painter = painterResource(id = dieResource),
+                            contentDescription = "Die Reference",
+                            contentScale = ContentScale.FillHeight,
+                            colorFilter = ColorFilter.tint(color),
+                            modifier = Modifier.fillMaxHeight()
+                        )
+                    }
+                }
+            } else {
+                Row {
+
+                    val dieResource =
+                        (if (dieStrings.first().isNumber()) dieResourceMap[dieStrings[1]]
                         else dieResourceMap[dieStrings.first()]) ?: R.drawable.swd01_blank_symbol_w
 
-                when (val s = dieStrings.first()) {
-                    "-" -> color = Color.Red
-                    else -> if (s.startsWith("+")) color = Color.Blue
-                }
+                    when (val s = dieStrings.first()) {
+                        "-" -> color = Color.Red
+                        else -> if (s.startsWith("+")) color = Color.Blue
+                    }
 
-                if (dieStrings.first().isNumber())
-                    Text(text = dieStrings.first(), fontSize = fontSize, style = style, color = color)
-                Image(
-                    painter = painterResource(id =
-                            dieResource),
-                    contentDescription = "Die Reference",
-                    contentScale = ContentScale.FillHeight,
-                    colorFilter = ColorFilter.tint(color) ,
-                    modifier = Modifier.fillMaxHeight()
-                )
-                //Text(text = "/$cost", fontSize = fontSize * 0.7, style = style.merge(TextStyle(baselineShift = BaselineShift(-0.3F))))
+                    if (dieStrings.first().isNumber())
+                        Text(
+                            text = dieStrings.first(),
+                            fontSize = fontSize,
+                            style = style,
+                            color = color
+                        )
+                    Image(
+                        painter = painterResource(
+                            id =
+                            dieResource
+                        ),
+                        contentDescription = "Die Reference",
+                        contentScale = ContentScale.FillHeight,
+                        colorFilter = ColorFilter.tint(color),
+                        modifier = Modifier.fillMaxHeight()
+                    )
+                    //Text(text = "/$cost", fontSize = fontSize * 0.7, style = style.merge(TextStyle(baselineShift = BaselineShift(-0.3F))))
+                }
             }
         }
     }
@@ -166,7 +187,7 @@ fun DiePreview() {
         modifier = Modifier.background(color = Color.Gray)
             .height(30.dp)
         ,
-        dieCode = "1R",
+        dieCode = "",
         false
     )
 }
@@ -174,7 +195,7 @@ fun DiePreview() {
 @Preview
 @Composable
 fun DieGroupPreview() {
-    val dieGroup = listOf("2RD", "+1MD", "2RD1", "1MDi1", "-")
+    val dieGroup = listOf("XRD", "+1MD", "2RD1", "1MDi1", "-")
     DieGroup(modifier = Modifier.background(Color.Black)
         .height(30.dp)
         .fillMaxWidth()
@@ -208,5 +229,5 @@ fun Regex() {
 }
 
 fun String.isNumber(): Boolean {
-    return this.matches(Regex("""(\+\d+)|\d+"""))
+    return this.matches(Regex("""(\+\d+)|\d+|X"""))
 }

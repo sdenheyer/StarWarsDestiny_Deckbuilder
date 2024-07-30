@@ -10,14 +10,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -52,9 +50,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.common.Die
 import com.stevedenheyer.starwarsdestinydeckbuilder.ui.theme.getColorFromString
-import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardDiceUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardInPlayUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DiceRollerViewModel
+import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DieRequest
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DieUi
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -135,14 +133,14 @@ fun DiceRollerScreen(
                 diceList = dice,
                 isCompactScreen = isCompactScreen,
                 selectCard = { index -> (cardDiceVM::selectCard)(index) },
-                setOrRollDie = { code, index, side -> (cardDiceVM::setOrReroll)(code, index, side)})
+                changeDie = { code, index, request, side -> (cardDiceVM::changeDie)(code, index, request, side)})
 
 
         }
     }
 }
 
-@Composable
+/*@Composable
 fun CardsList(
     modifier: Modifier = Modifier,
     isCompactScreen: Boolean,
@@ -180,7 +178,7 @@ fun CardsList(
     }
 
 
-}
+}*/
 
 @Composable
 fun DiceGrids(
@@ -189,7 +187,7 @@ fun DiceGrids(
     diceList: Map<String, List<DieUi>>,
     isCompactScreen: Boolean,
     selectCard: (Int) -> Unit = {},
-    setOrRollDie: (String, Int, String?) -> Unit
+    changeDie: (String, Int, DieRequest, String?) -> Unit
 ) {
 
     LazyColumn(modifier = modifier) {
@@ -220,7 +218,7 @@ fun DiceGrids(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier
                         .align(Alignment.CenterHorizontally)
-                        .padding(vertical = 4.dp)
+                        .padding(vertical = 4.dp, horizontal = 16.dp)
                 )
             }
 
@@ -234,7 +232,7 @@ fun DiceGrids(
                     var dropDownExpanded by remember {
                         mutableStateOf(false)
                     }
-                    if (dice.sideShowing != null)
+                  //  if (dice.sideShowing != null)
                         OutlinedCard(
                             onClick = { dropDownExpanded = !dropDownExpanded },
                             colors = CardDefaults.cardColors(
@@ -257,7 +255,7 @@ fun DiceGrids(
                                         //       color = getColorFromString(card.color))
                                         //  .background(color = if (card.isDieSelected) MaterialTheme.colorScheme.surfaceContainer else Color.Gray)
                                         .height(64.dp),
-                                    dieCode = dice.sideShowing,
+                                    dieCode = dice.sideShowing ?: "",
                                     isCompactScreen = isCompactScreen
                                 )
                             }
@@ -265,7 +263,7 @@ fun DiceGrids(
                                 DropdownMenuItem(text = { Text("Reroll",
                                     style = MaterialTheme.typography.headlineMedium,
                                     modifier = Modifier.fillMaxWidth().wrapContentWidth(align = Alignment.CenterHorizontally)) },
-                                    onClick = { setOrRollDie(card.code, index, null) },
+                                    onClick = { changeDie(card.code, index, DieRequest.REROLL, null) },
                                 )
                                 dice.diceRef.forEach {
                                     DropdownMenuItem(
@@ -274,7 +272,7 @@ fun DiceGrids(
                                             .width(48.dp)   //TODO:  Figure out how to center this
                                         ) },
                                         leadingIcon = {  },
-                                        onClick = { setOrRollDie(card.code, index, it) },
+                                        onClick = { changeDie(card.code, index, DieRequest.CHANGE, it) },
                                     )
                                   //  DropdownMenuItem(text = { Text(it) }, onClick = { setOrRollDie(dice.code, index, it) })
                                 }
@@ -287,6 +285,7 @@ fun DiceGrids(
 }
 
 
+/*
 @Preview
 @Composable
 fun CardsPreview() {
@@ -304,6 +303,7 @@ fun CardsPreview() {
         )
     )
 }
+*/
 
 @Preview
 @Composable
@@ -316,7 +316,7 @@ fun DicePreview() {
                 DieUi(
                     color = "Red",
                     diceRef = listOf("+1MD"),
-                    sideShowing = "1MDi1",
+                    sideShowing = null,
                 )
             )
         ),
@@ -330,7 +330,7 @@ fun DicePreview() {
             isSelected = true,
         )),
         selectCard = {},
-        setOrRollDie = { _, _, _ ->  },
+        changeDie = { _, _, _, _ ->  },
 
     )
 }

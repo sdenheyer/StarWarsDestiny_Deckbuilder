@@ -316,7 +316,7 @@ class DetailViewModel @Inject constructor(
             return
         }
         if (deck != null) {
-        //    Log.d("SWD", "Writing deck: ${deck.name}, ${quantity}")
+            Log.d("SWD", "Writing deck: ${deck.name}, ${quantity}, ${isElite}")
             val char = CharacterCard(
                 cardOrCode = CardOrCode.HasCode(code),
                 points = (if (isElite) card.points.second else card.points.first) ?: 0,

@@ -363,6 +363,6 @@ class GetDeckWithCards @Inject constructor(
                 }
             }
         }
-        return setAsides
+        return setAsides.distinct()
     }
 }

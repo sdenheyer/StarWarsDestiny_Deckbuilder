@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.BottomAppBar
@@ -54,6 +55,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.ui.theme.getColorFromString
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardDiceUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.CardInPlayUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DiceRollerViewModel
+import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.DieUi
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +68,7 @@ fun DiceRollerScreen(
 
     val loadingState by cardDiceVM.loadingState.collectAsStateWithLifecycle()    //TODO:  Implement the usual indetermine progress
     val cards by cardDiceVM.cardList.collectAsStateWithLifecycle(emptyList())
-    val dice by cardDiceVM.dice.collectAsStateWithLifecycle(emptyList())
+    val dice by cardDiceVM.diceMap.collectAsStateWithLifecycle(emptyMap())
 
     Scaffold(
         topBar = {
@@ -123,14 +125,16 @@ fun DiceRollerScreen(
                 .background(MaterialTheme.colorScheme.primaryContainer),
         ) {
 
-            CardsList(
+           /* CardsList(
                 isCompactScreen = isCompactScreen,
                 cards = cards,
                 selectCard = { index -> (cardDiceVM::selectCard)(index) },
-            )
+            )*/
 
-            DiceGrids(diceList = dice,
+            DiceGrids(cards = cards,
+                diceList = dice,
                 isCompactScreen = isCompactScreen,
+                selectCard = { index -> (cardDiceVM::selectCard)(index) },
                 setOrRollDie = { code, index, side -> (cardDiceVM::setOrReroll)(code, index, side)})
 
 
@@ -181,27 +185,52 @@ fun CardsList(
 @Composable
 fun DiceGrids(
     modifier: Modifier = Modifier,
-    diceList: List<List<CardDiceUi>>,
+    cards: List<CardInPlayUi>,
+    diceList: Map<String, List<DieUi>>,
     isCompactScreen: Boolean,
+    selectCard: (Int) -> Unit = {},
     setOrRollDie: (String, Int, String?) -> Unit
 ) {
 
     LazyColumn(modifier = modifier) {
-        items(items = diceList) { list ->
-            if (list.first().sideShowing != null) {
+        itemsIndexed(items = cards) { index, card ->
+
+           /* if (list.first().sideShowing != null) {
                 Text(
                     list.first().name,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     modifier = Modifier.padding(start = 4.dp)
                 )
+            }*/
+
+            OutlinedCard(
+                onClick = { selectCard(index) },
+                colors = CardDefaults.cardColors(
+                    containerColor = if (card.isSelected) MaterialTheme.colorScheme.surfaceContainer else Color.Gray,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ),
+                border = BorderStroke(2.dp, getColorFromString(s = card.color)),
+                modifier = Modifier.padding(horizontal = 2.dp)
+            ) {
+                Text(
+                    text = card.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(vertical = 4.dp)
+                )
             }
+
             LazyVerticalGrid(
                 modifier = Modifier.heightIn(128.dp, 1024.dp),
                 columns = GridCells.FixedSize(128.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 userScrollEnabled = false
             ) {
-                itemsIndexed(items = list) { index, dice ->
+                itemsIndexed(items = diceList[card.code] ?: emptyList()) { index, dice ->  //TODO: TEMP TEST
                     var dropDownExpanded by remember {
                         mutableStateOf(false)
                     }
@@ -209,7 +238,7 @@ fun DiceGrids(
                         OutlinedCard(
                             onClick = { dropDownExpanded = !dropDownExpanded },
                             colors = CardDefaults.cardColors(
-                                containerColor = if (dice.isDieSelected) MaterialTheme.colorScheme.surfaceContainer else Color.Gray,
+                                containerColor = if (card.isSelected) MaterialTheme.colorScheme.surfaceContainer else Color.Gray,
                                 contentColor = MaterialTheme.colorScheme.onSurface
                             ),
                             border = BorderStroke(2.dp, getColorFromString(s = dice.color)),
@@ -236,7 +265,7 @@ fun DiceGrids(
                                 DropdownMenuItem(text = { Text("Reroll",
                                     style = MaterialTheme.typography.headlineMedium,
                                     modifier = Modifier.fillMaxWidth().wrapContentWidth(align = Alignment.CenterHorizontally)) },
-                                    onClick = { setOrRollDie(dice.code, index, null) },
+                                    onClick = { setOrRollDie(card.code, index, null) },
                                 )
                                 dice.diceRef.forEach {
                                     DropdownMenuItem(
@@ -245,7 +274,7 @@ fun DiceGrids(
                                             .width(48.dp)   //TODO:  Figure out how to center this
                                         ) },
                                         leadingIcon = {  },
-                                        onClick = { setOrRollDie(dice.code, index, it) },
+                                        onClick = { setOrRollDie(card.code, index, it) },
                                     )
                                   //  DropdownMenuItem(text = { Text(it) }, onClick = { setOrRollDie(dice.code, index, it) })
                                 }
@@ -281,21 +310,28 @@ fun CardsPreview() {
 fun DicePreview() {
     DiceGrids(
         isCompactScreen = true,
-        diceList = listOf(
+        diceList = mapOf(
+            "" to
             listOf(
-                CardDiceUi(
-                    code = "",
-                    name = "Darth",
+                DieUi(
                     color = "Red",
                     diceRef = listOf("+1MD"),
-                    sideShowing = "+1MD",
-                    isCardSelected = true,
-                    isDieSelected = false,
-                    isElite = false,
+                    sideShowing = "1MDi1",
                 )
             )
         ),
-        setOrRollDie = { _, _, _ ->  }
+        cards = listOf(CardInPlayUi(
+            code = "",
+            name = "Darth",
+            color = "Red",
+            maxQuantity = 4,
+            quantity = 2,
+            baseQuantity = 1,
+            isSelected = true,
+        )),
+        selectCard = {},
+        setOrRollDie = { _, _, _ ->  },
+
     )
 }
 

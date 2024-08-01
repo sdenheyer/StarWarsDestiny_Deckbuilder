@@ -92,7 +92,7 @@ fun DiceRollerScreen(
             BottomAppBar(
                 actions = {
                     TextButton(
-                        onClick = { (cardDiceVM::rollAllDice)() },
+                        onClick = { (cardDiceVM::resolveAll)() },
                         colors = ButtonColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
                             contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
@@ -103,9 +103,7 @@ fun DiceRollerScreen(
                             .fillMaxWidth()
                             .wrapContentWidth(Alignment.CenterHorizontally)
                     ) {
-                        Text(
-                            "Roll All"
-                        )
+                        Text("Resolve All")
                     }
                 },
 
@@ -191,7 +189,7 @@ fun DiceGrids(
 ) {
 
     LazyColumn(modifier = modifier) {
-        itemsIndexed(items = cards) { index, card ->
+        itemsIndexed(items = cards) { cardIndex, card ->
 
            /* if (list.first().sideShowing != null) {
                 Text(
@@ -202,7 +200,7 @@ fun DiceGrids(
             }*/
 
             OutlinedCard(
-                onClick = { selectCard(index) },
+                onClick = { selectCard(cardIndex) },
                 colors = CardDefaults.cardColors(
                     containerColor = if (card.isSelected) MaterialTheme.colorScheme.surfaceContainer else Color.Gray,
                     contentColor = MaterialTheme.colorScheme.onSurface
@@ -228,18 +226,20 @@ fun DiceGrids(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 userScrollEnabled = false
             ) {
-                itemsIndexed(items = diceList[card.code] ?: emptyList()) { index, dice ->  //TODO: TEMP TEST
+                itemsIndexed(items = diceList[card.code] ?: emptyList()) { dieIndex, die ->  //TODO: TEMP TEST
                     var dropDownExpanded by remember {
                         mutableStateOf(false)
                     }
                   //  if (dice.sideShowing != null)
                         OutlinedCard(
-                            onClick = { dropDownExpanded = !dropDownExpanded },
+                            onClick = {
+                                if (die.sideShowing != null) dropDownExpanded = !dropDownExpanded else selectCard(cardIndex)
+                                      },
                             colors = CardDefaults.cardColors(
-                                containerColor = if (card.isSelected) MaterialTheme.colorScheme.surfaceContainer else Color.Gray,
+                                containerColor = if (card.isSelected && !die.sideShowing.isNullOrBlank()) MaterialTheme.colorScheme.surfaceContainer else Color.Gray,
                                 contentColor = MaterialTheme.colorScheme.onSurface
                             ),
-                            border = BorderStroke(2.dp, getColorFromString(s = dice.color)),
+                            border = BorderStroke(2.dp, getColorFromString(s = die.color)),
                             modifier = Modifier.height(128.dp)
                         )
                         {
@@ -255,7 +255,7 @@ fun DiceGrids(
                                         //       color = getColorFromString(card.color))
                                         //  .background(color = if (card.isDieSelected) MaterialTheme.colorScheme.surfaceContainer else Color.Gray)
                                         .height(64.dp),
-                                    dieCode = dice.sideShowing ?: "",
+                                    dieCode = die.sideShowing ?: "",
                                     isCompactScreen = isCompactScreen
                                 )
                             }
@@ -263,19 +263,34 @@ fun DiceGrids(
                                 DropdownMenuItem(text = { Text("Reroll",
                                     style = MaterialTheme.typography.headlineMedium,
                                     modifier = Modifier.fillMaxWidth().wrapContentWidth(align = Alignment.CenterHorizontally)) },
-                                    onClick = { changeDie(card.code, index, DieRequest.REROLL, null) },
+                                    onClick = { changeDie(card.code, dieIndex, DieRequest.REROLL, null)
+                                                dropDownExpanded = false },
                                 )
-                                dice.diceRef.forEach {
+                                DropdownMenuItem(text = { Text("Resolve",
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    modifier = Modifier.fillMaxWidth().wrapContentWidth(align = Alignment.CenterHorizontally)) },
+                                    onClick = { changeDie(card.code, dieIndex, DieRequest.RESOLVE, null)
+                                                dropDownExpanded = false },
+                                )
+                                die.diceRef.forEach {
                                     DropdownMenuItem(
                                         text = { Die(isCompactScreen = isCompactScreen, dieCode = it, modifier = Modifier
                                             .height(32.dp)
                                             .width(48.dp)   //TODO:  Figure out how to center this
+                                            .wrapContentWidth(align = Alignment.CenterHorizontally)
                                         ) },
-                                        leadingIcon = {  },
-                                        onClick = { changeDie(card.code, index, DieRequest.CHANGE, it) },
+                                       // leadingIcon = {  },
+                                        onClick = { changeDie(card.code, dieIndex, DieRequest.CHANGE, it)
+                                                    dropDownExpanded = false },
                                     )
-                                  //  DropdownMenuItem(text = { Text(it) }, onClick = { setOrRollDie(dice.code, index, it) })
                                 }
+                                if (card.quantity < card.maxQuantity)
+                                    DropdownMenuItem(text = { Text("Copy",
+                                        style = MaterialTheme.typography.headlineMedium,
+                                        modifier = Modifier.fillMaxWidth().wrapContentWidth(align = Alignment.CenterHorizontally)) },
+                                        onClick = { changeDie(card.code, dieIndex, DieRequest.COPY, null)
+                                                    dropDownExpanded = false },
+                                    )
                             }
                         }
                 }

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -23,6 +24,7 @@ import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -121,62 +123,24 @@ fun DiceRollerScreen(
                 .background(MaterialTheme.colorScheme.primaryContainer),
         ) {
 
-           /* CardsList(
-                isCompactScreen = isCompactScreen,
-                cards = cards,
-                selectCard = { index -> (cardDiceVM::selectCard)(index) },
-            )*/
-
             DiceGrids(cards = cards,
                 diceList = dice,
                 isCompactScreen = isCompactScreen,
                 selectCard = { index -> (cardDiceVM::selectCard)(index) },
                 changeDie = { code, index, request, side -> (cardDiceVM::changeDie)(code, index, request, side)})
 
-
-        }
-    }
-}
-
-/*@Composable
-fun CardsList(
-    modifier: Modifier = Modifier,
-    isCompactScreen: Boolean,
-    cards: List<CardInPlayUi>,
-    selectCard: (Int) -> Unit = {},
-) {
-
-    LazyVerticalGrid(
-        modifier = modifier,
-        columns = GridCells.Fixed(count = if (isCompactScreen) 2 else 4),
-        userScrollEnabled = false,
-    ) {
-        itemsIndexed(items = cards) { index, card ->
-            OutlinedCard(
-                onClick = { selectCard(index) },
-                colors = CardDefaults.cardColors(
-                    containerColor = if (card.isSelected) MaterialTheme.colorScheme.surfaceContainer else Color.Gray,
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                ),
-                border = BorderStroke(2.dp, getColorFromString(s = card.color)),
-                modifier = Modifier.padding(horizontal = 2.dp)
-            ) {
-                Text(
-                    text = card.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+            if (loadingState.isLoading) {
+                CircularProgressIndicator(
                     modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(vertical = 4.dp)
+                        .fillMaxSize()
+                        .wrapContentSize(Alignment.Center)
+                        .width(100.dp),
+                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
         }
     }
-
-
-}*/
+}
 
 @Composable
 fun DiceGrids(
@@ -190,14 +154,6 @@ fun DiceGrids(
 
     LazyColumn(modifier = modifier) {
         itemsIndexed(items = cards) { cardIndex, card ->
-
-           /* if (list.first().sideShowing != null) {
-                Text(
-                    list.first().name,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                    modifier = Modifier.padding(start = 4.dp)
-                )
-            }*/
 
             OutlinedCard(
                 onClick = { selectCard(cardIndex) },
@@ -230,7 +186,6 @@ fun DiceGrids(
                     var dropDownExpanded by remember {
                         mutableStateOf(false)
                     }
-                  //  if (dice.sideShowing != null)
                         OutlinedCard(
                             onClick = {
                                 if (die.sideShowing != null) dropDownExpanded = !dropDownExpanded else selectCard(cardIndex)
@@ -250,10 +205,6 @@ fun DiceGrids(
                             ) {
                                 Die(
                                     modifier = Modifier
-                                        //   .border(
-                                        //       width = 2.dp,
-                                        //       color = getColorFromString(card.color))
-                                        //  .background(color = if (card.isDieSelected) MaterialTheme.colorScheme.surfaceContainer else Color.Gray)
                                         .height(64.dp),
                                     dieCode = die.sideShowing ?: "",
                                     isCompactScreen = isCompactScreen
@@ -279,7 +230,6 @@ fun DiceGrids(
                                             .width(48.dp)   //TODO:  Figure out how to center this
                                             .wrapContentWidth(align = Alignment.CenterHorizontally)
                                         ) },
-                                       // leadingIcon = {  },
                                         onClick = { changeDie(card.code, dieIndex, DieRequest.CHANGE, it)
                                                     dropDownExpanded = false },
                                     )
@@ -298,27 +248,6 @@ fun DiceGrids(
         }
     }
 }
-
-
-/*
-@Preview
-@Composable
-fun CardsPreview() {
-    CardsList(
-        isCompactScreen = false, cards = listOf(
-            CardInPlayUi(
-                code = "",
-                name = "Darth",
-                color = "Red",
-                isSelected = true,
-                quantity = 1,
-                maxQuantity = 4,
-                baseQuantity = 2,
-            )
-        )
-    )
-}
-*/
 
 @Preview
 @Composable

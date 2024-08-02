@@ -210,14 +210,6 @@ class DiceRollerViewModel @Inject constructor(
             map[code] = newValue
             map
         }
-
-        /*  cards.update {
-              val newList = it.toMutableList()
-              val newValue = newList[index].copy(isCardSelected = !newList[index].isCardSelected)
-              newList.removeAt(index)
-              newList.add(index, newValue)
-              newList
-          }*/
     }
 
     fun resolveAll() {
@@ -235,27 +227,6 @@ class DiceRollerViewModel @Inject constructor(
             }
         }
     }
-
-        /*dice.update {
-            val list = cards.value.filter { it.isCardSelected }.flatMap {
-                if (it.isElite) {
-                    listOf(it, it)
-                } else {
-                    listOf(it)
-                }
-            }.groupBy { it.code }.values.toList()
-
-            list.map { cards ->
-                cards.map { die ->
-                    if (die.isCardSelected) {
-                        die.copy(sideShowing = die.diceRef[Random.nextInt(0, 5)])
-                    } else {
-                        die
-                    }
-                }
-            }
-        }*/
-
 
     fun changeDie(code: String, index: Int, req: DieRequest, side: String? = null) {
         when (req) {
@@ -329,22 +300,4 @@ class DiceRollerViewModel @Inject constructor(
             }
         }
     }
-
-    /*fun setOrReroll(code: String, index: Int, side: String?) {  //Null means re-roll
-        dice.update {
-            it.map { list ->
-                list.mapIndexed { i, die ->
-                    if (die.code == code && i == index) {
-                        if (side == null) {
-                            die.copy(sideShowing = die.diceRef[Random.nextInt(0, 5)])
-                        } else {
-                            die.copy(sideShowing = side)
-                        }
-                    } else {
-                        die
-                    }
-                }
-            }
-        }
-    }*/
 }

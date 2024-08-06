@@ -241,6 +241,7 @@ class GetDeckWithCards @Inject constructor(
                     }
 
                     val chars = charJob.await()
+                    var filteredSetAsides = setAsides.filter { setAside -> !(chars.data?.any { it.code == setAside.code } ?: false) }
                     when (chars.status) {
                         Resource.Status.ERROR -> {
                             emit(
@@ -255,7 +256,7 @@ class GetDeckWithCards @Inject constructor(
 
                         else -> {
 
-                            uiDeck = uiDeck.copy(chars = chars.data ?: emptyList())
+                            uiDeck = uiDeck.copy(chars = chars.data ?: emptyList(), setAsides = filteredSetAsides)
                             emit(
                                 UiState.HasData(
                                     isLoading = true,
@@ -267,6 +268,7 @@ class GetDeckWithCards @Inject constructor(
                     }
 
                     val slots = slotJob.await()
+                    filteredSetAsides = setAsides.filter { setAside -> !(slots.data?.any { it.code == setAside.code } ?: false) }
                     when (slots.status) {
                         Resource.Status.ERROR -> {
                             emit(
@@ -280,7 +282,7 @@ class GetDeckWithCards @Inject constructor(
                         }
 
                         else -> {
-                            uiDeck = uiDeck.copy(slots = slots.data ?: emptyList(), setAsides = setAsides)
+                            uiDeck = uiDeck.copy(slots = slots.data ?: emptyList(), setAsides = filteredSetAsides)
                             emit(
                                 UiState.HasData(
                                     isLoading = false,

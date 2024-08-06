@@ -250,7 +250,7 @@ class DetailViewModel @Inject constructor(
             val card = state.data
             val quantity = owned.find { it.card.fetchCode() == card.code }?.quantity ?: 0
 
-            val ownedDetail = CardDetailDeckUi(
+            val ownedDetail = CardDetailDeckUi(         //TODO: Just make this an int
                 name = "",
                 formatName = "",
                 affiliationName = "",

@@ -99,6 +99,7 @@ fun Die(modifier: Modifier = Modifier, dieCode: String, isCompactScreen: Boolean
 
                         if (dieStrings.first().startsWith("+")) color = Color.Blue
 
+                        var indexOfIcon = 1
                         if (dieStrings.first().isNumber())
                             Text(
                                 text = dieStrings.first(),
@@ -106,9 +107,14 @@ fun Die(modifier: Modifier = Modifier, dieCode: String, isCompactScreen: Boolean
                                 style = style,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
+                        else indexOfIcon = 0
 
                         val dieResource =
-                            dieResourceMap[dieStrings[1]] ?: R.drawable.swd01_blank_symbol_w
+                            try {
+                                dieResourceMap[dieStrings[indexOfIcon]] ?: R.drawable.swd01_blank_symbol_w }
+                            catch (e:IndexOutOfBoundsException) {
+                                R.drawable.swd01_blank_symbol_w
+                            }
 
                         Image(
                             painter = painterResource(id = dieResource),
@@ -187,7 +193,7 @@ fun DiePreview() {
         modifier = Modifier.background(color = Color.Gray)
             .height(30.dp)
         ,
-        dieCode = "",
+        dieCode = "Sp1",
         false
     )
 }

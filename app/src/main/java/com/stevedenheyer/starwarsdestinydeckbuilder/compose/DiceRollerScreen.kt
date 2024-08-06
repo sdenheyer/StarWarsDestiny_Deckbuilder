@@ -188,7 +188,7 @@ fun DiceGrids(
                     }
                         OutlinedCard(
                             onClick = {
-                                if (die.sideShowing != null) dropDownExpanded = !dropDownExpanded else selectCard(cardIndex)
+                                if (die.sideShowing != null) dropDownExpanded = !dropDownExpanded else if (!card.isSelected) selectCard(cardIndex)
                                       },
                             colors = CardDefaults.cardColors(
                                 containerColor = if (card.isSelected && !die.sideShowing.isNullOrBlank()) MaterialTheme.colorScheme.surfaceContainer else Color.Gray,

@@ -446,10 +446,11 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, findCardbySetAndPostitio
 
         if (card.sides != null) {
             DieGroup(
-                modifier = textModifer
-                    .padding(vertical = 6.dp)
+                modifier = Modifier
+                    .padding(vertical = 6.dp, horizontal = 8.dp)
                     .fillMaxWidth()
-                    .height(30.dp),
+                    .wrapContentWidth(align = Alignment.CenterHorizontally)
+                    .height(47.dp),
                 dieCodes = card.sides
             )
         }
@@ -742,7 +743,7 @@ fun Balance(modifier: Modifier, factionColor: Color, formats: List<Format>) {
 fun OwnedCard(
     modifier: Modifier,
     owned: CardDetailDeckUi,
-    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit
+    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit  //TODO: Unused pararmeters no longer needed
 ) {
     val textModifer = Modifier
         .padding(vertical = 2.dp, horizontal = 8.dp)
@@ -769,7 +770,7 @@ fun OwnedCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-            AddMultiple(modifier = Modifier, deck = owned, changeQuantity = changeQuantity)
+            AddOwned(modifier = Modifier, deck = owned, changeQuantity = changeQuantity)
         }
     }
 }
@@ -1136,6 +1137,59 @@ fun AddMultiple(
             color = MaterialTheme.colorScheme.primary,
         ),
             enabled = (deck.quantity < deck.maxQuantity + 1),
+            onClick = { changeQuantity(deck.name,
+                deck.quantity + 1,
+                false,
+                deck.quantity + 1 > deck.maxQuantity) }) {
+            Text(
+                "+",
+                Modifier
+                    .wrapContentSize(align = Alignment.Center),
+                softWrap = true,
+                style = MaterialTheme.typography.titleLarge
+            )
+        }
+    }
+}
+
+@Composable
+fun AddOwned(
+    modifier: Modifier,
+    deck: CardDetailDeckUi,
+    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit
+) {
+    Row(modifier = modifier) {
+        TextButton(border = BorderStroke(
+            2.dp,
+            color = MaterialTheme.colorScheme.primary
+        ),
+            enabled = (deck.quantity > 0),
+            onClick = { changeQuantity(deck.name,
+                deck.quantity - 1,
+                false,
+                deck.quantity -1 < 0) }) {
+            Text(
+                "-",
+                Modifier
+                    .wrapContentSize(align = Alignment.Center),
+                softWrap = true,
+                style = MaterialTheme.typography.titleLarge,
+            )
+        }
+        Text(
+            buildAnnotatedString {
+                    withStyle(style = SpanStyle(fontStyle = MaterialTheme.typography.headlineMedium.fontStyle, fontSize = MaterialTheme.typography.headlineMedium.fontSize)) {
+                        append(deck.quantity.toString())
+                    }
+            },
+
+            modifier = Modifier.padding(horizontal = 12.dp).align(Alignment.CenterVertically)
+        )
+        TextButton(border = BorderStroke(
+            2.dp,
+            color = MaterialTheme.colorScheme.primary,
+        ),
+            enabled = (deck.quantity < deck.maxQuantity),
             onClick = { changeQuantity(deck.name,
                 deck.quantity + 1,
                 false,

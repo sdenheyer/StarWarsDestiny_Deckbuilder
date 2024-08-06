@@ -57,15 +57,6 @@ data class CardDiceUi(
     val isDieSelected: Boolean = true,
 )
 
-fun CardUi.toCardDiceUi(selected: Boolean = false) = CardDiceUi(
-    code = code,
-    name = name,
-    color = color,
-    isElite = isElite,
-    diceRef = diceRef,
-    isCardSelected = selected
-)
-
 data class LoadingState(
     val isLoading: Boolean = true,
     val errorMsg: String? = null
@@ -91,10 +82,6 @@ class DiceRollerViewModel @Inject constructor(
     val cardList: MutableStateFlow<List<CardInPlayUi>> = MutableStateFlow(emptyList())
 
     val diceMap: MutableStateFlow<Map<String, List<DieUi>>> = MutableStateFlow(emptyMap())
-
-    val cards: MutableStateFlow<List<CardDiceUi>> = MutableStateFlow(emptyList())
-
-    val dice: MutableStateFlow<List<List<CardDiceUi>>> = MutableStateFlow(emptyList())
 
     init {
 

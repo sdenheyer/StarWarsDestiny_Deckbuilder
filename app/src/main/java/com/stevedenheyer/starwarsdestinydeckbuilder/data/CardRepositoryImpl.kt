@@ -1,5 +1,6 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.data
 
+import android.util.Log
 import androidx.datastore.core.DataStore
 import com.stevedenheyer.starwarsdestinydeckbuilder.UserSettings
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
@@ -29,6 +30,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import javax.inject.Inject
@@ -145,12 +147,13 @@ class CardRepositoryImpl @Inject constructor(
                         expiry = if (userSettings.expiry == 0L) (24 * 60 * 60 * 1000L) else userSettings.expiry
                     )
                 }.first()
+               // Log.d("TAG", "Get Set Timestamp: ${time.timestamp}, expiry: ${time.expiry}, current: ${Date().time}")
                         it.isNullOrEmpty() ||
                         (forceRemoteUpdate)||
                                 (Date().time - (time.timestamp) > (time.expiry))
-
             },
             fetchFromRemote = {
+                val networkExpiry = it?.last()?.expiry ?: 0L
                 val time = dataStore.data.map { userSettings ->
                     CardSetTimestamp(
                         timestamp = userSettings.getTimestampsOrDefault(code, 0),
@@ -161,6 +164,11 @@ class CardRepositoryImpl @Inject constructor(
                     0L.toString().format(dateFormatter)
                 else
                     time.timestamp.toString().format(dateFormatter)
+
+                dataStore.updateData { userSettings ->
+                    userSettings.toBuilder().setExpiry(networkExpiry).putTimestamps(code, Date().time).build()
+                }
+
                 cardNetwork.getCardsBySet(date, code) },
             processRemoteResponse = { },
             saveRemoteData = { cardCache.storeCards(it) },
@@ -172,6 +180,7 @@ class CardRepositoryImpl @Inject constructor(
         return networkBoundResource(
             fetchFromLocal = { cardCache.getFormats() },
             shouldFetchFromRemote = {
+                Log.d("SWD", "Formats timestamp: ${it?.timestamp} expiry: ${it?.expiry} current: ${Date().time}")
                 it?.cardFormats.isNullOrEmpty() ||
                         (forceRemoteUpdate) ||
                         (Date().time - (it?.timestamp ?: 0L) > (it?.expiry

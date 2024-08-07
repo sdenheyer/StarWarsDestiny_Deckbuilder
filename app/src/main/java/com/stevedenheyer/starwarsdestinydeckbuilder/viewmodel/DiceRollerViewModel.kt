@@ -46,6 +46,7 @@ fun CardUi.toDieUi(isCopyable: Boolean) = DieUi(
     isCopyable = isCopyable
 )
 
+/*
 data class CardDiceUi(
     val code: String,
     val name: String,
@@ -56,13 +57,14 @@ data class CardDiceUi(
     val isCardSelected: Boolean,
     val isDieSelected: Boolean = true,
 )
+*/
 
 data class LoadingState(
     val isLoading: Boolean = true,
     val errorMsg: String? = null
 )
 
-enum class DieRequest() {
+enum class DieRequest {
     REROLL,
     CHANGE,
     RESOLVE,
@@ -123,8 +125,8 @@ class DiceRollerViewModel @Inject constructor(
                         if (!deckState.isLoading) {
                             val deck = deckState.data
 
-                            diceMap.update {
-                                val map = it.toMutableMap()
+                            diceMap.update { dice ->
+                                val map = dice.toMutableMap()
 
                                 deck.chars.filter { it.diceRef.isNotEmpty() }
                                     .forEach { card ->
@@ -144,8 +146,8 @@ class DiceRollerViewModel @Inject constructor(
                                 map
                             }
 
-                            cardList.update {
-                                val list = it.toMutableList()
+                            cardList.update { cards ->
+                                val list = cards.toMutableList()
 
                                 deck.chars.filter { it.diceRef.isNotEmpty() }
                                     .forEach {
@@ -185,8 +187,8 @@ class DiceRollerViewModel @Inject constructor(
             list
         }
 
-        diceMap.update {
-            val map = it.toMutableMap()
+        diceMap.update { dice ->
+            val map = dice.toMutableMap()
             val code = cardList.value[index].code
 
             val newValue = map[code]!!.map {

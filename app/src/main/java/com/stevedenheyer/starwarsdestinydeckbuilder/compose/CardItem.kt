@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
 import androidx.compose.material3.CardDefaults
@@ -19,12 +20,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -97,10 +101,10 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
                     }
                 },
                 style = MaterialTheme.typography.headlineMedium,
-                overflow = TextOverflow.Ellipsis,
+                //overflow = TextOverflow.Ellipsis,
                 inlineContent = getUniqueInline(size = MaterialTheme.typography.titleLarge.fontSize,
                     color = factionColor),
-                modifier = Modifier
+                modifier = Modifier.weight(0.9f)
                     .padding(top = 0.dp, bottom = 8.dp, start = 8.dp, end = 6.dp)
             )
 
@@ -221,18 +225,29 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
         border = BorderStroke(2.dp, factionColor),
         onClick = { onItemClick(card.code) })
     {
-        Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+        Row(horizontalArrangement = Arrangement.Absolute.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+
             Text(
                 buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = factionColor)) {
-                        append(card.name)
-                    }
-                    if (card.uniqueWarning) { withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.error)) { append(" !") } }
-                },
+                    if (card.isUnique && (card.type == "Character" || card.type == "Plot")) appendInlineContent("unique", "[unique]")
+                        withStyle(style = SpanStyle(color = factionColor)) {
+                            append(card.name)
+                        }
+                        if (card.uniqueWarning) {
+                            withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.error)) {
+                                append(" !")
+                            }
+                        }
+                        }
+                ,
                 style = MaterialTheme.typography.headlineMedium,
-                overflow = TextOverflow.Ellipsis,
+             //   maxLines = 1,
+               // overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
-                    .padding(top = 0.dp, start = 8.dp)
+                    .padding(top = 0.dp, start = 8.dp).weight(0.66f),
+                inlineContent = getUniqueInline(size = MaterialTheme.typography.titleLarge.fontSize,
+                    color = factionColor),
+
             )
             if (card.quantity > 0)
                 Text(buildAnnotatedString {
@@ -245,7 +260,7 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
                     }
 
                 },  style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(top = 4.dp, end = 4.dp),
+                    modifier = Modifier.padding(top = 4.dp, end = 4.dp).wrapContentWidth(Alignment.End),
                     inlineContent = getCardInlines())
         }
         if (card.subtitle.isNotBlank()) {
@@ -324,7 +339,7 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
         }
         DieGroup(modifier = Modifier
             .padding(start = 6.dp, bottom = 10.dp)
-            .height(25.dp)
+            .height(35.dp)
             .fillMaxWidth(), card.diceRef, isCompactScreen = true)
     }
 }

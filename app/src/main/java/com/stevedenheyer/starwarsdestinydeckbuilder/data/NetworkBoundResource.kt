@@ -16,7 +16,7 @@ inline fun <DB, REMOTE> networkBoundResource(
     crossinline fetchFromLocal: suspend () -> Flow<DB>,
     crossinline shouldFetchFromRemote: suspend (DB?) -> Boolean = { true },
     crossinline fetchFromRemote: suspend (DB?) -> Flow<ApiResponse<REMOTE>>,
-    crossinline processRemoteResponse: (response: ApiSuccessResponse<REMOTE>) -> Unit,
+    crossinline processRemoteResponse: (response: ApiSuccessResponse<REMOTE>) -> Unit,    //TODO:  Change this to update timestamp
     crossinline saveRemoteData: suspend (REMOTE) -> Unit,
     crossinline onFetchFailed: (errorBody: String?, statusCode: Int) -> Unit
 ) = flow<Resource<DB>> {
@@ -27,13 +27,13 @@ inline fun <DB, REMOTE> networkBoundResource(
     val localData = fetchFromLocal().first()
 
     if (shouldFetchFromRemote(localData)) {
-        //   Log.d("SWD", "Fetching from remote...")
+        Log.d("SWD", "Fetching from remote...")
         emit(Resource.loading(localData))
 
         fetchFromRemote(localData).collect { apiResponse ->
             when (val state = apiResponse) {
                 is ApiSuccessResponse -> {
-                  //  Log.d("SWD", "Headers: ${apiResponse.headers}")
+                    //  Log.d("SWD", "Headers: ${apiResponse.headers}")
                     processRemoteResponse(state)
                     state.body?.let {
                         //  Log.d("SWD", "Saving to db: $it.size")
@@ -54,24 +54,26 @@ inline fun <DB, REMOTE> networkBoundResource(
                 }
 
                 is ApiErrorResponse -> {
-                   // Log.d("SWD", "Headers: ${apiResponse.statusCode} ${apiResponse.errorMessage}")
-                        onFetchFailed(state.errorMessage, state.statusCode)
-                        emitAll(fetchFromLocal().map {
-                            Resource.error(
-                                state.errorMessage,
-                                it
-                            )
-                        })
+                    // Log.d("SWD", "Headers: ${apiResponse.statusCode} ${apiResponse.errorMessage}")
+                    onFetchFailed(state.errorMessage, state.statusCode)
+                    emitAll(fetchFromLocal().map {
+                        Resource.error(
+                            state.errorMessage,
+                            it
+                        )
+                    })
                 }
 
-                is ApiEmptyResponse ->  emitAll(fetchFromLocal().map {
-                    Resource.success(it, true)
-                })
+                is ApiEmptyResponse -> {
+                    emitAll(fetchFromLocal().map {
+                        Resource.success(it, true)
+                    })
+                }
             }
 
         }
     } else {
-        //  Log.d("SWD", "Fetch from local")
+        Log.d("SWD", "Fetch from local")
         emitAll(fetchFromLocal().map {
             //  Log.d("SWD", "Fetch local output, $it")
             Resource.success(isFromDB = true, data = it)

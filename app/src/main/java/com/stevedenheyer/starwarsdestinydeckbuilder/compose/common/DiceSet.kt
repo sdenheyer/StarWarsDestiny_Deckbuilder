@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,11 +23,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.room.util.newStringBuilder
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
 import com.stevedenheyer.starwarsdestinydeckbuilder.ui.theme.LocalFactionColorScheme
 
@@ -60,7 +57,7 @@ fun Die(modifier: Modifier = Modifier, dieCode: String, isCompactScreen: Boolean
 
     val dieStrings = dieRegex.findAll(dieCode).map { it.groupValues.first() }.toList()
 
-    Log.d("SWD", "die strings: ${dieStrings}")
+  //  Log.d("SWD", "die strings: ${dieStrings}")
 
 
 

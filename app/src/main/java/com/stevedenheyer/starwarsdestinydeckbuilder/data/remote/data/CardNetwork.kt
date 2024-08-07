@@ -199,7 +199,6 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
                 try {
                     // Log.d("SWD", "Cache control header: $it")
                     expiry = it.substringAfter("=").toLong() * 1000
-                    // expiry = 60 * 1000 //TEST VALUE
                    // Log.d("SWD", "Expiry: $expiry")
                 } catch (e: NumberFormatException) {
                     Log.d("SWD", "Couldn't find an integer in the string")

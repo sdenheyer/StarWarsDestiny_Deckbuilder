@@ -32,7 +32,6 @@ import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.viewmodel.UiCardSet
@@ -149,7 +148,7 @@ fun SelectionDrawer(
                             })
                         }
 
-                        if (set.postition == 101) {
+                        if (set.position == 101) {
                             HorizontalDivider()
                             Text(
                                 "A Renewed Hope",

@@ -250,7 +250,7 @@ class DetailViewModel @Inject constructor(
             val card = state.data
             val quantity = owned.find { it.card.fetchCode() == card.code }?.quantity ?: 0
 
-            val ownedDetail = CardDetailDeckUi(         //TODO: Just make this an int
+            /*val ownedDetail = CardDetailDeckUi(
                 name = "",
                 formatName = "",
                 affiliationName = "",
@@ -263,8 +263,8 @@ class DetailViewModel @Inject constructor(
                 battlefield = null,
                 pointsUsed = 0,
                 deckSize = owned.size
-            )
-            emit(ownedDetail)
+            )*/
+            emit(quantity)
         }
     }
 
@@ -316,7 +316,7 @@ class DetailViewModel @Inject constructor(
             return
         }
         if (deck != null) {
-            Log.d("SWD", "Writing deck: ${deck.name}, ${quantity}, ${isElite}")
+          //  Log.d("SWD", "Writing deck: ${deck.name}, ${quantity}, ${isElite}")
             val char = CharacterCard(
                 cardOrCode = CardOrCode.HasCode(code),
                 points = (if (isElite) card.points.second else card.points.first) ?: 0,

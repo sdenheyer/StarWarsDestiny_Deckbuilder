@@ -16,7 +16,6 @@ fun CardFormat.toEntity() = FormatEntity(
     restricted = restricted.map { CardCode(it) },
     banned = banned.map { CardCode(it) },
     balance = balance.map { Balance(it.key, it.value) },
-   // restrictedPairs = null,
 )
 
 fun FormatEntity.toDomain() = CardFormat(

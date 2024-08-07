@@ -41,7 +41,7 @@ data class CardDTO (
     companion object {
         val testCard =
             CardDTO(
-                sides = listOf("1RD", "2RD", "1F", "1Dc", "1R", "-"),
+                sides = listOf("1RD", "+2RD", "1F", "1Dc", "1R", "-"),
                 set_code = "AW",
                 set_name = "Awakenings",
                 type_code = "character",
@@ -59,7 +59,7 @@ data class CardDTO (
                 position = 1,
                 code = "01001",
                 ttscardid = 1300,
-                name = "Captain Phasma",
+                name = "Captain Phasma LOOOOOOOOOOOOOOONG NAME",
                 subtitle = "Elite Trooper",
                 cost = null,
                 health = 11,

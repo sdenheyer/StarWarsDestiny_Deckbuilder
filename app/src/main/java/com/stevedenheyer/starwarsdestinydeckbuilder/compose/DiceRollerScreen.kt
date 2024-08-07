@@ -66,7 +66,7 @@ fun DiceRollerScreen(
     navigateBack: () -> Unit
 ) {
 
-    val loadingState by cardDiceVM.loadingState.collectAsStateWithLifecycle()    //TODO:  Implement the usual indetermine progress
+    val loadingState by cardDiceVM.loadingState.collectAsStateWithLifecycle()
     val cards by cardDiceVM.cardList.collectAsStateWithLifecycle(emptyList())
     val dice by cardDiceVM.diceMap.collectAsStateWithLifecycle(emptyMap())
 
@@ -182,7 +182,7 @@ fun DiceGrids(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 userScrollEnabled = false
             ) {
-                itemsIndexed(items = diceList[card.code] ?: emptyList()) { dieIndex, die ->  //TODO: TEMP TEST
+                itemsIndexed(items = diceList[card.code] ?: emptyList()) { dieIndex, die ->
                     var dropDownExpanded by remember {
                         mutableStateOf(false)
                     }
@@ -227,7 +227,7 @@ fun DiceGrids(
                                     DropdownMenuItem(
                                         text = { Die(isCompactScreen = isCompactScreen, dieCode = it, modifier = Modifier
                                             .height(32.dp)
-                                            .width(48.dp)   //TODO:  Figure out how to center this
+                                            .width(48.dp)
                                             .wrapContentWidth(align = Alignment.CenterHorizontally)
                                         ) },
                                         onClick = { changeDie(card.code, dieIndex, DieRequest.CHANGE, it)

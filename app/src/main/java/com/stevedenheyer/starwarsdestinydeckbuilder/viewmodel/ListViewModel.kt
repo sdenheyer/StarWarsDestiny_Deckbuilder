@@ -36,7 +36,7 @@ import javax.inject.Inject
 data class UiCardSet(
     val code: String,
     val name: String,
-    val postition: Int
+    val position: Int
 )
 
 data class UiDeck(
@@ -60,7 +60,6 @@ class ListTypeCollection : ListType()
 @HiltViewModel
 class ListViewModel @Inject constructor(
     private val cardRepo: CardRepository,
-    // private val getCardsFromCodes: GetCardsFromCodes
 ) : ViewModel() {
     val listTypeFlow: MutableStateFlow<ListType> = MutableStateFlow(ListTypeNone())
 
@@ -154,7 +153,7 @@ class ListViewModel @Inject constructor(
 
         if (response.data != null) {
             response.data.cardSets.forEach { set ->
-                setList.add(UiCardSet(code = set.code, name = set.name, postition = set.position))
+                setList.add(UiCardSet(code = set.code, name = set.name, position = set.position))
             }
         }
 

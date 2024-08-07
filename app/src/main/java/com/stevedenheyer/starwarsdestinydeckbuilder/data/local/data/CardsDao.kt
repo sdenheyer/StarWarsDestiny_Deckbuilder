@@ -121,6 +121,7 @@ interface CardsDao {
     @Update
     fun updateFormat(format: FormatBaseEntity)
 
+    @Transaction
     @Query("SELECT * FROM formatbaseentity")
     fun getFormats(): Flow<List<FormatEntity>>
 

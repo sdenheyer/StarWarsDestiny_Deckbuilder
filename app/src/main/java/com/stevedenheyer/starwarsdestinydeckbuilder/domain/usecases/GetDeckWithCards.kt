@@ -329,7 +329,7 @@ class GetDeckWithCards @Inject constructor(
     }
 
     private fun getBalance(card: Card, format: CardFormat): Pair<Int?, Int?> {
-        val balance = format.balance[card.setCode].asIntPair()
+        val balance = format.balance[card.code].asIntPair()
         return if (balance.first != null) {
             balance
         } else {
@@ -348,11 +348,10 @@ class GetDeckWithCards @Inject constructor(
                 while (strings.hasNext()) {
                     val string = strings.next()
                     if (string in CardSetIcon.entries.map { it.code }) {
-                        val set = string
                         val nextStrings = strings.next().split(")")
                         try {
                             val position = parseInt(nextStrings.first())
-                            val resource = cardRepo.getCardBySetAndPosition(set, position).first { it.status != Resource.Status.LOADING }
+                            val resource = cardRepo.getCardBySetAndPosition(string, position).first { it.status != Resource.Status.LOADING }
                             when (resource.status) {
                                 Resource.Status.ERROR -> {}
                                 else -> if (resource.data != null) setAsides.add(resource.data.toCardUi().copy(quantity = 1))

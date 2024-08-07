@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -121,20 +120,7 @@ fun DetailsScreen(
 
     val decks by detailViewModel.uiDecks.collectAsStateWithLifecycle(initialValue = emptyList())
 
-    val owned by detailViewModel.ownedCardsUi.collectAsStateWithLifecycle(initialValue = CardDetailDeckUi(
-        name = "",
-        formatName = "",
-        affiliationName = "",
-
-        quantity = 0,
-        isUnique = false,
-        isElite = false,
-        maxQuantity = Int.MAX_VALUE,
-        plot = null,
-        battlefield = null,
-        pointsUsed = 0,
-        deckSize = 0
-    ))
+    val owned by detailViewModel.ownedCardsUi.collectAsStateWithLifecycle(initialValue = 0)
 
   //  Log.d("SWD", "Card State: ${cardState.isLoading}")
     val snackbarHostState = remember { SnackbarHostState() }
@@ -177,7 +163,7 @@ fun DetailsScreen(
                         )
                     },
                     owned = owned,
-                    changeOwnedQuantity = { _, quantity, _ , _-> (detailViewModel::writeOwned)(quantity) },
+                    changeOwnedQuantity = { quantity -> (detailViewModel::writeOwned)(quantity) },
                     findCardbySetAndPostition = { set, position ->
                             val card = detailViewModel.getCardBySetAndPosition(set, position)
                             card.code
@@ -212,15 +198,16 @@ fun DetailsScreen(
 }
 
 @Composable
-fun Details(isCompactScreen: Boolean,
-            card: CardDetailUi,
-            decks: List<CardDetailDeckUi>,
-            owned: CardDetailDeckUi,
-            modifier: Modifier = Modifier,
-            changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
-            changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
-            findCardbySetAndPostition: suspend (String, Int) -> String?,
-            navigateToCard: (String) -> Unit) {
+fun Details(
+    isCompactScreen: Boolean,
+    card: CardDetailUi,
+    decks: List<CardDetailDeckUi>,
+    owned: Int,
+    modifier: Modifier = Modifier,
+    changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
+    changeOwnedQuantity: (quantity: Int) -> Unit,
+    findCardbySetAndPostition: suspend (String, Int) -> String?,
+    navigateToCard: (String) -> Unit) {
     when (isCompactScreen) {
         true -> CompactDetails(
             card = card,
@@ -250,10 +237,10 @@ fun Details(isCompactScreen: Boolean,
 fun CompactDetails(
     card: CardDetailUi,
     decks: List<CardDetailDeckUi>,
-    owned: CardDetailDeckUi,
+    owned: Int,
     modifier: Modifier = Modifier,
     changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
-    changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
+    changeOwnedQuantity: (quantity: Int) -> Unit,
     findCardbySetAndPostition: suspend (String, Int) -> String?,
     navigateToCard: (String) -> Unit,
 ) {
@@ -285,10 +272,10 @@ fun CompactDetails(
 fun LargeDetails(
     card: CardDetailUi,
     decks: List<CardDetailDeckUi>,
-    owned: CardDetailDeckUi,
+    owned: Int,
     modifier: Modifier = Modifier,
     changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
-    changeOwnedQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
+    changeOwnedQuantity: (quantity: Int) -> Unit,
     findCardbySetAndPostition: suspend (String, Int) -> String?,
     navigateToCard: (String) -> Unit,
 ) {
@@ -450,7 +437,7 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, findCardbySetAndPostitio
                     .padding(vertical = 6.dp, horizontal = 8.dp)
                     .fillMaxWidth()
                     .wrapContentWidth(align = Alignment.CenterHorizontally)
-                    .height(47.dp),
+                    .height(35.dp),
                 dieCodes = card.sides
             )
         }
@@ -742,8 +729,8 @@ fun Balance(modifier: Modifier, factionColor: Color, formats: List<Format>) {
 @Composable
 fun OwnedCard(
     modifier: Modifier,
-    owned: CardDetailDeckUi,
-    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit  //TODO: Unused pararmeters no longer needed
+    owned: Int,
+    changeQuantity: (quantity: Int) -> Unit
 ) {
     val textModifer = Modifier
         .padding(vertical = 2.dp, horizontal = 8.dp)
@@ -1155,19 +1142,18 @@ fun AddMultiple(
 @Composable
 fun AddOwned(
     modifier: Modifier,
-    deck: CardDetailDeckUi,
-    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit
+    deck: Int,
+    changeQuantity: (quantity: Int) -> Unit
 ) {
     Row(modifier = modifier) {
         TextButton(border = BorderStroke(
             2.dp,
             color = MaterialTheme.colorScheme.primary
         ),
-            enabled = (deck.quantity > 0),
-            onClick = { changeQuantity(deck.name,
-                deck.quantity - 1,
-                false,
-                deck.quantity -1 < 0) }) {
+            enabled = (deck > 0),
+            onClick = { changeQuantity(
+                deck - 1,
+               ) }) {
             Text(
                 "-",
                 Modifier
@@ -1179,7 +1165,7 @@ fun AddOwned(
         Text(
             buildAnnotatedString {
                     withStyle(style = SpanStyle(fontStyle = MaterialTheme.typography.headlineMedium.fontStyle, fontSize = MaterialTheme.typography.headlineMedium.fontSize)) {
-                        append(deck.quantity.toString())
+                        append(deck.toString())
                     }
             },
 
@@ -1189,11 +1175,10 @@ fun AddOwned(
             2.dp,
             color = MaterialTheme.colorScheme.primary,
         ),
-            enabled = (deck.quantity < deck.maxQuantity),
-            onClick = { changeQuantity(deck.name,
-                deck.quantity + 1,
-                false,
-                deck.quantity + 1 > deck.maxQuantity) }) {
+          //  enabled = (deck < deck.maxQuantity),
+            onClick = { changeQuantity(
+                deck + 1,
+               ) }) {
             Text(
                 "+",
                 Modifier

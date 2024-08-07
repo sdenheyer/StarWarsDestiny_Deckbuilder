@@ -33,7 +33,6 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.data.local.model.SubTypeEnti
                 FormatBannedCrossref::class, FormatRestrictedCrossref::class, BalanceCardCrossref::class, CardSetTimeEntity::class, FormatTimeEntity::class,
                 DeckBaseEntity::class, CharacterEntity::class, SlotEntity::class, OwnedCardsBaseEntity::class, CodeQuantity::class,],
             version = 2,
-      //      exportSchema = false
             autoMigrations = [
                 AutoMigration (from = 1, to = 2)
             ]

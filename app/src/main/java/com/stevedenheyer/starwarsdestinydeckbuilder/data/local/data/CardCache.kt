@@ -148,13 +148,11 @@ class CardCache(
     override suspend fun storeFormats(formatlist: CardFormatList) {
         formatlist.cardFormats.forEach {
             val format = it.toEntity()
-            Log.d("SWD", "Formats...")
             try {
                 dao.insertFormats(format.cardFormat)
             } catch (e: SQLiteConstraintException) {
                 dao.updateFormat(format.cardFormat)
             }
-            Log.d("SWD", "Inc Sets...")
             it.includedSets.forEach { set ->
                 dao.insertSetCodes(SetCode(set))
                 dao.insertIncludedSetsCrossRef(
@@ -164,7 +162,6 @@ class CardCache(
                     )
                 )
             }
-            Log.d("SWD", "Balance...")
             it.balance.forEach { map ->
                 dao.insertBalance(Balance(cardCode = map.key, balance = map.value))
                 dao.insertBalanceCrossRef(
@@ -175,7 +172,6 @@ class CardCache(
                     )
                 )
             }
-            Log.d("SWD", "Banned...")
             it.banned.forEach { code ->
                 dao.insertCardCodes(CardCode(code))
                 dao.insertBannedCardsCrossRef(
@@ -185,7 +181,6 @@ class CardCache(
                     )
                 )
             }
-            Log.d("SWD", "Restricted...")
             it.restricted.forEach { code ->
                 dao.insertCardCodes(CardCode(code))
                 dao.insertRestrictedCardsCrossRef(
@@ -195,7 +190,6 @@ class CardCache(
                     )
                 )
             }
-            Log.d("SWD", "Pairs...")
             it.restrictedPairs.forEach { map ->          //Just saving all the keys - not sure how to handle this exactly
                 dao.insertCardCodes(CardCode(map.key))
                 dao.insertRestrictedCardsCrossRef(
@@ -207,13 +201,12 @@ class CardCache(
             }
         }
 
-        val formatTime = FormatTimeEntity(
-            timestamp = Date().time,
-            expiry = formatlist.expiry - 1
-        )
-        Log.d("SWD", "Writing Format Timestamp: ${formatTime.timestamp}")
         dao.insertFormatTimestamp(
-            formatTime
+            FormatTimeEntity(
+                timestamp = formatlist.timestamp,
+                expiry = formatlist.expiry
+            )
+
         )
     }
 

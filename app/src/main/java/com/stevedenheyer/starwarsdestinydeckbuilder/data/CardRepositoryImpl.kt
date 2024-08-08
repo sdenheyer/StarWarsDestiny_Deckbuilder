@@ -23,6 +23,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.CardRepository
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.ICardCache
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.ICardNetwork
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
+import com.stevedenheyer.starwarsdestinydeckbuilder.utils.DEFAULT_EXPIRY
 import com.stevedenheyer.starwarsdestinydeckbuilder.utils.setCodeMap
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.flowOn
@@ -59,10 +60,20 @@ class CardRepositoryImpl @Inject constructor(
                         (Date().time - (it.timestamp) > (it.expiry))
             },
             fetchFromRemote = {
-                val date =  Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
-                cardNetwork.getCardByCode(date, code) },
+                val date = Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
+                cardNetwork.getCardByCode(date, code)
+            },
             updateTimestamp = { it?.let { cardCache.storeCards(listOf(it.copy(timestamp = Date().time))) } },
-            saveRemoteData = { card, expiry -> cardCache.storeCards(listOf(card.copy(timestamp = Date().time, expiry = expiry ?: 24 * 60 * 60 * 1000))) },
+            saveRemoteData = { card, expiry ->
+                cardCache.storeCards(
+                    listOf(
+                        card.copy(
+                            timestamp = Date().time,
+                            expiry = expiry ?: DEFAULT_EXPIRY
+                        )
+                    )
+                )
+            },
             onFetchFailed = { _, _ -> }
 
         ).flowOn(dispatcher)
@@ -70,50 +81,70 @@ class CardRepositoryImpl @Inject constructor(
 
     override fun getCardBySetAndPosition(set: String, position: Int): Flow<Resource<Card?>> {
         return networkBoundResource(
-            fetchFromLocal = { cardCache.getCardBySetAndPosition(set, position)  },
-            shouldFetchFromRemote = { it == null ||
-                    (Date().time - (it.timestamp) > (it.expiry)) },
-            fetchFromRemote = {  val date =  Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
-                cardNetwork.getCardsBySet(date, set) },
-            saveRemoteData = { cards, expiry -> cardCache.storeCards(cards.map { card -> card.copy(timestamp = Date().time, expiry = expiry ?: 24 * 60 * 60 * 1000)})},
-            updateTimestamp = { it?.let { cardCache.storeCards(listOf(it.copy(timestamp = Date().time))) }},
+            fetchFromLocal = { cardCache.getCardBySetAndPosition(set, position) },
+            shouldFetchFromRemote = {
+                it == null ||
+                        (Date().time - (it.timestamp) > (it.expiry))
+            },
+            fetchFromRemote = {
+                val date = Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
+                cardNetwork.getCardsBySet(date, set)
+            },
+            saveRemoteData = { cards, expiry ->
+                cardCache.storeCards(cards.map { card ->
+                    card.copy(
+                        timestamp = Date().time,
+                        expiry = expiry ?: DEFAULT_EXPIRY
+                    )
+                })
+            },
+            updateTimestamp = { it?.let { cardCache.storeCards(listOf(it.copy(timestamp = Date().time))) } },
             onFetchFailed = { _, _ -> }
         )
     }
 
-    override fun getCardsByCodes(vararg values: CardOrCode): Flow<Resource<List<CardOrCode>>> = flow {
-        val list = cardCache.getCardsByCodes(*values).toMutableList()
-        if (list.size == values.size) {
-            emit(Resource.success(data = list, isFromDB = true))
-        } else {
-            emit(Resource.loading(data = list))
-            val needFromNetwork = values.filter { card -> card.fetchCode() !in list.map { it.fetchCode() } }.toMutableList()
-            needFromNetwork.addAll(values.filter {
-                if (it is CardOrCode.HasCode) true else {
-                val card = (it as CardOrCode.HasCard).card
-                Date().time - (card.timestamp) > (card.expiry)  }
-            })
-            needFromNetwork.forEach {
-                when (val apiResource = cardNetwork.getCardByCode(0L.toString().format(dateFormatter), it.fetchCode()).first()) {  //If not in database, last modified not applied
-                    is ApiSuccessResponse -> {
-                        list.add(CardOrCode.HasCard(apiResource.body!!))
-                        emit(Resource.loading(list))
+    override fun getCardsByCodes(vararg values: CardOrCode): Flow<Resource<List<CardOrCode>>> =
+        flow {
+            val list = cardCache.getCardsByCodes(*values).toMutableList()
+            if (list.size == values.size) {
+                emit(Resource.success(data = list, isFromDB = true))
+            } else {
+                emit(Resource.loading(data = list))
+                val needFromNetwork =
+                    values.filter { card -> card.fetchCode() !in list.map { it.fetchCode() } }
+                        .toMutableList()
+                needFromNetwork.addAll(values.filter {
+                    if (it is CardOrCode.HasCode) true else {
+                        val card = (it as CardOrCode.HasCard).card
+                        Date().time - (card.timestamp) > (card.expiry)
                     }
-                    is ApiErrorResponse -> {
-                        emit(Resource.error(msg = apiResource.errorMessage, data = list))
-                        return@flow
-                    }
-                    is ApiEmptyResponse -> {
-                        emit(Resource.loading(list))
+                })
+                needFromNetwork.forEach {
+                    when (val apiResource = cardNetwork.getCardByCode(
+                        0L.toString().format(dateFormatter),
+                        it.fetchCode()
+                    ).first()) {  //If not in database, last modified not applied
+                        is ApiSuccessResponse -> {
+                            list.add(CardOrCode.HasCard(apiResource.body!!))
+                            emit(Resource.loading(list))
+                        }
+
+                        is ApiErrorResponse -> {
+                            emit(Resource.error(msg = apiResource.errorMessage, data = list))
+                            return@flow
+                        }
+
+                        is ApiEmptyResponse -> {
+                            emit(Resource.loading(list))
+                        }
                     }
                 }
+                emit(Resource.success(data = list))
             }
-            emit(Resource.success(data = list))
         }
-    }
 
     override fun getCardSets(forceRemoteUpdate: Boolean): Flow<Resource<CardSetList>> {
-       // return flow { Resource.loading(CardSetList(0, 100000, emptyList())) }  testing...
+        // return flow { Resource.loading(CardSetList(0, 100000, emptyList())) }  testing...
 
         return networkBoundResource(
             fetchFromLocal = { cardCache.getCardSets() },
@@ -123,11 +154,20 @@ class CardRepositoryImpl @Inject constructor(
                         (Date().time - (it?.timestamp ?: 0L) > (it?.expiry
                             ?: (24 * 60 * 60 * 1000L)))
             },
-            fetchFromRemote = {val date =  Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
+            fetchFromRemote = {
+                val date = Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
 
-                cardNetwork.getCardSets(date) },
-            updateTimestamp = { it?.let {cardCache.storeCardSets(it.copy(timestamp = Date().time))} },
-            saveRemoteData = { set, expiry -> cardCache.storeCardSets(set.copy(timestamp = Date().time, expiry = expiry ?: 24 * 60 * 60 * 1000)) },
+                cardNetwork.getCardSets(date)
+            },
+            updateTimestamp = { it?.let { cardCache.storeCardSets(it.copy(timestamp = Date().time)) } },
+            saveRemoteData = { set, expiry ->
+                cardCache.storeCardSets(
+                    set.copy(
+                        timestamp = Date().time,
+                        expiry = expiry ?: DEFAULT_EXPIRY
+                    )
+                )
+            },
             onFetchFailed = { _, _ -> }
         ).flowOn(dispatcher)
     }
@@ -144,20 +184,20 @@ class CardRepositoryImpl @Inject constructor(
                 val time = dataStore.data.map { userSettings ->
                     CardSetTimestamp(
                         timestamp = userSettings.getTimestampsOrDefault(code, 0),
-                        expiry = if (userSettings.expiry == 0L) (24 * 60 * 60 * 1000L) else userSettings.expiry
+                        expiry = if (userSettings.expiry == 0L) (DEFAULT_EXPIRY) else userSettings.expiry
                     )
                 }.first()
-               // Log.d("TAG", "Get Set Timestamp: ${time.timestamp}, expiry: ${time.expiry}, current: ${Date().time}")
-                        it.isNullOrEmpty() ||
-                        (forceRemoteUpdate)||
-                                (Date().time - (time.timestamp) > (time.expiry))
+                // Log.d("TAG", "Get Set Timestamp: ${time.timestamp}, expiry: ${time.expiry}, current: ${Date().time}")
+                it.isNullOrEmpty() ||
+                        (forceRemoteUpdate) ||
+                        (Date().time - (time.timestamp) > (time.expiry))
             },
             fetchFromRemote = {
-                val networkExpiry = it?.last()?.expiry ?: 0L
+                val networkExpiry = try { it?.last()?.expiry ?: DEFAULT_EXPIRY } catch (e: NoSuchElementException) { DEFAULT_EXPIRY }
                 val time = dataStore.data.map { userSettings ->
                     CardSetTimestamp(
                         timestamp = userSettings.getTimestampsOrDefault(code, 0),
-                        expiry = if (userSettings.expiry == 0L) (24 * 60 * 60 * 1000L) else userSettings.expiry
+                        expiry = if (userSettings.expiry == 0L) (DEFAULT_EXPIRY) else userSettings.expiry
                     )
                 }.first()
                 val date = if (forceRemoteUpdate)
@@ -166,12 +206,26 @@ class CardRepositoryImpl @Inject constructor(
                     time.timestamp.toString().format(dateFormatter)
 
                 dataStore.updateData { userSettings ->
-                    userSettings.toBuilder().setExpiry(networkExpiry).putTimestamps(code, Date().time).build()
+                    userSettings.toBuilder().setExpiry(networkExpiry)
+                        .putTimestamps(code, Date().time).build()
                 }
 
-                cardNetwork.getCardsBySet(date, code) },
-            updateTimestamp = { cards -> cards?.let { cardCache.storeCards(it.map { card -> card.copy(timestamp = Date().time) })} },
-            saveRemoteData = { cards, expiry -> cardCache.storeCards(cards.map { card -> card.copy(timestamp = Date().time, expiry = expiry ?: 24 * 60 * 60 * 1000)}) },
+                cardNetwork.getCardsBySet(date, code)
+            },
+            updateTimestamp = { cards ->
+                cards?.let { cardCache.storeCards(it.map { card -> card.copy(timestamp = Date().time) }) }
+                dataStore.updateData { userSettings ->
+                    userSettings.toBuilder().putTimestamps(code, Date().time).build()
+                }
+            },
+            saveRemoteData = { cards, expiry ->
+                cardCache.storeCards(cards.map { card ->
+                    card.copy(
+                        timestamp = Date().time,
+                        expiry = expiry ?: DEFAULT_EXPIRY
+                    )
+                })
+            },
             onFetchFailed = { _, _ -> }
         ).flowOn(dispatcher)
     }
@@ -180,17 +234,26 @@ class CardRepositoryImpl @Inject constructor(
         return networkBoundResource(
             fetchFromLocal = { cardCache.getFormats() },
             shouldFetchFromRemote = {
-                Log.d("SWD", "Formats timestamp: ${it?.timestamp} expiry: ${it?.expiry} current: ${Date().time}")
+         //       Log.d("SWD", "Formats timestamp: ${it?.timestamp} expiry: ${it?.expiry} current: ${Date().time}" )
                 it?.cardFormats.isNullOrEmpty() ||
                         (forceRemoteUpdate) ||
                         (Date().time - (it?.timestamp ?: 0L) > (it?.expiry
-                            ?: (24 * 60 * 60 * 1000L)))
+                            ?: (DEFAULT_EXPIRY)))
             },
-            fetchFromRemote = {val date =  Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
-             //   Log.d("SWD", "Timestamp: ${it?.timestamp} LastModifiedDate: $date")
-                cardNetwork.getFormats(date) },
-            updateTimestamp = { it?.let { cardCache.storeFormats(it.copy(timestamp = Date().time))} },
-            saveRemoteData = { formats, expiry -> cardCache.storeFormats(formats.copy(timestamp = Date().time, expiry = expiry ?: 24 * 60 * 60 * 1000)) },
+            fetchFromRemote = {
+                val date = Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
+                //   Log.d("SWD", "Timestamp: ${it?.timestamp} LastModifiedDate: $date")
+                cardNetwork.getFormats(date)
+            },
+            updateTimestamp = { it?.let { cardCache.storeFormats(it.copy(timestamp = Date().time)) } },
+            saveRemoteData = { formats, expiry ->
+                cardCache.storeFormats(
+                    formats.copy(
+                        timestamp = Date().time,
+                        expiry = expiry ?: DEFAULT_EXPIRY
+                    )
+                )
+            },
             onFetchFailed = { _, _ -> }
         ).flowOn(dispatcher)
     }
@@ -202,24 +265,27 @@ class CardRepositoryImpl @Inject constructor(
                     if (query.byFormat.isNotBlank()) {
                         val formats =
                             getCardFormats(false).first { it.status != Resource.Status.LOADING }
-                       // Log.d("SWD", "formats resource: ${formats.status}")
+                        // Log.d("SWD", "formats resource: ${formats.status}")
                         if (formats.status == Resource.Status.SUCCESS) {
                             cards.filter { card ->
-                              //  Log.d("SWD", "formats: ${formats.data?.cardFormats}")
+                                //  Log.d("SWD", "formats: ${formats.data?.cardFormats}")
                                 val format =
                                     formats.data?.cardFormats?.find { it.gameTypeCode == query.byFormat }
                                 if (format == null) {
                                     true
                                 } else {
                                     val cardCodes =
-                                        listOf(card.code, *card.reprints.map { it.fetchCode() }.toTypedArray())
+                                        listOf(
+                                            card.code,
+                                            *card.reprints.map { it.fetchCode() }.toTypedArray()
+                                        )
                                     val setCodes = listOf(
                                         card.setCode,
                                         *card.reprints.mapNotNull { code ->
                                             setCodeMap[code.fetchCode().substring(0, 2)]
                                         }.toTypedArray()
                                     )
-                                  //  Log.d("SWD", "Checking codes: ${setCodes}")
+                                    //  Log.d("SWD", "Checking codes: ${setCodes}")
                                     if (!(setCodes.any { it in format.includedSets }) || cardCodes.any { it in format.banned })
                                         false
                                     else {
@@ -237,13 +303,20 @@ class CardRepositoryImpl @Inject constructor(
             },
             shouldFetchFromRemote = { true },
             fetchFromRemote = { cardNetwork.findCards(query) },
-            saveRemoteData = { cards, expiry -> cardCache.storeCards(cards.map { it.copy(timestamp = Date().time, expiry = expiry ?: 24 * 60 * 60 * 1000) }) },
+            saveRemoteData = { cards, expiry ->
+                cardCache.storeCards(cards.map {
+                    it.copy(
+                        timestamp = Date().time,
+                        expiry = expiry ?: DEFAULT_EXPIRY
+                    )
+                })
+            },
             onFetchFailed = { _, _ -> },
             updateTimestamp = { }
         )
     }
 
-    override fun fetchSavedQueries(): Flow<SavedQueriesUi> = dataStore.data.map {userSettings ->
+    override fun fetchSavedQueries(): Flow<SavedQueriesUi> = dataStore.data.map { userSettings ->
         //Log.d("SWD", "Fucking protocol buffers: ${userSettings.cardNameQueriesList}")
         SavedQueriesUi(
             nameQueries = userSettings.cardNameQueriesList,
@@ -270,7 +343,8 @@ class CardRepositoryImpl @Inject constructor(
                 queries.add(newQuery)
             if (queries.size > 6)
                 queries.removeFirst()
-            userSettings.toBuilder().clearCardSubtypeQueries().addAllCardSubtypeQueries(queries).build()
+            userSettings.toBuilder().clearCardSubtypeQueries().addAllCardSubtypeQueries(queries)
+                .build()
         }
     }
 
@@ -296,7 +370,7 @@ class CardRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateDeck(deck: Deck, slot: Slot) {
-      //  Log.d("SWD", "Writing new Deck: ${deck.battlefieldCardCode}")
+        //  Log.d("SWD", "Writing new Deck: ${deck.battlefieldCardCode}")
         cardCache.updateDeck(deck, slot)
     }
 
@@ -339,7 +413,7 @@ class CardRepositoryImpl @Inject constructor(
                     SortState.SET -> setSortBy(UserSettings.SortBy.SORTBY_SET)
                     SortState.FACTION -> setSortBy(UserSettings.SortBy.SORTBY_FACTION)
                     SortState.POINTS_COST -> setSortBy(UserSettings.SortBy.SORTBY_POINTS_COST)
-            }
+                }
             }.build()
         }
     }

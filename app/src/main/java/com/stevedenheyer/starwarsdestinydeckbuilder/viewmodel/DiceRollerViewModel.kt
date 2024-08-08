@@ -92,7 +92,7 @@ class DiceRollerViewModel @Inject constructor(
                 diceMap.update {
                     val map = it.toMutableMap()
                     list.forEach { card ->
-                        Log.d("SWD", "Updating dice for card ${card.name} to ${card.quantity}")
+                     //   Log.d("SWD", "Updating dice for card ${card.name} to ${card.quantity}")
 
                         val dice = map[card.code]!!.toMutableList()
                         while (dice.size < card.quantity) {
@@ -151,7 +151,7 @@ class DiceRollerViewModel @Inject constructor(
 
                                 deck.chars.filter { it.diceRef.isNotEmpty() }
                                     .forEach {
-                                        Log.d("SWD", "Adding card: ${it.name} elite: ${it.isElite}")
+                                //        Log.d("SWD", "Adding card: ${it.name} elite: ${it.isElite}")
                                         list.add(it.toCardInPlayUi())
                                     }
 

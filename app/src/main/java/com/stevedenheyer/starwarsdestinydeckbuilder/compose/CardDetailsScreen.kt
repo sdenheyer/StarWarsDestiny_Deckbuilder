@@ -474,15 +474,15 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, findCardbySetAndPostitio
                                 annotation.tag == "LINK"
                             }?.let { annotation ->
                                 //navigate to card
-                                Log.d("SWD", "Link click deteced")
+                            //    Log.d("SWD", "Link click deteced")
                                scope.launch(Dispatchers.IO) {
                                    val strings = annotation.item.split("_")
                                    val setCode = strings.first()
                                    try {
                                        val cardPosition = parseInt(strings.last())
-                                       Log.d("SWD", "Link click deteced: $setCode, $cardPosition")
+                                     //  Log.d("SWD", "Link click deteced: $setCode, $cardPosition")
                                        val cardCode = findCardbySetAndPostition(setCode, cardPosition)
-                                       Log.d("SWD", "Card:  $cardCode")
+                                    //   Log.d("SWD", "Card:  $cardCode")
                                        withContext(Dispatchers.Main) {
                                            if (cardCode != null)
                                                navigateToCard(cardCode)

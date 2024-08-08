@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import com.stevedenheyer.starwarsdestinydeckbuilder.R
 
+const val DEFAULT_EXPIRY: Long = 24 * 60 * 60 * 1000
+
 val formatMap =
     mapOf("STD" to "Standard", "TRI" to "Trilogy", "INF" to "Infinite", "ARHS" to "ARH Standard")
 

@@ -336,7 +336,7 @@ class DetailViewModel @Inject constructor(
        //     Log.d("SWD", "Attempting slot write: ${quantity}, ${limit}")
             val deck = decks.value.find { it.name == deckName }
             if (deck != null) {
-                Log.d("SWD", "Writing deck: ${deck.name}")
+              //  Log.d("SWD", "Writing deck: ${deck.name}")
                 val slot = Slot(
                     cardOrCode = CardOrCode.HasCode(code),
                     quantity = quantity,

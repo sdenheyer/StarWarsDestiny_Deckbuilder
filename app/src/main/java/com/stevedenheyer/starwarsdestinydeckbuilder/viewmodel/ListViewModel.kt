@@ -204,7 +204,7 @@ class ListViewModel @Inject constructor(
         refreshCollection()
 
         viewModelScope.launch(Dispatchers.IO) { val formats = cardRepo.getCardFormats(false).first { it.status != Resource.Status.LOADING}
-                                            Log.d("SWD", "Format prefetch: ${formats.status}")
+                                          //  Log.d("SWD", "Format prefetch: ${formats.status}")
         }  //Pre-fetch formats info
     }
 

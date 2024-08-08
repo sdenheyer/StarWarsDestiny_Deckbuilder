@@ -16,8 +16,8 @@ inline fun <DB, REMOTE> networkBoundResource(
     crossinline fetchFromLocal: suspend () -> Flow<DB>,
     crossinline shouldFetchFromRemote: suspend (DB?) -> Boolean = { true },
     crossinline fetchFromRemote: suspend (DB?) -> Flow<ApiResponse<REMOTE>>,
-    crossinline processRemoteResponse: (response: ApiSuccessResponse<REMOTE>) -> Unit,    //TODO:  Change this to update timestamp
-    crossinline saveRemoteData: suspend (REMOTE) -> Unit,
+    crossinline updateTimestamp: suspend (DB?) -> Unit,    //TODO:  Change this to update timestamp
+    crossinline saveRemoteData: suspend (REMOTE, maxAge: Long?) -> Unit,
     crossinline onFetchFailed: (errorBody: String?, statusCode: Int) -> Unit
 ) = flow<Resource<DB>> {
     // Log.d("SWD", "Network resource flows initializing...")
@@ -34,10 +34,12 @@ inline fun <DB, REMOTE> networkBoundResource(
             when (val state = apiResponse) {
                 is ApiSuccessResponse -> {
                     //  Log.d("SWD", "Headers: ${apiResponse.headers}")
-                    processRemoteResponse(state)
+                 //   processRemoteResponse(state)
+                    val maxAge = state.headers.get("cache-control: max-age")?.toLongOrNull()
+                    Log.d("SWD", "Max-age header: $maxAge")
                     state.body?.let {
                         //  Log.d("SWD", "Saving to db: $it.size")
-                        saveRemoteData(it)
+                        saveRemoteData(it, maxAge)
                     }
                     emitAll(fetchFromLocal().map { dbData ->
                         if (state.body is Collection<*> && dbData is Collection<*>) {
@@ -65,6 +67,7 @@ inline fun <DB, REMOTE> networkBoundResource(
                 }
 
                 is ApiEmptyResponse -> {
+                    updateTimestamp(localData)
                     emitAll(fetchFromLocal().map {
                         Resource.success(it, true)
                     })

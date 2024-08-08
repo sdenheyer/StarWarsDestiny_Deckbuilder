@@ -61,8 +61,8 @@ class CardRepositoryImpl @Inject constructor(
             fetchFromRemote = {
                 val date =  Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
                 cardNetwork.getCardByCode(date, code) },
-            processRemoteResponse = { },
-            saveRemoteData = { cardCache.storeCards(listOf(it)) },
+            updateTimestamp = { it?.let { cardCache.storeCards(listOf(it.copy(timestamp = Date().time))) } },
+            saveRemoteData = { card, expiry -> cardCache.storeCards(listOf(card.copy(timestamp = Date().time, expiry = expiry ?: 24 * 60 * 60 * 1000))) },
             onFetchFailed = { _, _ -> }
 
         ).flowOn(dispatcher)
@@ -75,8 +75,8 @@ class CardRepositoryImpl @Inject constructor(
                     (Date().time - (it.timestamp) > (it.expiry)) },
             fetchFromRemote = {  val date =  Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
                 cardNetwork.getCardsBySet(date, set) },
-            saveRemoteData = { cardCache.storeCards(it)},
-            processRemoteResponse = { },
+            saveRemoteData = { cards, expiry -> cardCache.storeCards(cards.map { card -> card.copy(timestamp = Date().time, expiry = expiry ?: 24 * 60 * 60 * 1000)})},
+            updateTimestamp = { it?.let { cardCache.storeCards(listOf(it.copy(timestamp = Date().time))) }},
             onFetchFailed = { _, _ -> }
         )
     }
@@ -126,8 +126,8 @@ class CardRepositoryImpl @Inject constructor(
             fetchFromRemote = {val date =  Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
 
                 cardNetwork.getCardSets(date) },
-            processRemoteResponse = { },
-            saveRemoteData = { cardCache.storeCardSets(it) },
+            updateTimestamp = { it?.let {cardCache.storeCardSets(it.copy(timestamp = Date().time))} },
+            saveRemoteData = { set, expiry -> cardCache.storeCardSets(set.copy(timestamp = Date().time, expiry = expiry ?: 24 * 60 * 60 * 1000)) },
             onFetchFailed = { _, _ -> }
         ).flowOn(dispatcher)
     }
@@ -170,8 +170,8 @@ class CardRepositoryImpl @Inject constructor(
                 }
 
                 cardNetwork.getCardsBySet(date, code) },
-            processRemoteResponse = { },
-            saveRemoteData = { cardCache.storeCards(it) },
+            updateTimestamp = { cards -> cards?.let { cardCache.storeCards(it.map { card -> card.copy(timestamp = Date().time) })} },
+            saveRemoteData = { cards, expiry -> cardCache.storeCards(cards.map { card -> card.copy(timestamp = Date().time, expiry = expiry ?: 24 * 60 * 60 * 1000)}) },
             onFetchFailed = { _, _ -> }
         ).flowOn(dispatcher)
     }
@@ -189,8 +189,8 @@ class CardRepositoryImpl @Inject constructor(
             fetchFromRemote = {val date =  Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
              //   Log.d("SWD", "Timestamp: ${it?.timestamp} LastModifiedDate: $date")
                 cardNetwork.getFormats(date) },
-            processRemoteResponse = { },
-            saveRemoteData = { cardCache.storeFormats(it) },
+            updateTimestamp = { it?.let { cardCache.storeFormats(it.copy(timestamp = Date().time))} },
+            saveRemoteData = { formats, expiry -> cardCache.storeFormats(formats.copy(timestamp = Date().time, expiry = expiry ?: 24 * 60 * 60 * 1000)) },
             onFetchFailed = { _, _ -> }
         ).flowOn(dispatcher)
     }
@@ -237,9 +237,9 @@ class CardRepositoryImpl @Inject constructor(
             },
             shouldFetchFromRemote = { true },
             fetchFromRemote = { cardNetwork.findCards(query) },
-            processRemoteResponse = {},
-            saveRemoteData = { cardCache.storeCards(it) },
-            onFetchFailed = { _, _ -> }
+            saveRemoteData = { cards, expiry -> cardCache.storeCards(cards.map { it.copy(timestamp = Date().time, expiry = expiry ?: 24 * 60 * 60 * 1000) }) },
+            onFetchFailed = { _, _ -> },
+            updateTimestamp = { }
         )
     }
 

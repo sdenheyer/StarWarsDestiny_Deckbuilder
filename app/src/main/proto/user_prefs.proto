@@ -7,6 +7,7 @@ message UserSettings {
     bool hide_hero = 1;
     bool hide_villain = 2;
     SortBy sort_by = 3;
+    string game_type = 9;
 
     enum SortBy {
         SORTBY_SET = 0;

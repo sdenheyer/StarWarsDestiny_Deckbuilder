@@ -2,11 +2,13 @@ package com.stevedenheyer.starwarsdestinydeckbuilder.compose.model
 
 data class SortUi(
     val sortState: SortState = SortState.SET,
-    val hideHero: Boolean = true,
-    val hideVillain: Boolean = true,
+    val hideHero: Boolean = false,
+    val hideVillain: Boolean = false,
+    val gameType: String = ""
 )
 
 enum class SortState {
     NAME, SET, FACTION, POINTS_COST,
-    HIDE_HERO, SHOW_VILLAIN
+    HIDE_HERO, HIDE_VILLAIN,
+    GAME_TYPE
 }

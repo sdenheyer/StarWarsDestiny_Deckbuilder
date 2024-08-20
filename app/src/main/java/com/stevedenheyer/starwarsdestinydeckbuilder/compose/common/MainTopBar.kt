@@ -1,6 +1,14 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.compose.common
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -9,6 +17,7 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,10 +41,11 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainTopBar(
+    gameTypes: List<String>,
     sortState: SortUi,
     openQuery: () -> Unit,
     openDrawer: () -> Unit,
-    changeSortState: (SortState) -> Unit,
+    changeSortState: (SortState, String) -> Unit,
 ) {
 
     val popupXoffset = remember { mutableIntStateOf(0) }
@@ -73,6 +83,7 @@ fun MainTopBar(
                 )
             }
 
+            Box {
             IconButton(onClick = { sortMenuExpanded.value = true }) {
                 Icon(
                     painter = painterResource(R.drawable.baseline_sort_24),
@@ -95,56 +106,96 @@ fun MainTopBar(
                     disabledTextColor = MaterialTheme.colorScheme.onTertiaryContainer,
                 )
 
-                DropdownMenuItem(
-                    text = { Text("Sort by Name") },
-                    colors = menuItemColors,
-                    onClick = { changeSortState(SortState.NAME) },
-                    enabled = (sortState.sortState != SortState.NAME),
-                    modifier = if (sortState.sortState == SortState.NAME) Modifier.background(color = MaterialTheme.colorScheme.tertiaryContainer) else Modifier
-                )
-                DropdownMenuItem(
-                    text = { Text("Sort by Set") },
-                    colors = menuItemColors,
-                    onClick = { changeSortState(SortState.SET) },
-                    enabled = (sortState.sortState != SortState.SET),
-                    modifier = if (sortState.sortState == SortState.SET) Modifier.background(color = MaterialTheme.colorScheme.tertiaryContainer) else Modifier
-                )
-                DropdownMenuItem(
-                    text = { Text("Sort by Faction") },
-                    colors = menuItemColors,
-                    onClick = { changeSortState(SortState.FACTION) },
-                    enabled = (sortState.sortState != SortState.FACTION),
-                    modifier = if (sortState.sortState == SortState.FACTION) Modifier.background(color = MaterialTheme.colorScheme.tertiaryContainer) else Modifier
-                )
-                DropdownMenuItem(
-                    text = { Text("Sort by Points/Cost") },
-                    colors = menuItemColors,
-                    onClick = { changeSortState(SortState.POINTS_COST) },
-                    enabled = (sortState.sortState != SortState.POINTS_COST),
-                    modifier = if (sortState.sortState == SortState.POINTS_COST) Modifier.background(color = MaterialTheme.colorScheme.tertiaryContainer) else Modifier
-                )
-                DropdownMenuItem(text = {
-                    Text(buildAnnotatedString {
-                        if (sortState.hideHero)
-                            append("Show")
-                        else
-                            append("Hide")
-                        append(" Heroes")
-                    })
-                },
-                    colors = menuItemColors,
-                    onClick = { changeSortState(SortState.HIDE_HERO) })
-                DropdownMenuItem(text = {
-                    Text(buildAnnotatedString {
-                        if (sortState.hideVillain)
-                            append("Show")
-                        else
-                            append("Hide")
-                        append(" Villains")
-                    })
-                },
-                    colors = menuItemColors,
-                    onClick = { changeSortState(SortState.SHOW_VILLAIN) })
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                ) {
+                    Column(Modifier
+                        .weight(1f)
+                        .padding(end = 2.dp)
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text("All") },
+                            colors = menuItemColors,
+                            onClick = { changeSortState(SortState.GAME_TYPE, "") },
+                            enabled = (sortState.gameType != "All" || sortState.gameType.isBlank()),
+                            modifier = if (sortState.gameType == "All" || sortState.gameType.isBlank()) Modifier.background(
+                                color = MaterialTheme.colorScheme.tertiaryContainer
+                            ) else Modifier
+                        )
+                        for (s in gameTypes)
+                        DropdownMenuItem(
+                            text = { Text(s) },
+                            colors = menuItemColors,
+                            onClick = { changeSortState(SortState.GAME_TYPE, s) },
+                            enabled = (sortState.gameType != s),
+                            modifier = if (sortState.gameType == s) Modifier.background(
+                                color = MaterialTheme.colorScheme.tertiaryContainer
+                            ) else Modifier
+                        )
+                    }
+                    Column(Modifier.weight(1f)) {
+                        DropdownMenuItem(
+                            text = { Text("Sort by Name") },
+                            colors = menuItemColors,
+                            onClick = { changeSortState(SortState.NAME, "") },
+                            enabled = (sortState.sortState != SortState.NAME),
+                            modifier = if (sortState.sortState == SortState.NAME) Modifier.background(
+                                color = MaterialTheme.colorScheme.tertiaryContainer
+                            ) else Modifier
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Sort by Set") },
+                            colors = menuItemColors,
+                            onClick = { changeSortState(SortState.SET, "") },
+                            enabled = (sortState.sortState != SortState.SET),
+                            modifier = if (sortState.sortState == SortState.SET) Modifier.background(
+                                color = MaterialTheme.colorScheme.tertiaryContainer
+                            ) else Modifier
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Sort by Faction") },
+                            colors = menuItemColors,
+                            onClick = { changeSortState(SortState.FACTION, "") },
+                            enabled = (sortState.sortState != SortState.FACTION),
+                            modifier = if (sortState.sortState == SortState.FACTION) Modifier.background(
+                                color = MaterialTheme.colorScheme.tertiaryContainer
+                            ) else Modifier
+                        )
+                        DropdownMenuItem(
+                            text = { Text("Sort by Points/Cost") },
+                            colors = menuItemColors,
+                            onClick = { changeSortState(SortState.POINTS_COST, "") },
+                            enabled = (sortState.sortState != SortState.POINTS_COST),
+                            modifier = if (sortState.sortState == SortState.POINTS_COST) Modifier.background(
+                                color = MaterialTheme.colorScheme.tertiaryContainer
+                            ) else Modifier
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.onSecondary, thickness = 2.dp, modifier = Modifier.padding(horizontal = 4.dp))
+                        DropdownMenuItem(text = {
+                            Text(buildAnnotatedString {
+                                if (sortState.hideHero)
+                                    append("Show")
+                                else
+                                    append("Hide")
+                                append(" Heroes")
+                            })
+                        },
+                            colors = menuItemColors,
+                            onClick = { changeSortState(SortState.HIDE_HERO, "") })
+                        DropdownMenuItem(text = {
+                            Text(buildAnnotatedString {
+                                if (sortState.hideVillain)
+                                    append("Show")
+                                else
+                                    append("Hide")
+                                append(" Villains")
+                            })
+                        },
+                            colors = menuItemColors,
+                            onClick = { changeSortState(SortState.HIDE_VILLAIN, "") })
+                    }
+                }
+            }
             }
         }
     )

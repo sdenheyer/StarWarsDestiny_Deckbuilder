@@ -89,6 +89,8 @@ fun CardListScreen(
 
     val listType by cardVM.listTypeFlow.collectAsStateWithLifecycle()
 
+    val gameTypes by cardVM.gameTypeNamesFlow.collectAsStateWithLifecycle(initialValue = emptyList())
+
     val decksUiState by cardVM.decksFlow.collectAsStateWithLifecycle(initialValue = emptyList())
 
     val sortState by cardVM.sortStateFlow.collectAsStateWithLifecycle(
@@ -189,9 +191,10 @@ fun CardListScreen(
 
             topBar = {
                 MainTopBar(
+                    gameTypes = gameTypes,
                     sortState = sortState,
                     openDrawer = { scope.launch { drawerState.apply { if (isClosed) open() else close() } } },
-                    changeSortState = { sortState -> (cardVM::setSort)(sortState)
+                    changeSortState = { sortState, gameType -> (cardVM::setSort)(sortState, gameType)
                                         scope.launch {
                                             delay(100)           //  Give some time to re-sort
                                             listScrollState.scrollToItem(0) }

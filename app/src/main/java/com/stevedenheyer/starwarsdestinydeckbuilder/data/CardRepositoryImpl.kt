@@ -1,6 +1,5 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.data
 
-import android.util.Log
 import androidx.datastore.core.DataStore
 import com.stevedenheyer.starwarsdestinydeckbuilder.UserSettings
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
@@ -31,7 +30,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onEach
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import javax.inject.Inject
@@ -399,20 +397,22 @@ class CardRepositoryImpl @Inject constructor(
                 UserSettings.SortBy.SORTBY_FACTION -> SortState.FACTION
                 UserSettings.SortBy.SORTBY_POINTS_COST -> SortState.POINTS_COST
                 else -> SortState.SET
-            }
+            },
+            gameType = userSettings.gameType
         )
     }
 
-    override suspend fun setSortByState(sortState: SortState) {
+    override suspend fun setSortByState(sortState: SortState, gameType: String) {
         dataStore.updateData { currentSettings ->
             currentSettings.toBuilder().apply {
                 when (sortState) {
                     SortState.HIDE_HERO -> setHideHero(!currentSettings.hideHero)
-                    SortState.SHOW_VILLAIN -> setHideVillain(!currentSettings.hideVillain)
+                    SortState.HIDE_VILLAIN -> setHideVillain(!currentSettings.hideVillain)
                     SortState.NAME -> setSortBy(UserSettings.SortBy.SORTBY_NAME)
                     SortState.SET -> setSortBy(UserSettings.SortBy.SORTBY_SET)
                     SortState.FACTION -> setSortBy(UserSettings.SortBy.SORTBY_FACTION)
                     SortState.POINTS_COST -> setSortBy(UserSettings.SortBy.SORTBY_POINTS_COST)
+                    SortState.GAME_TYPE -> { setGameType(gameType) }
                 }
             }.build()
         }

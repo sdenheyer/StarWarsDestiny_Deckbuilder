@@ -226,9 +226,11 @@ fun DiceGrids(
                                 die.diceRef.forEach {
                                     DropdownMenuItem(
                                         text = { Die(isCompactScreen = isCompactScreen, dieCode = it, modifier = Modifier
+                                            .fillMaxWidth()
+                                            .wrapContentWidth(align = Alignment.CenterHorizontally)
                                             .height(32.dp)
                                             .width(48.dp)
-                                            .wrapContentWidth(align = Alignment.CenterHorizontally)
+
                                         ) },
                                         onClick = { changeDie(card.code, dieIndex, DieRequest.CHANGE, it)
                                                     dropDownExpanded = false },

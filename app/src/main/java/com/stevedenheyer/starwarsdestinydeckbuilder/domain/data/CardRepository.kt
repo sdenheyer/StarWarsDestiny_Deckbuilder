@@ -58,5 +58,5 @@ interface CardRepository {
 
     fun sortStateFlow():Flow<SortUi>
 
-    suspend fun setSortByState(sortState: SortState)
+    suspend fun setSortByState(sortState: SortState, gameType: String)
 }

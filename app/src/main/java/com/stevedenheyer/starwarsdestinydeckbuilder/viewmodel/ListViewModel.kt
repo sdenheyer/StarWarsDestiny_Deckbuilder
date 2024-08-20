@@ -13,6 +13,7 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Deck
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.UiState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.toCardUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.CardRepository
+import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardFormat
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.CardOrCode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -62,6 +63,14 @@ class ListViewModel @Inject constructor(
     private val cardRepo: CardRepository,
 ) : ViewModel() {
     val listTypeFlow: MutableStateFlow<ListType> = MutableStateFlow(ListTypeNone())
+
+    private val formatsListFlow: MutableStateFlow<List<CardFormat>> = MutableStateFlow(emptyList())
+
+    val gameTypeNamesFlow = formatsListFlow.map {
+        it.map {
+            it.gameTypeName
+        }
+    }
 
     val sortStateFlow = cardRepo.sortStateFlow()
 
@@ -122,6 +131,12 @@ class ListViewModel @Inject constructor(
                 }
                 if (sortState.hideVillain) {
                     cards = cards.filterNot { it.affiliation == "Villain" }
+                }
+                val format = formatsListFlow.value.find { it.gameTypeName == sortState.gameType }
+                if (sortState.gameType != "ALL" && sortState.gameType.isNotBlank() && format != null) {
+                    cards = cards.filter {
+                        it.code !in format.banned && it.set in format.includedSets
+                    }
                 }
                 when (sortState.sortState) {
                     SortState.SET -> cards = cards.sortedBy { it.position }.sortedBy { it.set }
@@ -203,8 +218,13 @@ class ListViewModel @Inject constructor(
 
         refreshCollection()
 
-        viewModelScope.launch(Dispatchers.IO) { val formats = cardRepo.getCardFormats(false).first { it.status != Resource.Status.LOADING}
-                                          //  Log.d("SWD", "Format prefetch: ${formats.status}")
+        viewModelScope.launch(Dispatchers.IO) {
+            val resource =
+                cardRepo.getCardFormats(false).first { it.status != Resource.Status.LOADING }
+            if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                formatsListFlow.value = resource.data.cardFormats
+            }
+            //  Log.d("SWD", "Format prefetch: ${formats.status}")
         }  //Pre-fetch formats info
     }
 
@@ -239,7 +259,10 @@ class ListViewModel @Inject constructor(
         when (val type = listTypeFlow.value) {
             is ListTypeBySet -> refreshCardsBySet(true)
             is ListTypeByQuery -> findCards(type.queryTerms)
-            is ListTypeCollection -> { refreshCollection() }
+            is ListTypeCollection -> {
+                refreshCollection()
+            }
+
             is ListTypeNone -> {}
         }
     }
@@ -297,8 +320,8 @@ class ListViewModel @Inject constructor(
         }
     }
 
-    fun setSort(sortState: SortState) {
-        viewModelScope.launch { cardRepo.setSortByState(sortState) }
+    fun setSort(sortState: SortState, gameType: String = "") {
+        viewModelScope.launch { cardRepo.setSortByState(sortState, gameType) }
     }
 
     suspend fun createDeck(deck: Deck) = cardRepo.createDeck(deck)

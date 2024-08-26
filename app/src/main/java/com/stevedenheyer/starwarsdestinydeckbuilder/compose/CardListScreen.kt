@@ -95,8 +95,8 @@ fun CardListScreen(
 
     val sortState by cardVM.sortStateFlow.collectAsStateWithLifecycle(
         initialValue = SortUi(
-            hideHero = true,
-            hideVillain = true,
+            hideHero = false,
+            hideVillain = false,
             sortState = SortState.SET
         )
     )
@@ -128,6 +128,25 @@ fun CardListScreen(
         if (listUiState is UiState.HasData) {
             if (!listUiState.isLoading && !(listUiState as UiState.HasData).isFromDB) {
                 listScrollState.scrollToItem(0)
+            }
+        }
+    }
+
+    if (!setsUiState.errorMessage.isNullOrBlank()) {
+        LaunchedEffect(snackbarHostState) {
+            val result = snackbarHostState.showSnackbar(
+                setsUiState.errorMessage!!,
+                actionLabel = "Retry",
+                duration = SnackbarDuration.Indefinite
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                cardVM.refreshSets(true)
+            }
+        }
+    } else {
+        if (!listUiState.errorMessage.isNullOrBlank()) {
+            LaunchedEffect(snackbarHostState) {
+                snackbarHostState.showSnackbar(listUiState.errorMessage!!)
             }
         }
     }
@@ -311,24 +330,7 @@ fun CardListScreen(
                                     onRefreshSwipe = { (cardVM::refreshList)() }
                                 )
 
-                            if (setsUiState.errorMessage != null) {
-                                LaunchedEffect(snackbarHostState) {
-                                    val result = snackbarHostState.showSnackbar(
-                                        setsUiState.errorMessage!!,
-                                        actionLabel = "Retry",
-                                        duration = SnackbarDuration.Indefinite
-                                    )
-                                    if (result == SnackbarResult.ActionPerformed) {
-                                        cardVM.refreshSets(true)
-                                    }
-                                }
-                            } else {
-                                if (listUiState.errorMessage != null) {
-                                    LaunchedEffect(snackbarHostState) {
-                                        snackbarHostState.showSnackbar(listUiState.errorMessage!!)
-                                    }
-                                }
-                            }
+
                         }
                     }
                 }

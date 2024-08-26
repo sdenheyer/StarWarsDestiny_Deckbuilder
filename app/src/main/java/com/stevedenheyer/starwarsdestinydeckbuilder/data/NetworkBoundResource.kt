@@ -56,7 +56,7 @@ inline fun <DB, REMOTE> networkBoundResource(
                 }
 
                 is ApiErrorResponse -> {
-                    // Log.d("SWD", "Headers: ${apiResponse.statusCode} ${apiResponse.errorMessage}")
+                  //  Log.d("SWD", "Headers: ${state.statusCode} ${state.errorMessage}")
                     onFetchFailed(state.errorMessage, state.statusCode)
                     emitAll(fetchFromLocal().map {
                         Resource.error(
@@ -67,6 +67,7 @@ inline fun <DB, REMOTE> networkBoundResource(
                 }
 
                 is ApiEmptyResponse -> {
+                    Log.d("SWD", "Api Empty response....")
                     updateTimestamp(localData)
                     emitAll(fetchFromLocal().map {
                         Resource.success(it, true)

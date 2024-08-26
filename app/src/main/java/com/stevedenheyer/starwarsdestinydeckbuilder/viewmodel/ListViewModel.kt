@@ -147,7 +147,8 @@ class ListViewModel @Inject constructor(
 
                     else -> {}
                 }
-                (uiState).copy(data = cards)
+                Log.d("SWD", "UiState: ${uiState.errorMessage}")
+                uiState.copy(data = cards)
             }
         }
 

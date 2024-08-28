@@ -43,11 +43,15 @@ class GetCardWithFormat @Inject constructor(private val cardRepo: CardRepository
         var card = cardResource.data!!
 
         val reprintsJob = coroutineScope.async(dispatcher) {
-            cardRepo.getCardsByCodes(*card.reprints.toTypedArray()).last()
+            cardRepo.getCardsByCodes(*card.reprints.toTypedArray()).first {
+                it.status != Resource.Status.LOADING
+            }
         }
 
         val parallelDiceJob = coroutineScope.async(dispatcher) {
-            cardRepo.getCardsByCodes(*card.parallelDiceOf.toTypedArray()).last()
+            cardRepo.getCardsByCodes(*card.parallelDiceOf.toTypedArray()).first {
+                it.status != Resource.Status.LOADING
+            }
         }
 
         val formatsResource = formatJob.await()

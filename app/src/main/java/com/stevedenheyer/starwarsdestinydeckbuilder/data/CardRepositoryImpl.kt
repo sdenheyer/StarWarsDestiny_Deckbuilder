@@ -233,7 +233,7 @@ class CardRepositoryImpl @Inject constructor(
         return networkBoundResource(
             fetchFromLocal = { cardCache.getFormats() },
             shouldFetchFromRemote = {
-               Log.d("SWD", "Formats timestamp: ${it?.timestamp} expiry: ${it?.expiry} current: ${Date().time}" )
+             //  Log.d("SWD", "Formats timestamp: ${it?.timestamp} expiry: ${it?.expiry} current: ${Date().time}" )
                 it?.cardFormats.isNullOrEmpty() ||
                         (forceRemoteUpdate) ||
                         (Date().time - (it?.timestamp ?: 0L) > (it?.expiry

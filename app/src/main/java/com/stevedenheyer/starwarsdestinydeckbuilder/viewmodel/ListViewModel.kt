@@ -215,24 +215,27 @@ class ListViewModel @Inject constructor(
 
     init {
 
+        refreshFormats(false)
+
         refreshSets(false)
 
         refreshCollection()
 
-        viewModelScope.launch(Dispatchers.IO) {
-            val resource =
-                cardRepo.getCardFormats(false).first { it.status != Resource.Status.LOADING }
-            if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
-                formatsListFlow.value = resource.data.cardFormats
-            }
-            //  Log.d("SWD", "Format prefetch: ${formats.status}")
-        }  //Pre-fetch formats info
     }
 
     fun refreshSets(forceRemoteUpdate: Boolean) = viewModelScope.launch(Dispatchers.IO) {
         cardRepo.getCardSets(forceRemoteUpdate).collect { resource ->
             _cardSetsFlow.update { resource }
         }
+    }
+
+    fun refreshFormats(forceRemoteUpdate: Boolean) = viewModelScope.launch(Dispatchers.IO) {
+        cardRepo.getCardFormats(forceRemoteUpdate).collect { resource ->
+            if (resource.status == Resource.Status.SUCCESS && resource.data != null) {
+                formatsListFlow.value = resource.data.cardFormats
+            }
+        }
+        //  Log.d("SWD", "Format prefetch: ${formats.status}")
     }
 
     private fun refreshCardsBySet(forceRemoteUpdate: Boolean) {

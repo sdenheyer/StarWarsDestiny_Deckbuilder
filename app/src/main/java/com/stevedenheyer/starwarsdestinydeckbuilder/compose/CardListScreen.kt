@@ -135,18 +135,19 @@ fun CardListScreen(
     if (!setsUiState.errorMessage.isNullOrBlank()) {
         LaunchedEffect(snackbarHostState) {
             val result = snackbarHostState.showSnackbar(
-                setsUiState.errorMessage!!,
+                setsUiState.errorMessage ?: "Error",
                 actionLabel = "Retry",
                 duration = SnackbarDuration.Indefinite
             )
             if (result == SnackbarResult.ActionPerformed) {
+                cardVM.refreshFormats(true)
                 cardVM.refreshSets(true)
             }
         }
     } else {
         if (!listUiState.errorMessage.isNullOrBlank()) {
             LaunchedEffect(snackbarHostState) {
-                snackbarHostState.showSnackbar(listUiState.errorMessage!!)
+                snackbarHostState.showSnackbar(listUiState.errorMessage ?: "Error")
             }
         }
     }
@@ -285,6 +286,16 @@ fun CardListScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .wrapContentWidth(align = Alignment.CenterHorizontally))
+                        }
+
+                        if (sortState.gameType != "All" && !sortState.gameType.isNullOrBlank()) {
+                            Text(sortState.gameType,
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .wrapContentWidth(align = Alignment.CenterHorizontally)
+                            )
                         }
 
                         val numCards = try { (listUiState as UiState.HasData).data.size } catch(e: ClassCastException) { 0 }

@@ -1,5 +1,6 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.data
 
+import android.util.Log
 import androidx.datastore.core.DataStore
 import com.stevedenheyer.starwarsdestinydeckbuilder.UserSettings
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
@@ -232,7 +233,7 @@ class CardRepositoryImpl @Inject constructor(
         return networkBoundResource(
             fetchFromLocal = { cardCache.getFormats() },
             shouldFetchFromRemote = {
-         //       Log.d("SWD", "Formats timestamp: ${it?.timestamp} expiry: ${it?.expiry} current: ${Date().time}" )
+               Log.d("SWD", "Formats timestamp: ${it?.timestamp} expiry: ${it?.expiry} current: ${Date().time}" )
                 it?.cardFormats.isNullOrEmpty() ||
                         (forceRemoteUpdate) ||
                         (Date().time - (it?.timestamp ?: 0L) > (it?.expiry
@@ -240,7 +241,7 @@ class CardRepositoryImpl @Inject constructor(
             },
             fetchFromRemote = {
                 val date = Date(it?.timestamp ?: 0L).toString().format(dateFormatter)
-                //   Log.d("SWD", "Timestamp: ${it?.timestamp} LastModifiedDate: $date")
+                   Log.d("SWD", "Timestamp: ${it?.timestamp} LastModifiedDate: $date")
                 cardNetwork.getFormats(date)
             },
             updateTimestamp = { it?.let { cardCache.storeFormats(it.copy(timestamp = Date().time)) } },

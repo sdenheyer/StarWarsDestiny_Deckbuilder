@@ -25,7 +25,7 @@ inline fun <DB, REMOTE> networkBoundResource(
 
     emit(Resource.loading(null))
 
-    val localData = fetchFromLocal().first()
+    val localData = try { fetchFromLocal().first() } catch (e: NoSuchElementException) { null }
 
     if (shouldFetchFromRemote(localData)) {
       //  Log.d("SWD", "Fetching from remote...")
@@ -67,7 +67,7 @@ inline fun <DB, REMOTE> networkBoundResource(
                 }
 
                 is ApiEmptyResponse -> {
-                    Log.d("SWD", "Api Empty response....")
+                 //   Log.d("SWD", "Api Empty response....")
                     updateTimestamp(localData)
                     emitAll(fetchFromLocal().map {
                         Resource.success(it, true)

@@ -35,11 +35,13 @@ inline fun <DB, REMOTE> networkBoundResource(
             when (val state = apiResponse) {
                 is ApiSuccessResponse -> {
 
-                    val maxAge = state.headers.get("Cache-Control")?.split("=")?.last()?.toLongOrNull() ?: DEFAULT_EXPIRY
+                    val maxAge = state.headers.get("Cache-Control")?.split("=")?.last()?.toLong()
+
+                    val expiry = if (maxAge != null) { maxAge * 1000 } else { DEFAULT_EXPIRY }
                   //  Log.d("SWD", "Max-age header: $maxAge Names: $map")
                     state.body?.let {
                         //  Log.d("SWD", "Saving to db: $it.size")
-                        saveRemoteData(it, maxAge)
+                        saveRemoteData(it, expiry)
                     }
                     emitAll(fetchFromLocal().map { dbData ->
                         if (state.body is Collection<*> && dbData is Collection<*>) {

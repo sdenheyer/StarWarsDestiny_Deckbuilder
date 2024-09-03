@@ -236,8 +236,7 @@ class CardRepositoryImpl @Inject constructor(
              //  Log.d("SWD", "Formats timestamp: ${it?.timestamp} expiry: ${it?.expiry} current: ${Date().time}" )
                 it?.cardFormats.isNullOrEmpty() ||
                         (forceRemoteUpdate) ||
-                        (Date().time - (it?.timestamp ?: 0L) > (it?.expiry
-                            ?: (DEFAULT_EXPIRY)))
+                        Date().time - (it?.timestamp ?: 0L) > (it?.expiry ?: (DEFAULT_EXPIRY))
             },
             fetchFromRemote = {
                 val date = Date(it?.timestamp ?: 0L).toString().format(dateFormatter)

@@ -320,7 +320,7 @@ fun DetailsCard(modifier: Modifier, card: CardDetailUi, findCardbySetAndPostitio
     val cardColor = getColorFromString(card.color)
 
     val textModifer = Modifier
-        .padding(start = 8.dp)
+        .padding(start = 8.dp, end = 4.dp)
         .padding(vertical = 2.dp)
 
     val scope = rememberCoroutineScope()

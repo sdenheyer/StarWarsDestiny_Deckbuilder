@@ -786,7 +786,7 @@ fun DeckCard(
                 .padding(horizontal = 12.dp, vertical = 4.dp)
                 .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
-        ) {
+        ) {                                                                 //TODO: Link to actual deck
             Text(
                 deck.name,
                 style = MaterialTheme.typography.titleLarge,

@@ -1,5 +1,6 @@
 package com.stevedenheyer.starwarsdestinydeckbuilder.domain.usecases
 
+import android.util.Log
 import com.stevedenheyer.starwarsdestinydeckbuilder.di.IoDispatcher
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.CardRepository
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
@@ -42,7 +43,8 @@ class GetCardWithFormat @Inject constructor(private val cardRepo: CardRepository
 
         var card = cardResource.data!!
 
-        val reprintsJob = coroutineScope.async(dispatcher) {
+        val reprintsJob = coroutineScope.async(dispatcher) {            //TODO:  Get rid of all this bullshit and just derive from code
+           // Log.d("SWD", "reprints: ${card.reprints}")
             cardRepo.getCardsByCodes(*card.reprints.toTypedArray()).first {
                 it.status != Resource.Status.LOADING
             }
@@ -59,6 +61,8 @@ class GetCardWithFormat @Inject constructor(private val cardRepo: CardRepository
         if (formatsResource.status == Resource.Status.SUCCESS && cardResource.status == Resource.Status.SUCCESS) {
 
             val reprints = reprintsJob.await().data ?: emptyList()
+
+          //  Log.d("SWD", "Reprints: ${reprints}")
 
             val parallelDiceOf = parallelDiceJob.await().data ?: emptyList()
 

@@ -28,7 +28,7 @@ inline fun <DB, REMOTE> networkBoundResource(
     val localData = try { fetchFromLocal().first() } catch (e: NoSuchElementException) { null }
 
     if (shouldFetchFromRemote(localData)) {
-      //  Log.d("SWD", "Fetching from remote...")
+        Log.d("SWD", "Fetching from remote...")
         emit(Resource.loading(localData))
 
         fetchFromRemote(localData).collect { apiResponse ->
@@ -37,10 +37,10 @@ inline fun <DB, REMOTE> networkBoundResource(
 
                     val maxAge = state.headers.get("Cache-Control")?.split("=")?.last()?.toLong()
 
-                    val expiry = if (maxAge != null) { maxAge * 1000 } else { DEFAULT_EXPIRY }
+                    val expiry = if (maxAge != null) { maxAge * 1000L } else { DEFAULT_EXPIRY }
                   //  Log.d("SWD", "Max-age header: $maxAge Names: $map")
                     state.body?.let {
-                        //  Log.d("SWD", "Saving to db: $it.size")
+                          Log.d("SWD", "Saving to db: $it.size $expiry")
                         saveRemoteData(it, expiry)
                     }
                     emitAll(fetchFromLocal().map { dbData ->

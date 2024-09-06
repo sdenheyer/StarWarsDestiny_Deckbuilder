@@ -64,6 +64,7 @@ class CardRepositoryImpl @Inject constructor(
             },
             updateTimestamp = { it?.let { cardCache.storeCards(listOf(it.copy(timestamp = Date().time))) } },
             saveRemoteData = { card, expiry ->
+                Log.d("SWD", "Saving card... $expiry")
                 cardCache.storeCards(
                     listOf(
                         card.copy(
@@ -105,9 +106,11 @@ class CardRepositoryImpl @Inject constructor(
     override fun getCardsByCodes(vararg values: CardOrCode): Flow<Resource<List<CardOrCode>>> =
         flow {
             val list = cardCache.getCardsByCodes(*values).toMutableList()
+          //  Log.d("SWD", "Cardcodes: ${list.size}, ${values.size}")
             if (list.size == values.size) {
                 emit(Resource.success(data = list, isFromDB = true))
             } else {
+             //   Log.d("SWD", "fetching cardcodes from network")
                 emit(Resource.loading(data = list))
                 val needFromNetwork =
                     values.filter { card -> card.fetchCode() !in list.map { it.fetchCode() } }
@@ -233,7 +236,7 @@ class CardRepositoryImpl @Inject constructor(
         return networkBoundResource(
             fetchFromLocal = { cardCache.getFormats() },
             shouldFetchFromRemote = {
-             //  Log.d("SWD", "Formats timestamp: ${it?.timestamp} expiry: ${it?.expiry} current: ${Date().time}" )
+               Log.d("SWD", "Formats timestamp: ${it?.timestamp} expiry: ${it?.expiry} current: ${Date().time}" )
                 it?.cardFormats.isNullOrEmpty() ||
                         (forceRemoteUpdate) ||
                         Date().time - (it?.timestamp ?: 0L) > (it?.expiry ?: (DEFAULT_EXPIRY))
@@ -245,6 +248,7 @@ class CardRepositoryImpl @Inject constructor(
             },
             updateTimestamp = { it?.let { cardCache.storeFormats(it.copy(timestamp = Date().time)) } },
             saveRemoteData = { formats, expiry ->
+                Log.d("SWD", "Saving... $expiry")
                 cardCache.storeFormats(
                     formats.copy(
                         timestamp = Date().time,

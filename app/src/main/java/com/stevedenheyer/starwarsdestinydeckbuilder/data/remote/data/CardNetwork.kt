@@ -129,7 +129,7 @@ class CardNetwork @Inject constructor(private val cardService: CardService,
             }
 
             if (bySubtype.isNotBlank()) {
-                queryString.append("b:$bySubtype")
+                queryString.append("b:$bySubtype ")
             }
 
             if (byColors.size < 4) {

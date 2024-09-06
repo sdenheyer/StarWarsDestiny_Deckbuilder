@@ -46,7 +46,8 @@ class CardCache(
     override suspend fun getCardsByCodes(vararg values: CardOrCode): List<CardOrCode> =
         dao.getCardsByCodes(*values.map {
             it.fetchCode()
-        }.toTypedArray()).map { entity ->
+        }.toTypedArray()
+        ).map { entity ->
             CardOrCode.HasCard(entity.toDomain())
         }
 

@@ -105,6 +105,26 @@ class CardRepositoryImpl @Inject constructor(
 
     override fun getCardsByCodes(vararg values: CardOrCode): Flow<Resource<List<CardOrCode>>> =
         flow {
+            val cardList = ArrayList<CardOrCode>()
+            values.forEach {
+                emit(Resource.loading(cardList))
+                val resource = getCardByCode(
+                    it.fetchCode(),
+                    false
+                ).first { it.status != Resource.Status.LOADING }
+                if (resource.status == Resource.Status.ERROR && resource.data != null) {
+                    emit(Resource.error(msg = resource.message ?: "", data = cardList))
+                    return@flow
+                } else {
+                    cardList.add(CardOrCode.HasCard(resource.data!!))
+                }
+            }
+            emit(Resource.success(cardList))
+        }
+
+/*
+
+
             val list = cardCache.getCardsByCodes(*values).toMutableList()
           //  Log.d("SWD", "Cardcodes: ${list.size}, ${values.size}")
             if (list.size == values.size) {
@@ -144,6 +164,7 @@ class CardRepositoryImpl @Inject constructor(
                 emit(Resource.success(data = list))
             }
         }
+*/
 
     override fun getCardSets(forceRemoteUpdate: Boolean): Flow<Resource<CardSetList>> {
         // return flow { Resource.loading(CardSetList(0, 100000, emptyList())) }  testing...

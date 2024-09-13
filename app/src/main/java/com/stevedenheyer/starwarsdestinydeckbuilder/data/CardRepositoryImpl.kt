@@ -7,9 +7,6 @@ import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.QueryUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SavedQueriesUi
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortState
 import com.stevedenheyer.starwarsdestinydeckbuilder.compose.model.SortUi
-import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiEmptyResponse
-import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiErrorResponse
-import com.stevedenheyer.starwarsdestinydeckbuilder.data.remote.data.ApiSuccessResponse
 import com.stevedenheyer.starwarsdestinydeckbuilder.di.IoDispatcher
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.data.Resource
 import com.stevedenheyer.starwarsdestinydeckbuilder.domain.model.Card
@@ -107,8 +104,8 @@ class CardRepositoryImpl @Inject constructor(
         flow {
             val cardList = cardCache.getCardsByCodes(*values).toMutableList()
             emit(Resource.loading(cardList))
-            val notFound = cardList.filterNot { card -> values.any { card.fetchCode() == it.fetchCode() } }
-            notFound.forEach {
+            val notFoundinDB = cardList.filterNot { card -> values.any { card.fetchCode() == it.fetchCode() } }
+            notFoundinDB.forEach {
                 emit(Resource.loading(cardList))
                 val resource = getCardByCode(
                     it.fetchCode(),

@@ -108,6 +108,7 @@ fun DetailsScreen(
     modifier: Modifier = Modifier,
     detailViewModel: DetailViewModel = hiltViewModel(),
     navigateToCard: (String) -> Unit,
+    navigateToDeck: (String) -> Unit,
     navigateBack: () -> Unit
 ) {
 
@@ -168,6 +169,7 @@ fun DetailsScreen(
                             val card = detailViewModel.getCardBySetAndPosition(set, position)
                             card.code
                     },
+                    navigateToDeck = navigateToDeck,
                     navigateToCard = navigateToCard
                 )
 
@@ -207,6 +209,7 @@ fun Details(
     changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
     changeOwnedQuantity: (quantity: Int) -> Unit,
     findCardbySetAndPostition: suspend (String, Int) -> String?,
+    navigateToDeck: (String) -> Unit,
     navigateToCard: (String) -> Unit) {
     when (isCompactScreen) {
         true -> CompactDetails(
@@ -217,6 +220,7 @@ fun Details(
             changeOwnedQuantity = changeOwnedQuantity,
             findCardbySetAndPostition = findCardbySetAndPostition,
             navigateToCard = navigateToCard,
+            navigateToDeck = navigateToDeck,
             modifier = modifier
         )
 
@@ -227,6 +231,7 @@ fun Details(
             changeCardQuantity = changeCardQuantity,
             changeOwnedQuantity = changeOwnedQuantity,
             navigateToCard = navigateToCard,
+            navigateToDeck = navigateToDeck,
             findCardbySetAndPostition = findCardbySetAndPostition,
             modifier = modifier
         )
@@ -242,6 +247,7 @@ fun CompactDetails(
     changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
     changeOwnedQuantity: (quantity: Int) -> Unit,
     findCardbySetAndPostition: suspend (String, Int) -> String?,
+    navigateToDeck: (String) -> Unit,
     navigateToCard: (String) -> Unit,
 ) {
     LazyColumn(modifier) {
@@ -259,6 +265,7 @@ fun CompactDetails(
                 modifier = Modifier.padding(vertical = 8.dp),
                 deck = deck,
                 card = card,
+                navigateToDeck = navigateToDeck
             ) { deckName, quantity, isElite, isSetAside -> changeCardQuantity(deckName, quantity, isElite, isSetAside) }
         }
         item {
@@ -277,6 +284,7 @@ fun LargeDetails(
     changeCardQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
     changeOwnedQuantity: (quantity: Int) -> Unit,
     findCardbySetAndPostition: suspend (String, Int) -> String?,
+    navigateToDeck: (String) -> Unit,
     navigateToCard: (String) -> Unit,
 ) {
 
@@ -308,7 +316,8 @@ fun LargeDetails(
             DeckCard(
                 modifier = Modifier.fillMaxWidth(),
                 deck = deck,
-                card = card
+                card = card,
+                navigateToDeck = navigateToDeck,
             ) { deckName, quantity, isElite, isSetAside -> changeCardQuantity(deckName, quantity, isElite, isSetAside) }
         }
     }
@@ -767,7 +776,8 @@ fun DeckCard(
     modifier: Modifier,
     card: CardDetailUi,
     deck: CardDetailDeckUi,
-    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit
+    navigateToDeck: (String) -> Unit,
+    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
 ) {
     val textModifer = Modifier
         .padding(vertical = 2.dp, horizontal = 8.dp)
@@ -786,14 +796,25 @@ fun DeckCard(
                 .padding(horizontal = 12.dp, vertical = 4.dp)
                 .fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
-        ) {                                                                 //TODO: Link to actual deck
-            Text(
-                deck.name,
-                style = MaterialTheme.typography.titleLarge,
+        ) {
+            val s = buildAnnotatedString {
+                pushStringAnnotation(tag = "LINK", annotation = deck.name)
+                withStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)) {
+                    append(deck.name)
+                }
+            }
+            ClickableText(
+                s,
+                style = MaterialTheme.typography.titleLarge.copy(textDecoration = TextDecoration.Underline),
                 modifier = textModifer,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
-            )
+            ) { offset ->
+                s.getStringAnnotations("LINK", offset, offset)
+                    .firstOrNull()?.let { annotation ->
+                        navigateToDeck(annotation.item)
+                    }
+            }
             Text(
                 buildAnnotatedString {
                     append(deck.formatName)
@@ -848,7 +869,8 @@ fun DeckCardCompact(
     modifier: Modifier,
     deck: CardDetailDeckUi,
     card: CardDetailUi,
-    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit
+    navigateToDeck: (String) -> Unit,
+    changeQuantity: (deckName: String, quantity: Int, isElite: Boolean, isSetAside: Boolean) -> Unit,
 ) {
     val textModifer = Modifier
         .padding(vertical = 2.dp, horizontal = 8.dp)
@@ -876,13 +898,24 @@ fun DeckCardCompact(
         )
         {
            // Column(verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier) {
-                Text(
-                    deck.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = textModifer,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+            val s = buildAnnotatedString {
+                pushStringAnnotation(tag = "LINK", annotation = deck.name)
+                withStyle(SpanStyle(color = Color.Blue, textDecoration = TextDecoration.Underline)) {
+                    append(deck.name)
+                }
+            }
+            ClickableText(
+                s,
+                style = MaterialTheme.typography.titleLarge.copy(textDecoration = TextDecoration.Underline),
+                modifier = textModifer,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            ) { offset ->
+                s.getStringAnnotations("LINK", offset, offset)
+                    .firstOrNull()?.let { annotation ->
+                        navigateToDeck(annotation.item)
+                    }
+            }
 
                 Row(verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -1360,7 +1393,7 @@ fun DecksPreview() {
         deckSize = 25,
         isElite = false
     )
-    DeckCard(modifier = Modifier, deck = deck, card = testCard) { name, quan, isElite, isSetAside -> }
+    DeckCard(modifier = Modifier, deck = deck, card = testCard, navigateToDeck = {}) { name, quan, isElite, isSetAside -> }
 }
 
 @Preview(widthDp = 400)
@@ -1407,6 +1440,6 @@ fun DecksCompactPreview() {
         deckSize = 25,
         isElite = false
     )
-    DeckCardCompact(modifier = Modifier, deck = deck, card = testCard) { name, quan, isElite, isSetAside -> }
+    DeckCardCompact(modifier = Modifier, deck = deck, navigateToDeck = {}, card = testCard) { name, quan, isElite, isSetAside -> }
 }
 

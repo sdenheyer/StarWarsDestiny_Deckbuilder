@@ -43,7 +43,7 @@ class GetCardWithFormat @Inject constructor(private val cardRepo: CardRepository
 
         var card = cardResource.data!!
 
-        val reprintsJob = coroutineScope.async(dispatcher) {            //TODO:  Get rid of all this bullshit and just derive from code
+        val reprintsJob = coroutineScope.async(dispatcher) {
            // Log.d("SWD", "reprints: ${card.reprints}")
             cardRepo.getCardsByCodes(*card.reprints.toTypedArray()).first {
                 it.status != Resource.Status.LOADING

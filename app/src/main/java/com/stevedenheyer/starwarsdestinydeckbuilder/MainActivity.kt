@@ -58,7 +58,9 @@ fun DestinyApp(modifier: Modifier = Modifier,
        })) {
             DetailsScreen(isCompactScreen, modifier = modifier,
                 navigateBack = { navController.navigateUp() },
-                navigateToCard = { code -> navController.navigate("card_detail/${code}")})
+                navigateToCard = { code -> navController.navigate("card_detail/${code}")},
+                navigateToDeck = { name -> navController.navigate("deck_detail/${name}")},
+            )
        }
 
        composable(route = "deck_detail/{name}", arguments = listOf(navArgument("name") {

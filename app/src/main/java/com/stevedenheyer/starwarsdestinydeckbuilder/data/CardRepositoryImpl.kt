@@ -105,8 +105,10 @@ class CardRepositoryImpl @Inject constructor(
 
     override fun getCardsByCodes(vararg values: CardOrCode): Flow<Resource<List<CardOrCode>>> =
         flow {
-            val cardList = ArrayList<CardOrCode>()
-            values.forEach {
+            val cardList = cardCache.getCardsByCodes(*values).toMutableList()
+            emit(Resource.loading(cardList))
+            val notFound = cardList.filterNot { card -> values.any { card.fetchCode() == it.fetchCode() } }
+            notFound.forEach {
                 emit(Resource.loading(cardList))
                 val resource = getCardByCode(
                     it.fetchCode(),

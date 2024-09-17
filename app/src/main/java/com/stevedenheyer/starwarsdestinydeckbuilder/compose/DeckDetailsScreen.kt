@@ -164,7 +164,7 @@ fun DeckDetailsScreen(
                     LaunchedEffect(snackbarHostState) {
                         snackbarHostState.showSnackbar(
                             deckDetail.errorMessage!!,
-                            //  actionLabel = "Retry",
+                            actionLabel = "Retry",
                             duration = SnackbarDuration.Indefinite
                         )
                     }

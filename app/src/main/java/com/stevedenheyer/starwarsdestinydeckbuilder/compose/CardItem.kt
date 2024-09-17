@@ -101,7 +101,6 @@ fun CardItemLarge(modifier: Modifier, card: CardUi, onItemClick: (String) -> Uni
                     }
                 },
                 style = MaterialTheme.typography.headlineMedium,
-                //overflow = TextOverflow.Ellipsis,
                 inlineContent = getUniqueInline(size = MaterialTheme.typography.titleLarge.fontSize,
                     color = factionColor),
                 modifier = Modifier.weight(0.9f)
@@ -241,8 +240,6 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
                         }
                 ,
                 style = MaterialTheme.typography.headlineMedium,
-             //   maxLines = 1,
-               // overflow = TextOverflow.Ellipsis,
                 modifier = Modifier
                     .padding(top = 0.dp, start = 8.dp).weight(0.66f),
                 inlineContent = getUniqueInline(size = MaterialTheme.typography.titleLarge.fontSize,
@@ -251,6 +248,9 @@ fun CardItemCompact(modifier: Modifier, card: CardUi, onItemClick: (String) -> U
             )
             if (card.quantity > 0)
                 Text(buildAnnotatedString {
+                    if (card.isBanned) {
+                        appendInlineContent("banned", "[banned]")
+                    }
                     append(card.quantity.toString())
                     appendInlineContent("cards", "[cards]")
                     if (card.diceRef.isNotEmpty()) {

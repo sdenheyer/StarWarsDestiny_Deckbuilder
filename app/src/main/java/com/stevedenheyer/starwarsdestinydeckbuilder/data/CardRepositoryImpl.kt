@@ -121,52 +121,8 @@ class CardRepositoryImpl @Inject constructor(
             emit(Resource.success(cardList))
         }
 
-/*
-
-
-            val list = cardCache.getCardsByCodes(*values).toMutableList()
-          //  Log.d("SWD", "Cardcodes: ${list.size}, ${values.size}")
-            if (list.size == values.size) {
-                emit(Resource.success(data = list, isFromDB = true))
-            } else {
-             //   Log.d("SWD", "fetching cardcodes from network")
-                emit(Resource.loading(data = list))
-                val needFromNetwork =
-                    values.filter { card -> card.fetchCode() !in list.map { it.fetchCode() } }
-                        .toMutableList()
-                needFromNetwork.addAll(values.filter {
-                    if (it is CardOrCode.HasCode) true else {
-                        val card = (it as CardOrCode.HasCard).card
-                        Date().time - (card.timestamp) > (card.expiry)
-                    }
-                })
-                needFromNetwork.forEach {
-                    when (val apiResource = cardNetwork.getCardByCode(
-                        0L.toString().format(dateFormatter),
-                        it.fetchCode()
-                    ).first()) {  //If not in database, last modified not applied
-                        is ApiSuccessResponse -> {
-                            list.add(CardOrCode.HasCard(apiResource.body!!))
-                            emit(Resource.loading(list))
-                        }
-
-                        is ApiErrorResponse -> {
-                            emit(Resource.error(msg = apiResource.errorMessage, data = list))
-                            return@flow
-                        }
-
-                        is ApiEmptyResponse -> {
-                            emit(Resource.loading(list))
-                        }
-                    }
-                }
-                emit(Resource.success(data = list))
-            }
-        }
-*/
 
     override fun getCardSets(forceRemoteUpdate: Boolean): Flow<Resource<CardSetList>> {
-        // return flow { Resource.loading(CardSetList(0, 100000, emptyList())) }  testing...
 
         return networkBoundResource(
             fetchFromLocal = { cardCache.getCardSets() },
@@ -198,7 +154,6 @@ class CardRepositoryImpl @Inject constructor(
         code: String,
         forceRemoteUpdate: Boolean
     ): Flow<Resource<List<Card>>> {
-        // return flow { Resource.loading(listOf<Card>()) }  Testing...
 
         return networkBoundResource(
             fetchFromLocal = { cardCache.getCardsBySet(code) },

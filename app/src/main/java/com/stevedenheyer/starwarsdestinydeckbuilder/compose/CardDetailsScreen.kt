@@ -884,13 +884,6 @@ fun DeckCardCompact(
         ),
         border = BorderStroke(4.dp, color = MaterialTheme.colorScheme.onSurface)
     ) {
-        /*Row(
-            modifier = Modifier
-                .padding(horizontal = 12.dp, vertical = 4.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) */
         Column(
             modifier = Modifier
                 .padding(horizontal = 12.dp, vertical = 4.dp)

@@ -250,20 +250,6 @@ class DetailViewModel @Inject constructor(
             val card = state.data
             val quantity = owned.find { it.card.fetchCode() == card.code }?.quantity ?: 0
 
-            /*val ownedDetail = CardDetailDeckUi(
-                name = "",
-                formatName = "",
-                affiliationName = "",
-
-                quantity = quantity,
-                isUnique = card.isUnique,
-                isElite = false,
-                maxQuantity = Int.MAX_VALUE,
-                plot = null,
-                battlefield = null,
-                pointsUsed = 0,
-                deckSize = owned.size
-            )*/
             emit(quantity)
         }
     }
